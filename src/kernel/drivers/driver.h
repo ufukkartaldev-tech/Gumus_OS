@@ -30,5 +30,11 @@ typedef struct driver {
 void driver_manager_init();
 void driver_register(driver_t* driver);
 driver_t* driver_get(const char* name);
+int driver_activate(const char* name);
+int driver_deactivate(const char* name);
+int driver_unregister(const char* name);
+void driver_list_all();
+void driver_list_active();
+int driver_auto_load_all();
 
 #endif
