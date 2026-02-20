@@ -10,7 +10,8 @@
 #include "cmos.h"
 #include "driver.h"
 #include "vfs.h"
-#include "gdt.h" // Add header
+#include "gdt.h"
+#include "usb_host.h"
 
 // ... codes ...
 
@@ -378,6 +379,9 @@ void kernel_main() {
     driver_manager_init();
     ata_init_driver();
     vfs_init();
+    
+    // USB Host Controller Sistemi Başlatılıyor
+    usb_host_init();
     
     mouse_init(); // Fareyi Başlat
     

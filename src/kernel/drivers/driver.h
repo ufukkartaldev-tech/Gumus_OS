@@ -13,14 +13,37 @@ typedef enum {
     DRIVER_TYPE_INPUT
 } driver_type_t;
 
-// Sürücü Sınıfları (PCI Class kodları ile uyumlu)
+// PCI Sınıf Kodları
 typedef enum {
-    DRIVER_CLASS_STORAGE = 0x01,
-    DRIVER_CLASS_NETWORK = 0x02,
-    DRIVER_CLASS_DISPLAY = 0x03,
-    DRIVER_CLASS_MULTIMEDIA = 0x04,
-    DRIVER_CLASS_SERIAL = 0x0C
-} driver_class_t;
+    PCI_CLASS_UNCLASSIFIED = 0x00,
+    PCI_CLASS_STORAGE = 0x01,
+    PCI_CLASS_NETWORK = 0x02,
+    PCI_CLASS_DISPLAY = 0x03,
+    PCI_CLASS_MULTIMEDIA = 0x04,
+    PCI_CLASS_MEMORY = 0x05,
+    PCI_CLASS_BRIDGE = 0x06,
+    PCI_CLASS_COMMUNICATIONS = 0x07,
+    PCI_CLASS_SYSTEM = 0x08,
+    PCI_CLASS_INPUT = 0x09,
+    PCI_CLASS_DOCKING = 0x0A,
+    PCI_CLASS_PROCESSOR = 0x0B,
+    PCI_CLASS_SERIAL = 0x0C,
+    PCI_CLASS_WIRELESS = 0x0D,
+    PCI_CLASS_INTELLIGENT = 0x0E,
+    PCI_CLASS_SATELLITE = 0x0F,
+    PCI_CLASS_ENCRYPTION = 0x10,
+    PCI_CLASS_SIGNAL_PROCESSING = 0x11
+} pci_class_t;
+
+// PCI Alt Sınıf Kodları
+typedef enum {
+    PCI_SUBCLASS_STORAGE_IDE = 0x01,
+    PCI_SUBCLASS_STORAGE_SATA = 0x06,
+    PCI_SUBCLASS_DISPLAY_VGA = 0x00,
+    PCI_SUBCLASS_NETWORK_ETHERNET = 0x00,
+    PCI_SUBCLASS_MULTIMEDIA_AUDIO = 0x01,
+    PCI_SUBCLASS_SERIAL_USB = 0x03
+} pci_subclass_t;
 
 // Sürücü Düğümü (Linked List için)
 typedef struct driver_node {

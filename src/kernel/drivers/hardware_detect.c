@@ -9,6 +9,7 @@
 #include "../drivers/vesa_vbe.h"
 #include "../drivers/network_driver.h"
 #include "../drivers/audio_driver.h"
+#include "../drivers/usb_host.h"
 
 // Global değişkenler
 static hardware_info_t hw_info;
@@ -289,6 +290,33 @@ driver_t* hardware_get_best_driver(uint16_t vendor_id, uint16_t device_id, uint8
         case PCI_CLASS_MULTIMEDIA:
             if (subclass == PCI_SUBCLASS_MULTIMEDIA_AUDIO) {
                 return create_audio_driver(NULL);
+            }
+            break;
+            
+        case PCI_CLASS_SERIAL:
+            if (subclass == PCI_SUBCLASS_SERIAL_USB) {
+                // USB Host Controller tipine göre sürücü seç
+                pci_device_t temp_device = {0};
+                temp_device.vendor_id = vendor_id;
+                temp_device.device_id = device_id;
+                temp_device.class_code = class_code;
+                temp_device.subclass = subclass;
+                
+                // Program Interface'e göre controller tipini belirle
+                uint8_t prog_if = pci_read_config_byte(0, 0, 0, 0x09);
+                temp_device.prog_if = prog_if;
+                
+                switch (prog_if) {
+                    case 0x10: // OHCI
+                        return create_ohci_driver(&temp_device);
+                    case 0x20: // EHCI
+                        return create_ehci_driver(&temp_device);
+                    case 0x30: // XHCI
+                        return create_xhci_driver(&temp_device);
+                    default:
+                        printf("Bilinmeyen USB Controller tipi: %02X\n", prog_if);
+                        break;
+                }
             }
             break;
     }
