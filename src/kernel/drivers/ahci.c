@@ -254,6 +254,9 @@ driver_t* create_ahci_driver(pci_device_t* device) {
     // Sürücü yapısını ayarla
     strcpy(driver->base.name, "AHCI SATA");
     driver->base.type = DRIVER_TYPE_BLOCK;
+    driver->base.class = DRIVER_CLASS_STORAGE;
+    driver->base.vendor_id = device ? device->vendor_id : 0xFFFF;
+    driver->base.device_id = device ? device->device_id : 0xFFFF;
     driver->base.init = ahci_driver_init;
     driver->base.read = ahci_driver_read;
     driver->base.write = ahci_driver_write;
@@ -261,53 +264,56 @@ driver_t* create_ahci_driver(pci_device_t* device) {
     driver->base.shutdown = ahci_driver_shutdown;
     
     // PCI aygıtını yapılandır
-    uint32_t bar5 = device->bar[5];
-    if (!(bar5 & 0x01)) { // Memory mapped I/O
-        driver->hba = (hba_mem_t*)bar5;
-    } else {
-        printf("AHCI: I/O mapped I/O desteklenmiyor\n");
-        return NULL;
-    }
-    
-    // HBA'yı başlat
-    driver->hba->ghc |= (1 << 31); // AHCI Enable
-    
-    // Portları tara
-    uint32_t ports_impl = driver->hba->pi;
-    for (int i = 0; i < 32; i++) {
-        if (ports_impl & (1 << i)) {
-            hba_port_t* port = &driver->hba->ports[i];
-            
-            int port_type = ahci_port_type(port);
-            if (port_type == 0) { // SATA
-                driver->port = port;
-                driver->port_num = i;
+    if (device) {
+        uint32_t bar5 = device->bar[5];
+        if (!(bar5 & 0x01)) { // Memory mapped I/O
+            driver->hba = (hba_mem_t*)bar5;
+        } else {
+            printf("AHCI: I/O mapped I/O desteklenmiyor\n");
+            return NULL;
+        }
+        
+        // HBA'yı başlat
+        driver->hba->ghc |= (1 << 31); // AHCI Enable
+        
+        // Portları tara
+        uint32_t ports_impl = driver->hba->pi;
+        for (int i = 0; i < 32; i++) {
+            if (ports_impl & (1 << i)) {
+                hba_port_t* port = &driver->hba->ports[i];
                 
-                // Port'u yeniden yapılandır
-                port->cmd &= ~HBA_PxCMD_ST; // Stop command
-                port->cmd &= ~HBA_PxCMD_FRE; // Disable FIS receive
-                
-                while (port->cmd & HBA_PxCMD_CR); // Wait for stop
-                while (port->cmd & HBA_PxCMD_FR); // Wait for FIS receive stop
-                
-                // Port'u yeniden başlat
-                ahci_port_rebase(port, i);
-                
-                port->cmd |= HBA_PxCMD_FRE; // Enable FIS receive
-                port->cmd |= HBA_PxCMD_ST;  // Start command
-                
-                driver->initialized = 1;
-                
-                printf("AHCI SATA aygıtı bulundu: Port %d\n", i);
-                
-                // Aygıtı tanı
-                ahci_identify(driver);
-                
-                return (driver_t*)driver;
+                int port_type = ahci_port_type(port);
+                if (port_type == 0) { // SATA
+                    driver->port = port;
+                    driver->port_num = i;
+                    
+                    // Port'u yeniden yapılandır
+                    port->cmd &= ~HBA_PxCMD_ST; // Stop command
+                    port->cmd &= ~HBA_PxCMD_FRE; // Disable FIS receive
+                    
+                    while (port->cmd & HBA_PxCMD_CR); // Wait for stop
+                    while (port->cmd & HBA_PxCMD_FR); // Wait for FIS receive stop
+                    
+                    // Port'u yeniden başlat
+                    ahci_port_rebase(port, i);
+                    
+                    port->cmd |= HBA_PxCMD_FRE; // Enable FIS receive
+                    port->cmd |= HBA_PxCMD_ST;  // Start command
+                    
+                    driver->initialized = 1;
+                    
+                    printf("AHCI SATA aygıtı bulundu: Port %d (%04X:%04X)\n", i, device->vendor_id, device->device_id);
+                    
+                    // Aygıtı tanı
+                    ahci_identify(driver);
+                    
+                    return (driver_t*)driver;
+                }
             }
         }
+        
+        printf("AHCI: SATA aygıtı bulunamadı (%04X:%04X)\n", device->vendor_id, device->device_id);
     }
     
-    printf("AHCI: SATA aygıtı bulunamadı\n");
-    return NULL;
+    return (driver_t*)driver;
 }

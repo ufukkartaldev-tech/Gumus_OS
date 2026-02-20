@@ -17,11 +17,7 @@ static int hardware_detect_initialized = 0;
 // PCI Konfigürasyon Okuma Fonksiyonları
 uint32_t pci_read_config_dword(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
     uint32_t address = (1 << 31) | (bus << 16) | (device << 11) | (function << 8) | (offset & 0xFC);
-    outb(PCI_CONFIG_ADDRESS, address >> 8);
-    outb(PCI_CONFIG_ADDRESS + 1, address >> 16);
-    outb(PCI_CONFIG_ADDRESS + 2, address >> 24);
-    outb(PCI_CONFIG_ADDRESS + 3, address);
-    
+    outl(PCI_CONFIG_ADDRESS, address);
     return inl(PCI_CONFIG_DATA);
 }
 
@@ -37,11 +33,7 @@ uint8_t pci_read_config_byte(uint8_t bus, uint8_t device, uint8_t function, uint
 
 void pci_write_config_dword(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value) {
     uint32_t address = (1 << 31) | (bus << 16) | (device << 11) | (function << 8) | (offset & 0xFC);
-    outb(PCI_CONFIG_ADDRESS, address >> 8);
-    outb(PCI_CONFIG_ADDRESS + 1, address >> 16);
-    outb(PCI_CONFIG_ADDRESS + 2, address >> 24);
-    outb(PCI_CONFIG_ADDRESS + 3, address);
-    
+    outl(PCI_CONFIG_ADDRESS, address);
     outl(PCI_CONFIG_DATA, value);
 }
 
@@ -152,7 +144,7 @@ void hardware_detect_scan_pci() {
                 
                 hw_info.pci_device_count++;
                 
-                // Multi-function device kontrolü
+                // Multi-function device kontrolü (header_type'ın en üst biti)
                 if (function == 0 && !(pci_dev->header_type & 0x80)) {
                     break; // Multi-function değil, diğer function'ları atla
                 }
@@ -191,14 +183,64 @@ void hardware_detect_acpi() {
     printf("ACPI tabloları taranıyor...\n");
     
     // RSDP (Root System Description Pointer) ara
-    // Genellikle ilk 1KB'de bulunur
-    uint8_t* rsdp_area = (uint8_t*)0x000E0000;
-    for (int i = 0; i < 0x10000; i += 16) {
-        if (memcmp(rsdp_area + i, "RSD PTR ", 8) == 0) {
-            printf("ACPI RSDP bulundu: 0x%08X\n", 0x000E0000 + i);
-            break;
+    // 1. EBDA (Extended BIOS Data Area) - 0x0000040E'de adres var
+    uint16_t ebda_seg = *((uint16_t*)0x0000040E);
+    uint32_t ebda_base = ebda_seg * 16;
+    
+    printf("EBDA adresi: 0x%08X\n", ebda_base);
+    
+    // EBDA'da RSDP ara (ilk 1KB)
+    for (uint32_t i = 0; i < 1024; i += 16) {
+        uint8_t* rsdp_candidate = (uint8_t*)(ebda_base + i);
+        if (memcmp(rsdp_candidate, "RSD PTR ", 8) == 0) {
+            // Checksum kontrolü yap
+            uint8_t checksum = 0;
+            for (int j = 0; j < 20; j++) { // ACPI 1.0 RSDP 20 byte
+                checksum += rsdp_candidate[j];
+            }
+            
+            if (checksum == 0) {
+                printf("ACPI RSDP bulundu (EBDA): 0x%08X\n", ebda_base + i);
+                return;
+            } else {
+                printf("RSDP candidate bulundu ama checksum hatalı: 0x%02X\n", checksum);
+            }
         }
     }
+    
+    // 2. BIOS ROM alanında ara (0x000E0000 - 0x000FFFFF)
+    uint8_t* rsdp_area = (uint8_t*)0x000E0000;
+    for (int i = 0; i < 0x20000; i += 16) {
+        if (memcmp(rsdp_area + i, "RSD PTR ", 8) == 0) {
+            // Checksum kontrolü yap
+            uint8_t checksum = 0;
+            for (int j = 0; j < 20; j++) { // ACPI 1.0 RSDP 20 byte
+                checksum += rsdp_area[i + j];
+            }
+            
+            if (checksum == 0) {
+                printf("ACPI RSDP bulundu (BIOS): 0x%08X\n", 0x000E0000 + i);
+                
+                // ACPI 2.0+ kontrolü
+                uint8_t* rsdp = rsdp_area + i;
+                uint32_t length = *((uint32_t*)(rsdp + 20));
+                if (length >= 36) { // ACPI 2.0+ 36+ byte
+                    checksum = 0;
+                    for (int j = 0; j < length; j++) {
+                        checksum += rsdp[j];
+                    }
+                    if (checksum == 0) {
+                        printf("ACPI 2.0+ RSDP doğrulandı, uzunluk: %d\n", length);
+                    }
+                }
+                return;
+            } else {
+                printf("RSDP candidate bulundu ama checksum hatalı: 0x%02X\n", checksum);
+            }
+        }
+    }
+    
+    printf("ACPI RSDP bulunamadı\n");
 }
 
 int hardware_load_driver_for_device(pci_device_t* device) {

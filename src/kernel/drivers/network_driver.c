@@ -575,7 +575,7 @@ driver_t* create_rtl8139_driver(pci_device_t* device) {
     }
     
     // I/O base adresini al
-    uint32_t io_base = device->bar[0];
+    uint32_t io_base = device ? device->bar[0] : 0;
     if (io_base & 0x01) {
         rtl8139_driver.io_base = io_base & ~0x01;
     } else {
@@ -586,13 +586,19 @@ driver_t* create_rtl8139_driver(pci_device_t* device) {
     // Sürücü yapısını ayarla
     strcpy(rtl8139_driver.base.base.name, "RTL8139 Ethernet");
     rtl8139_driver.base.base.type = DRIVER_TYPE_NET;
+    rtl8139_driver.base.base.class = DRIVER_CLASS_NETWORK;
+    rtl8139_driver.base.base.vendor_id = device ? device->vendor_id : 0x10EC;
+    rtl8139_driver.base.base.device_id = device ? device->device_id : 0x8139;
     rtl8139_driver.base.base.init = rtl8139_driver_init;
     rtl8139_driver.base.base.read = rtl8139_driver_read;
     rtl8139_driver.base.base.write = rtl8139_driver_write;
     rtl8139_driver.base.base.ioctl = rtl8139_driver_ioctl;
     rtl8139_driver.base.base.shutdown = rtl8139_driver_shutdown;
     
-    printf("RTL8139 sürücüsü oluşturuldu, I/O base: 0x%04X\n", rtl8139_driver.io_base);
+    printf("RTL8139 sürücüsü oluşturuldu, I/O base: 0x%04X (%04X:%04X)\n", 
+           rtl8139_driver.io_base, 
+           device ? device->vendor_id : 0x10EC, 
+           device ? device->device_id : 0x8139);
     return &rtl8139_driver.base.base;
 }
 
@@ -603,7 +609,7 @@ driver_t* create_e1000_driver(pci_device_t* device) {
     }
     
     // MMIO base adresini al
-    uint32_t mmio_base = device->bar[0];
+    uint32_t mmio_base = device ? device->bar[0] : 0;
     if (!(mmio_base & 0x01)) {
         e1000_driver.mmio_base = mmio_base;
     } else {
@@ -614,12 +620,18 @@ driver_t* create_e1000_driver(pci_device_t* device) {
     // Sürücü yapısını ayarla
     strcpy(e1000_driver.base.base.name, "Intel E1000 Ethernet");
     e1000_driver.base.base.type = DRIVER_TYPE_NET;
+    e1000_driver.base.base.class = DRIVER_CLASS_NETWORK;
+    e1000_driver.base.base.vendor_id = device ? device->vendor_id : 0x8086;
+    e1000_driver.base.base.device_id = device ? device->device_id : 0x1000;
     e1000_driver.base.base.init = e1000_driver_init;
     e1000_driver.base.base.read = e1000_driver_read;
     e1000_driver.base.base.write = e1000_driver_write;
     e1000_driver.base.base.ioctl = e1000_driver_ioctl;
     e1000_driver.base.base.shutdown = e1000_driver_shutdown;
     
-    printf("Intel E1000 sürücüsü oluşturuldu, MMIO base: 0x%08X\n", e1000_driver.mmio_base);
+    printf("Intel E1000 sürücüsü oluşturuldu, MMIO base: 0x%08X (%04X:%04X)\n", 
+           e1000_driver.mmio_base,
+           device ? device->vendor_id : 0x8086, 
+           device ? device->device_id : 0x1000);
     return &e1000_driver.base.base;
 }

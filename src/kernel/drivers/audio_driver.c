@@ -479,7 +479,7 @@ driver_t* create_ac97_driver(pci_device_t* device) {
     }
     
     // I/O base adresini al
-    uint32_t io_base = device->bar[0];
+    uint32_t io_base = device ? device->bar[0] : 0;
     if (io_base & 0x01) {
         ac97_driver.io_base = io_base & ~0x01;
     } else {
@@ -493,13 +493,19 @@ driver_t* create_ac97_driver(pci_device_t* device) {
     // Sürücü yapısını ayarla
     strcpy(ac97_driver.base.base.name, "AC'97 Audio");
     ac97_driver.base.base.type = DRIVER_TYPE_CHAR;
+    ac97_driver.base.base.class = DRIVER_CLASS_MULTIMEDIA;
+    ac97_driver.base.base.vendor_id = device ? device->vendor_id : 0xFFFF;
+    ac97_driver.base.base.device_id = device ? device->device_id : 0xFFFF;
     ac97_driver.base.base.init = ac97_driver_init;
     ac97_driver.base.base.read = ac97_driver_read;
     ac97_driver.base.base.write = ac97_driver_write;
     ac97_driver.base.base.ioctl = ac97_driver_ioctl;
     ac97_driver.base.base.shutdown = ac97_driver_shutdown;
     
-    printf("AC'97 sürücüsü oluşturuldu, I/O base: 0x%04X\n", ac97_driver.io_base);
+    printf("AC'97 sürücüsü oluşturuldu, I/O base: 0x%04X (%04X:%04X)\n", 
+           ac97_driver.io_base,
+           device ? device->vendor_id : 0xFFFF, 
+           device ? device->device_id : 0xFFFF);
     return &ac97_driver.base.base;
 }
 
@@ -510,7 +516,7 @@ driver_t* create_hda_driver(pci_device_t* device) {
     }
     
     // MMIO base adresini al
-    uint32_t mmio_base = device->bar[0];
+    uint32_t mmio_base = device ? device->bar[0] : 0;
     if (!(mmio_base & 0x01)) {
         hda_driver.mmio_base = mmio_base;
     } else {
@@ -521,12 +527,18 @@ driver_t* create_hda_driver(pci_device_t* device) {
     // Sürücü yapısını ayarla
     strcpy(hda_driver.base.base.name, "Intel HDA Audio");
     hda_driver.base.base.type = DRIVER_TYPE_CHAR;
+    hda_driver.base.base.class = DRIVER_CLASS_MULTIMEDIA;
+    hda_driver.base.base.vendor_id = device ? device->vendor_id : 0x8086;
+    hda_driver.base.base.device_id = device ? device->device_id : 0x2668;
     hda_driver.base.base.init = hda_driver_init;
     hda_driver.base.base.read = hda_driver_read;
     hda_driver.base.base.write = hda_driver_write;
     hda_driver.base.base.ioctl = hda_driver_ioctl;
     hda_driver.base.base.shutdown = hda_driver_shutdown;
     
-    printf("Intel HDA sürücüsü oluşturuldu, MMIO base: 0x%08X\n", hda_driver.mmio_base);
+    printf("Intel HDA sürücüsü oluşturuldu, MMIO base: 0x%08X (%04X:%04X)\n", 
+           hda_driver.mmio_base,
+           device ? device->vendor_id : 0x8086, 
+           device ? device->device_id : 0x2668);
     return &hda_driver.base.base;
 }

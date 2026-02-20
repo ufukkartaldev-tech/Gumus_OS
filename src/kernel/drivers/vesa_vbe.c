@@ -514,12 +514,16 @@ driver_t* create_vesa_driver(pci_device_t* device) {
     // Sürücü yapısını ayarla
     strcpy(vesa_driver.base.name, "VESA/VBE Graphics");
     vesa_driver.base.type = DRIVER_TYPE_DISPLAY;
+    vesa_driver.base.class = DRIVER_CLASS_DISPLAY;
+    vesa_driver.base.vendor_id = device ? device->vendor_id : 0xFFFF;
+    vesa_driver.base.device_id = device ? device->device_id : 0xFFFF;
     vesa_driver.base.init = vesa_driver_init;
     vesa_driver.base.read = vesa_driver_read;
     vesa_driver.base.write = vesa_driver_write;
     vesa_driver.base.ioctl = vesa_driver_ioctl;
     vesa_driver.base.shutdown = vesa_driver_shutdown;
     
-    printf("VESA/VBE sürücüsü oluşturuldu\n");
+    printf("VESA/VBE sürücüsü oluşturuldu (%04X:%04X)\n", 
+           device ? device->vendor_id : 0xFFFF, device ? device->device_id : 0xFFFF);
     return &vesa_driver.base;
 }
