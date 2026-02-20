@@ -1,7 +1,7 @@
 #include "usb_mass_storage.h"
-#include "../core/memory.h"
-#include "string.h"
-#include "stdio.h"
+#include "../../../core/memory.h"
+#include "../../../core/string.h"
+#include "../../../core/stdio.h"
 
 // Global mass storage driver
 static usb_mass_storage_driver_t mass_storage_driver;

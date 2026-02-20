@@ -1,7 +1,7 @@
 #ifndef EHCI_H
 #define EHCI_H
 
-#include "usb_host.h"
+#include "../../core/usb_host.h"
 
 // EHCI Capability Registers
 #define EHCI_CAPLENGTH            0x00

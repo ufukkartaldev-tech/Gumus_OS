@@ -1,8 +1,8 @@
 #ifndef USB_MASS_STORAGE_H
 #define USB_MASS_STORAGE_H
 
-#include "usb_host.h"
-#include "../core/types.h"
+#include "../../core/usb_host.h"
+#include "../../../core/types.h"
 
 // USB Mass Storage Class Constants
 #define USB_MASS_STORAGE_CLASS    0x08

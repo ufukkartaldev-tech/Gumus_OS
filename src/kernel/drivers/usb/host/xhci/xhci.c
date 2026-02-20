@@ -1,11 +1,11 @@
 #include "xhci.h"
-#include "../core/memory.h"
-#include "../core/pci.h"
-#include "../core/interrupts.h"
-#include "../core/io.h"
-#include "usb_host.h"
-#include "string.h"
-#include "stdio.h"
+#include "../../../core/memory.h"
+#include "../../../core/pci.h"
+#include "../../../core/interrupts.h"
+#include "../../../core/io.h"
+#include "../../core/usb_host.h"
+#include "../../../core/string.h"
+#include "../../../core/stdio.h"
 
 // Global XHCI controller list
 static xhci_controller_t* xhci_controllers = NULL;

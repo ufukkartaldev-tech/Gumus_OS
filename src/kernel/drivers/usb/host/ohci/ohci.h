@@ -1,7 +1,7 @@
 #ifndef OHCI_H
 #define OHCI_H
 
-#include "usb_host.h"
+#include "../../core/usb_host.h"
 
 // OHCI Registers
 #define OHCI_REVISION               0x00

@@ -1,11 +1,11 @@
 #include "ohci.h"
-#include "../core/memory.h"
-#include "../core/pci.h"
-#include "../core/interrupts.h"
-#include "../core/io.h"
-#include "usb_host.h"
-#include "string.h"
-#include "stdio.h"
+#include "../../../core/memory.h"
+#include "../../../core/pci.h"
+#include "../../../core/interrupts.h"
+#include "../../../core/io.h"
+#include "../../core/usb_host.h"
+#include "../../../core/string.h"
+#include "../../../core/stdio.h"
 
 // Global OHCI controller list
 static ohci_controller_t* ohci_controllers = NULL;
