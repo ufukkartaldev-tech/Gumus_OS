@@ -13,6 +13,7 @@
 #include "../drivers/network/arp.h"
 #include "../drivers/network/ip.h"
 #include "../drivers/network/icmp.h"
+#include "file_manager_gui.h"
 
 static char command_buffer[MAX_COMMAND_LEN];
 static int buffer_index = 0;
@@ -72,6 +73,8 @@ void shell_parse_command(char* cmd) {
         print("  ag_durum    - Ag durumunu gosterir\n");
         print("  ping [IP]   - ICMP ping gonderir\n");
         print("  arp [IP]    - ARP tablosunu sorgular\n");
+        print_color("\nGrafiksel Arayuz:\n", LIGHT_CYAN);
+        print("  dosyalar    - Grafiksel dosya yöneticisini acar\n");
         print_color("\nGumusDil (soyle) Örnekleri:\n", LIGHT_GREEN);
         print("  yaz \"Selam\"        - Ekrana yazar\n");
         print("  kutu(50,50,5,5,10) - Dikdortgen cizer\n");
@@ -232,6 +235,9 @@ void shell_parse_command(char* cmd) {
         } else {
             print_color("ARP cozumlemesi basarisiz.\n", LIGHT_RED);
         }
+    } else if (strcmp(cmd, "dosyalar") == 0) {
+        print_color("\nGrafiksel Dosya Yöneticisi aciliyor...\n", LIGHT_CYAN);
+        launch_file_manager_gui();
     } else if (strlen(cmd) > 0) {
         print_color("\nBilinmeyen komut: ", LIGHT_RED);
         print(cmd);

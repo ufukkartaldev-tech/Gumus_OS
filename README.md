@@ -43,6 +43,15 @@ GümüşOS artık modern ağ protokollerini destekliyor!
 - **ICMP (Ping):** Ağ bağlantı testi için ping desteği.
 - **Shell Komutları:** `ag_baslat`, `ag_durum`, `ping [IP]`, `arp [IP]`
 
+### 7. Grafiksel Dosya Yöneticisi 📁
+Modern dosya yönetimi arayüzü!
+- **Grid View:** İkonlu dosya görüntüleme
+- **Mouse Desteği:** Çift tıklama ile dosya açma
+- **Dosya İşlemleri:** Kopyala, taşı, sil, yeniden adlandır
+- **Klasör Navigasyonu:** Alt ve üst dizinler arasında geçiş
+- **Context Menu:** Sağ tık menüsü
+- **Dosya Önizleme:** Metin ve resim dosyaları için hızlı önizleme
+
 ---
 
 ## 📂 Proje Yapısı
@@ -59,6 +68,7 @@ GümüşOS artık modern ağ protokollerini destekliyor!
 1. **Gerekli Araçlar:** NASM, GCC (MinGW), LD ve QEMU sisteminizde kurulu olmalıdır.
 2. **Derleme:** PowerShell üzerinden `./build.ps1` komutunu verin.
 3. **Sonuç:** QEMU üzerinde GümüşOS'un 800x600'lük renkli dünyası açılacaktır.
+4. **Dosya Yöneticisi:** Shell'den `dosyalar` komutu ile grafiksel dosya yöneticisini açın.
 
 ---
 
