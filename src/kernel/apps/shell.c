@@ -9,6 +9,10 @@
 #include "sound.h"
 #include "window.h"
 #include "snake.h"
+#include "../drivers/network/ethernet.h"
+#include "../drivers/network/arp.h"
+#include "../drivers/network/ip.h"
+#include "../drivers/network/icmp.h"
 
 static char command_buffer[MAX_COMMAND_LEN];
 static int buffer_index = 0;
@@ -63,6 +67,11 @@ void shell_parse_command(char* cmd) {
         print("  bicimlendir - Test disk alanini hazirlar (format)\n");
         print("  test        - Bellek testi yapar\n");
         print("  pencere     - Ekran testi icin pencere acar\n");
+        print_color("\nAg Komutlari:\n", LIGHT_CYAN);
+        print("  ag_baslat   - Ag suruculerini baslatir\n");
+        print("  ag_durum    - Ag durumunu gosterir\n");
+        print("  ping [IP]   - ICMP ping gonderir\n");
+        print("  arp [IP]    - ARP tablosunu sorgular\n");
         print_color("\nGumusDil (soyle) Örnekleri:\n", LIGHT_GREEN);
         print("  yaz \"Selam\"        - Ekrana yazar\n");
         print("  kutu(50,50,5,5,10) - Dikdortgen cizer\n");
@@ -156,6 +165,72 @@ void shell_parse_command(char* cmd) {
     } else if (strcmp(cmd, "ciz") == 0) {
         for(int i = 0; i < 50; i++) {
             vga_draw_rect(i*6, i*4, 10, 10, i % 256);
+        }
+    } else if (strcmp(cmd, "ag_baslat") == 0) {
+        print_color("\nAg suruculeri baslatiliyor...\n", LIGHT_CYAN);
+        
+        if (ethernet_init() == 0) {
+            print_color("Ethernet surucusu: [ OK ]\n", LIGHT_GREEN);
+        } else {
+            print_color("Ethernet surucusu: [ HATA ]\n", LIGHT_RED);
+        }
+        
+        if (arp_init() == 0) {
+            print_color("ARP protokolu: [ OK ]\n", LIGHT_GREEN);
+        } else {
+            print_color("ARP protokolu: [ HATA ]\n", LIGHT_RED);
+        }
+        
+        if (ip_init() == 0) {
+            print_color("IP protokolu: [ OK ]\n", LIGHT_GREEN);
+        } else {
+            print_color("IP protokolu: [ HATA ]\n", LIGHT_RED);
+        }
+        
+        if (icmp_init() == 0) {
+            print_color("ICMP protokolu: [ OK ]\n", LIGHT_GREEN);
+        } else {
+            print_color("ICMP protokolu: [ HATA ]\n", LIGHT_RED);
+        }
+        
+        print_color("Ag suruculeri baslatildi.\n", LIGHT_GREEN);
+    } else if (strcmp(cmd, "ag_durum") == 0) {
+        print_color("\nAg Durumu:\n", LIGHT_CYAN);
+        print("MAC Adres: ");
+        mac_addr_t mac = ethernet_get_mac();
+        ethernet_print_mac(&mac);
+        print("\nIP Adres: ");
+        uint8_t* ip = ip_get_source_ip();
+        char ip_str[16];
+        ip_to_string(ip, ip_str);
+        print(ip_str);
+        print("\n");
+    } else if (strncmp(cmd, "ping ", 5) == 0) {
+        char* ip_str = cmd + 5;
+        uint8_t target_ip[4];
+        string_to_ip(ip_str, target_ip);
+        
+        print_color("\nPing baslatiliyor: ", LIGHT_CYAN);
+        print(ip_str);
+        print("\n");
+        
+        ping(target_ip, 4);
+    } else if (strncmp(cmd, "arp ", 4) == 0) {
+        char* ip_str = cmd + 4;
+        uint8_t target_ip[4];
+        string_to_ip(ip_str, target_ip);
+        
+        print_color("\nARP sorgulanıyor: ", LIGHT_CYAN);
+        print(ip_str);
+        print("\n");
+        
+        mac_addr_t mac;
+        if (arp_resolve(target_ip, &mac)) {
+            print("MAC Adres: ");
+            ethernet_print_mac(&mac);
+            print("\n");
+        } else {
+            print_color("ARP cozumlemesi basarisiz.\n", LIGHT_RED);
         }
     } else if (strlen(cmd) > 0) {
         print_color("\nBilinmeyen komut: ", LIGHT_RED);

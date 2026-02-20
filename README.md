@@ -35,6 +35,14 @@ Sistem, aynı anda birden fazla işi yapıyormuş illüzyonu yaratır.
 - **Scheduler:** Round-Robin (Döner Sıra) algoritmasıyla her sürece adil işlemci zamanı verilir.
 - **Preemptive:** Çekirdek, uygulamayı beklemeden `IRQ0` (Sistem saati) kesmesiyle kontrolü geri alabilir ve diğer göreve geçebilir.
 
+### 6. Ağ Desteği 🌐
+GümüşOS artık modern ağ protokollerini destekliyor!
+- **Ethernet Sürücüsü:** NE2000 uyumlu network kartları için temel sürücü.
+- **ARP Protokolü:** IP adreslerinden MAC adreslerini çözme.
+- **IP Protokolü:** IPv4 paket yönetimi ve routing.
+- **ICMP (Ping):** Ağ bağlantı testi için ping desteği.
+- **Shell Komutları:** `ag_baslat`, `ag_durum`, `ping [IP]`, `arp [IP]`
+
 ---
 
 ## 📂 Proje Yapısı
@@ -42,6 +50,7 @@ Sistem, aynı anda birden fazla işi yapıyormuş illüzyonu yaratır.
 - `src/kernel/core/`: Çekirdeğin ana motoru; bellek yönetimi, paging ve syscall handler'lar.
 - `src/kernel/cpu/`: CPU seviyesindeki tablolar (GDT, IDT, TSS) ve multitasking.
 - `src/kernel/drivers/`: Ekran kartı (VGA/VBE), klavye, mouse ve disk sürücüleri.
+- `src/kernel/drivers/network/`: Ağ protokolleri (Ethernet, ARP, IP, ICMP).
 
 ---
 

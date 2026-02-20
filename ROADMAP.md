@@ -18,14 +18,23 @@ Bu belge, GümüşOS'un gelişimini takip eder. Gümüşhane'den doğan bu güne
 ## 3. Donanım Sürücüleri (Drivers) 🛠️
 - [x] **Klavye:** TR-Q haritalamalı interrupt bazlı sürücü.
 - [x] **Disk (ATA/IDE):** Sektör bazlı okuma/yazma (PIO Mode).
-- [ ] **Grafik:** VGA Mode 13h veya VBE (LFB) grafik sürücüsü. (Görselliğin zirvesi!)
+- [x] **Grafik:** VGA Mode 13h veya VBE (LFB) grafik sürücüsü. (Görselliğin zirvesi!)
+- [x] **Ağ Sürücüleri:** Ethernet, ARP, IP, ICMP protokolleri.
 
-## 4. Dosya Sistemi & GümüşDil 💾
+## 4. Ağ Protokolleri 🌐
+- [x] **Ethernet:** Temel frame gönderme/alma.
+- [x] **ARP:** IP'den MAC çözümleme ve cache yönetimi.
+- [x] **IPv4:** Paket yönetimi ve routing.
+- [x] **ICMP:** Ping desteği.
+- [ ] **UDP:** Datagram iletişimi.
+- [ ] **TCP:** Güvenilir bağlantı yönetimi.
+
+## 5. Dosya Sistemi & GümüşDil 💾
 - [x] **Dosya Sistemi:** FAT12/16 prototipi (Listele, Oku, Kaydet).
 - [x] **GümüşDil:** Bellek üzerinde koşan "soyle" interpreter'ı.
 - [ ] **Dinamik Yükleyici:** Diskten program yükleyip çalıştırma.
 
-## 5. Kullanıcı Arayüzü (GUI/TUI) 🎨
+## 6. Kullanıcı Arayüzü (GUI/TUI) 🎨
 - [x] **Durum Çubuğu:** Sistem bilgilerini gösteren sabit bar.
 - [x] **Pencere Sistemi:** Text mode üzerinde pencere çizimi.
 - [x] **Renk Paleti:** Hata, başarı ve bilgi kodlu terminal.

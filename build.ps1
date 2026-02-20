@@ -32,7 +32,7 @@ Write-Host "[2/5] Kernel Entry ve Kesme sarmalayicilari derleniyor..."
 
 # 3. Kernel Derleme (C Kodları)
 Write-Host "[3/5] Kernel derleniyor..."
-$INCLUDES = @("-Isrc/kernel/core", "-Isrc/kernel/drivers", "-Isrc/kernel/fs", "-Isrc/kernel/cpu", "-Isrc/kernel/apps")
+$INCLUDES = @("-Isrc/kernel/core", "-Isrc/kernel/drivers", "-Isrc/kernel/drivers/network", "-Isrc/kernel/fs", "-Isrc/kernel/cpu", "-Isrc/kernel/apps")
 
 & $GCC -ffreestanding $INCLUDES -c src/kernel/core/kernel.c -o kernel.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/cpu/idt.c -o idt.o
@@ -60,12 +60,16 @@ $INCLUDES = @("-Isrc/kernel/core", "-Isrc/kernel/drivers", "-Isrc/kernel/fs", "-
 & $GCC -ffreestanding $INCLUDES -c src/kernel/core/syscall.c -o syscall.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/cpu/gdt.c -o gdt.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/core/utf8.c -o utf8.o
+& $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/network/ethernet.c -o ethernet.o
+& $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/network/arp.c -o arp.o
+& $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/network/ip.c -o ip.o
+& $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/network/icmp.c -o icmp.o
 
 # 4. Kernel'ı Linkle ve Binary'ye Çevir
 Write-Host "[4/5] Kernel dosyaları bağlanıyor ve binary'ye çevriliyor..."
 # 0x1000 adresine yerleştiriyoruz
 # Not: kernel_entry.o en başta olmalı
-& $LD -o kernel.tmp -Ttext 0x1000 kernel_entry.o interrupt.o kernel.o idt.o utf8.o vga_font.o memory.o shell.o string.o gumus_dil.o ata.o fs.o vga_gfx.o cmos.o sound.o mouse.o task.o window.o file_manager.o snake.o start_menu.o calculator.o paint.o image_viewer.o driver_manager.o vfs.o syscall.o gdt.o gdt_asm.o
+& $LD -o kernel.tmp -Ttext 0x1000 kernel_entry.o interrupt.o kernel.o idt.o utf8.o vga_font.o memory.o shell.o string.o gumus_dil.o ata.o fs.o vga_gfx.o cmos.o sound.o mouse.o task.o window.o file_manager.o snake.o start_menu.o calculator.o paint.o image_viewer.o driver_manager.o vfs.o syscall.o gdt.o gdt_asm.o ethernet.o arp.o ip.o icmp.o
 & $OBJCOPY -O binary kernel.tmp kernel.bin
 
 # 5. OS Image oluştur (Bootloader + Kernel)
