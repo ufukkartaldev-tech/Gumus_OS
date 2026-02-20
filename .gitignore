@@ -1,0 +1,41 @@
+# Derleme dosyaları
+*.o
+*.obj
+*.exe
+*.bin
+*.img
+*.iso
+
+# Build logları ve çıktıları
+build_*.txt
+compile_*.txt
+*_search.txt
+build_output.txt
+build_error.txt
+
+# Geçici dosyalar
+*.tmp
+*.temp
+*.log
+
+# IDE dosyaları
+.vscode/
+*.vcxproj*
+*.sln
+*.user
+
+# Disk imajları
+*.img
+*.iso
+*.vhd
+
+# Debug dosyaları
+*.debug
+*.map
+
+# Sistem dosyaları
+Thumbs.db
+.DS_Store
+
+# Batch script'leri (isteğe bağlı)
+*.bat
