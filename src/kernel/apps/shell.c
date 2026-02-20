@@ -15,6 +15,8 @@
 #include "../drivers/network/icmp.h"
 #include "file_manager_gui.h"
 #include "system_monitor.h"
+#include "../drivers/advanced_sound.h"
+#include "audio_mixer.h"
 
 static char command_buffer[MAX_COMMAND_LEN];
 static int buffer_index = 0;
@@ -77,6 +79,10 @@ void shell_parse_command(char* cmd) {
         print_color("\nGrafiksel Arayuz:\n", LIGHT_CYAN);
         print("  dosyalar    - Grafiksel dosya yöneticisini acar\n");
         print("  monitor     - Sistem monitörünü acar\n");
+        print_color("\nSes Sistemi:\n", LIGHT_CYAN);
+        print("  ses_cal     - Ses mixer arayüzünü acar\n");
+        print("  ses_kaydet  - Ses kaydını baslatir/durdurur\n");
+        print("  wav_cal [dosya] - WAV dosyası calar\n");
         print_color("\nGumusDil (soyle) Örnekleri:\n", LIGHT_GREEN);
         print("  yaz \"Selam\"        - Ekrana yazar\n");
         print("  kutu(50,50,5,5,10) - Dikdortgen cizer\n");
@@ -243,6 +249,35 @@ void shell_parse_command(char* cmd) {
     } else if (strcmp(cmd, "monitor") == 0) {
         print_color("\nSistem Monitörü aciliyor...\n", LIGHT_CYAN);
         launch_system_monitor();
+    } else if (strcmp(cmd, "ses_cal") == 0) {
+        print_color("\nSes Mixer arayüzü aciliyor...\n", LIGHT_CYAN);
+        launch_audio_mixer();
+    } else if (strncmp(cmd, "ses_kaydet", 10) == 0) {
+        if (audio_is_recording()) {
+            audio_stop_recording();
+            print_color("\nSes kaydı durduruldu.\n", LIGHT_GREEN);
+        } else {
+            audio_start_recording();
+            print_color("\nSes kaydı baslatildi.\n", LIGHT_GREEN);
+        }
+    } else if (strncmp(cmd, "wav_cal ", 8) == 0) {
+        char* filename = cmd + 8;
+        print_color("\nWAV dosyasi caliniyor: ", LIGHT_CYAN);
+        print(filename);
+        print("\n");
+        
+        // WAV dosyasını yükle ve çal
+        uint8_t* buffer;
+        uint32_t size;
+        wav_header_t header;
+        
+        if (audio_load_wav(filename, &buffer, &size, &header) == 0) {
+            int channel = audio_create_channel();
+            if (channel >= 0) {
+                audio_play_buffer(channel, buffer, size, AUDIO_FORMAT_PCM16);
+                audio_set_loop(channel, 0);
+            }
+        }
     } else if (strlen(cmd) > 0) {
         print_color("\nBilinmeyen komut: ", LIGHT_RED);
         print(cmd);

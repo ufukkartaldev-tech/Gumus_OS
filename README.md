@@ -61,6 +61,18 @@ Gerçek zamanlı sistem performans izleme!
 - **Grafiksel Arayüz:** Bar grafikler ve çizgi grafikler
 - **Gerçek Zamanlı Güncelleme:** Otomatik veri yenileme
 
+### 9. Gelişmiş Ses Sistemi 🎵
+Profesyonel ses yönetimi ve işleme!
+- **Çok Kanallı Ses:** 8 kanala kadar aynı anda ses çalma
+- **Ses Formatları:** WAV ve MIDI dosya formatı desteği
+- **Ses Karıştırıcı:** Multiple ses kanalını aynı anda çalma
+- **Ses Efektleri:** Echo, reverb, distortion gibi efektler
+- **Ses Kayıt:** Microphone ile ses kaydetme
+- **Ses Kontrolü:** Volume, pan, loop kontrolleri
+- **Grafiksel Mixer:** Profesyonel ses arayüzü
+- **Equalizer:** 10 band grafiksel equalizer
+- **Visualizer:** Gerçek zamanlı ses görselleştirme
+
 ---
 
 ## 📂 Proje Yapısı
@@ -79,6 +91,7 @@ Gerçek zamanlı sistem performans izleme!
 3. **Sonuç:** QEMU üzerinde GümüşOS'un 800x600'lük renkli dünyası açılacaktır.
 4. **Dosya Yöneticisi:** Shell'den `dosyalar` komutu ile grafiksel dosya yöneticisini açın.
 5. **Sistem Monitörü:** Shell'den `monitor` komutu ile sistem performansını izleyin.
+6. **Ses Sistemi:** Shell'den `ses_cal` komutu ile ses mixer'ı açın.
 
 ---
 

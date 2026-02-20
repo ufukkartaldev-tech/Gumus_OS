@@ -44,6 +44,7 @@ $INCLUDES = @("-Isrc/kernel/core", "-Isrc/kernel/drivers", "-Isrc/kernel/drivers
 & $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/vga_font.c -o vga_font.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/cmos.c -o cmos.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/sound.c -o sound.o
+& $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/advanced_sound.c -o advanced_sound.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/mouse.c -o mouse.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/apps/shell.c -o shell.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/core/memory.c -o memory.o
@@ -52,6 +53,7 @@ $INCLUDES = @("-Isrc/kernel/core", "-Isrc/kernel/drivers", "-Isrc/kernel/drivers
 & $GCC -ffreestanding $INCLUDES -c src/kernel/apps/file_manager.c -o file_manager.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/apps/file_manager_gui.c -o file_manager_gui.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/apps/system_monitor.c -o system_monitor.o
+& $GCC -ffreestanding $INCLUDES -c src/kernel/apps/audio_mixer.c -o audio_mixer.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/apps/snake.c -o snake.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/apps/start_menu.c -o start_menu.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/apps/calculator.c -o calculator.o
@@ -71,7 +73,7 @@ $INCLUDES = @("-Isrc/kernel/core", "-Isrc/kernel/drivers", "-Isrc/kernel/drivers
 Write-Host "[4/5] Kernel dosyaları bağlanıyor ve binary'ye çevriliyor..."
 # 0x1000 adresine yerleştiriyoruz
 # Not: kernel_entry.o en başta olmalı
-& $LD -o kernel.tmp -Ttext 0x1000 kernel_entry.o interrupt.o kernel.o idt.o utf8.o vga_font.o memory.o shell.o string.o gumus_dil.o ata.o fs.o vga_gfx.o cmos.o sound.o mouse.o task.o window.o file_manager.o file_manager_gui.o system_monitor.o snake.o start_menu.o calculator.o paint.o image_viewer.o driver_manager.o vfs.o syscall.o gdt.o gdt_asm.o ethernet.o arp.o ip.o icmp.o
+& $LD -o kernel.tmp -Ttext 0x1000 kernel_entry.o interrupt.o kernel.o idt.o utf8.o vga_font.o memory.o shell.o string.o gumus_dil.o ata.o fs.o vga_gfx.o cmos.o sound.o advanced_sound.o mouse.o task.o window.o file_manager.o file_manager_gui.o system_monitor.o audio_mixer.o snake.o start_menu.o calculator.o paint.o image_viewer.o driver_manager.o vfs.o syscall.o gdt.o gdt_asm.o ethernet.o arp.o ip.o icmp.o
 & $OBJCOPY -O binary kernel.tmp kernel.bin
 
 # 5. OS Image oluştur (Bootloader + Kernel)

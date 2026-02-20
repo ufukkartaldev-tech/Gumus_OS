@@ -41,5 +41,14 @@ Bu belge, GümüşOS'un gelişimini takip eder. Gümüşhane'den doğan bu güne
 - [x] **Grafiksel Dosya Yöneticisi:** Modern dosya yönetimi arayüzü.
 - [x] **Sistem Monitörü:** Gerçek zamanlı performans izleme.
 
+## 7. Ses Sistemi 🎵
+- [x] **PC Speaker:** Temel bip sesleri ve melodiler.
+- [x] **Çok Kanallı Ses:** 8 kanala kadar aynı anda ses çalma.
+- [x] **Ses Formatları:** WAV ve MIDI dosya formatı desteği.
+- [x] **Ses Karıştırıcı:** Multiple ses kanalını aynı anda çalma.
+- [x] **Ses Efektleri:** Echo, reverb, distortion gibi efektler.
+- [x] **Ses Kayıt:** Microphone ile ses kaydetme.
+- [x] **Grafiksel Mixer:** Profesyonel ses arayüzü.
+
 ---
 **Güncel Hedef:** UDP/TCP protokollerini tamamlamak veya NE2000 network kartı sürücüsünü geliştirmek.
