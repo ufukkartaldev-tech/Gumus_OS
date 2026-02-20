@@ -39,6 +39,7 @@ Bu belge, GümüşOS'un gelişimini takip eder. Gümüşhane'den doğan bu güne
 - [x] **Pencere Sistemi:** Text mode üzerinde pencere çizimi.
 - [x] **Renk Paleti:** Hata, başarı ve bilgi kodlu terminal.
 - [x] **Grafiksel Dosya Yöneticisi:** Modern dosya yönetimi arayüzü.
+- [x] **Sistem Monitörü:** Gerçek zamanlı performans izleme.
 
 ---
 **Güncel Hedef:** UDP/TCP protokollerini tamamlamak veya NE2000 network kartı sürücüsünü geliştirmek.

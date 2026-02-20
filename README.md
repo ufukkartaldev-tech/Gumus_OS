@@ -52,6 +52,15 @@ Modern dosya yönetimi arayüzü!
 - **Context Menu:** Sağ tık menüsü
 - **Dosya Önizleme:** Metin ve resim dosyaları için hızlı önizleme
 
+### 8. Sistem Monitörü 📊
+Gerçek zamanlı sistem performans izleme!
+- **CPU Kullanımı:** Anlık CPU kullanım yüzdesi ve geçmiş grafiği
+- **Bellek Kullanımı:** RAM kullanım istatistikleri ve grafikler
+- **Sistem Bilgileri:** Uptime, process sayısı, interrupt sayısı
+- **Sürücü İstatistikleri:** Disk, network, input kullanım verileri
+- **Grafiksel Arayüz:** Bar grafikler ve çizgi grafikler
+- **Gerçek Zamanlı Güncelleme:** Otomatik veri yenileme
+
 ---
 
 ## 📂 Proje Yapısı
@@ -69,6 +78,7 @@ Modern dosya yönetimi arayüzü!
 2. **Derleme:** PowerShell üzerinden `./build.ps1` komutunu verin.
 3. **Sonuç:** QEMU üzerinde GümüşOS'un 800x600'lük renkli dünyası açılacaktır.
 4. **Dosya Yöneticisi:** Shell'den `dosyalar` komutu ile grafiksel dosya yöneticisini açın.
+5. **Sistem Monitörü:** Shell'den `monitor` komutu ile sistem performansını izleyin.
 
 ---
 
