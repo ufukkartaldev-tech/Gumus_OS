@@ -2,7 +2,9 @@
 #define KERNEL_H
 
 #include <stdint.h>
+#include "../cpu/idt.h"
 
+void panic(const char* message, registers_t* r);
 void putchar(char c);
 void print(const char* str);
 void print_color(const char* str, uint8_t color);

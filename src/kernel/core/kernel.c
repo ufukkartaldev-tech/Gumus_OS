@@ -1,3 +1,4 @@
+#include "kernel.h"
 #include "idt.h"
 #include "io.h"
 #include "keyboard.h"
@@ -14,28 +15,41 @@
 #include "usb_host.h"
 #include "serial.h"
 
-// ... codes ...
+void panic(const char* message, registers_t* r) {
+    asm volatile("cli"); // Interruptları durdur
 
-// Eski kernel_main kaldırıldı
-
-// Şeffaf Dikdörtgen (Checkerboard / Stipple)
-void vga_draw_rect_transparent(int x, int y, int w, int h, uint8_t color) {
-    for (int j = y; j < y + h; j++) {
-        for (int i = x; i < x + w; i++) {
-            if ((i + j) % 2 == 0) { // Sadece çift pikselleri boya
-                vga_putpixel(i, j, color);
-            }
-        }
+    // Ekranı temizle ve kırmızı bir panel çiz
+    vga_clear(RED);
+    draw_window(20, 40, 280, 120, " GUMUS OS: SISTEM DURDURULDU ", LIGHT_RED);
+    
+    gfx_cursor_x = 30;
+    gfx_cursor_y = 65;
+    print_color("Hata: ", YELLOW);
+    print_color(message, WHITE);
+    
+    if (r) {
+        gfx_cursor_x = 30;
+        gfx_cursor_y = 85;
+        print_color("Register Dump:", LIGHT_GREY);
+        
+        char buf[32];
+        gfx_cursor_y += 10; gfx_cursor_x = 30;
+        print("EAX: "); itoa(r->eax, buf); print(buf); print(" EBX: "); itoa(r->ebx, buf); print(buf);
+        gfx_cursor_y += 8; gfx_cursor_x = 30;
+        print("ECX: "); itoa(r->ecx, buf); print(buf); print(" EDX: "); itoa(r->edx, buf); print(buf);
+        gfx_cursor_y += 8; gfx_cursor_x = 30;
+        print("EIP: "); itoa(r->eip, buf); print(buf); print(" CS:  "); itoa(r->cs, buf); print(buf);
+        gfx_cursor_y += 8; gfx_cursor_x = 30;
+        print("ESP: "); itoa(r->esp, buf); print(buf); print(" EFLAGS: "); itoa(r->eflags, buf); print(buf);
     }
-}
 
-// Kesme sırasında kaydedilen register yapısı
-struct registers {
-    uint32_t ds;
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    uint32_t int_no, err_code;
-    uint32_t eip, cs, eflags, useresp, ss;
-};
+    gfx_cursor_y = 145; gfx_cursor_x = 30;
+    print_color("Sistem guvenli modda durduruldu.", LIGHT_CYAN);
+    print_color("\nLutfen bilgisayari resetleyin.", LIGHT_CYAN);
+
+    vga_present();
+    while(1) { asm volatile("hlt"); }
+}
 
 #include "vga_font.h"
 

@@ -166,6 +166,22 @@ void task_exit(int code) {
     }
 }
 
+int task_kill(uint32_t pid) {
+    if (pid == 0) return -1; // Kernel'ı öldürme
+    
+    task_t* temp = task_head;
+    do {
+        if (temp->id == pid) {
+            temp->status = TASK_DEAD;
+            temp->exit_code = -1; // Kapatıldı
+            return 0;
+        }
+        temp = temp->next;
+    } while (temp != task_head);
+    
+    return -1; // Bulunamadı
+}
+
 uint32_t schedule(uint32_t esp) {
     if (!current_task) return esp;
 

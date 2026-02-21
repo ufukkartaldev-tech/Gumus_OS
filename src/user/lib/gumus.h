@@ -10,6 +10,9 @@
 #define SYS_OPEN  5
 #define SYS_CLOSE 6
 #define SYS_SBRK  7
+#define SYS_KILL  8
+#define SYS_SHM_GET 9
+#define SYS_SHM_AT  10
 
 // Wrapper Functions
 static inline int syscall(int num, int a, int b, int c) {
@@ -20,6 +23,18 @@ static inline int syscall(int num, int a, int b, int c) {
 
 static inline void exit(int code) {
     syscall(SYS_EXIT, code, 0, 0);
+}
+
+static inline int kill(int pid) {
+    return syscall(SYS_KILL, pid, 0, 0);
+}
+
+static inline int shm_get(uint32_t key, uint32_t size) {
+    return syscall(SYS_SHM_GET, key, size, 0);
+}
+
+static inline void* shm_at(int shm_id) {
+    return (void*)syscall(SYS_SHM_AT, shm_id, 0, 0);
 }
 
 static inline int write(int fd, const void* buf, uint32_t size) {

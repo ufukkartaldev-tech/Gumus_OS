@@ -54,4 +54,8 @@ void map_page_in_dir(page_directory_t* dir, void* phys, void* virt, uint32_t fla
 page_directory_t* create_process_directory();
 void switch_page_directory(page_directory_t* dir);
 
+// SHM (Shared Memory)
+int shm_get(uint32_t key, uint32_t size);
+void* shm_at(int shm_id);
+
 #endif

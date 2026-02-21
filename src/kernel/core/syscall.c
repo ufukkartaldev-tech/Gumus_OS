@@ -3,13 +3,7 @@
 #include "vga_gfx.h"
 #include "task.h"
 #include "memory.h"
-
-typedef struct registers {
-    uint32_t ds;
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    uint32_t int_no, err_code;
-    uint32_t eip, cs, eflags, useresp, ss;
-} registers_t;
+#include "../cpu/idt.h"
 
 // Syscall Numaraları
 #define SYS_EXIT  1
@@ -124,6 +118,18 @@ uint32_t syscall_handler(registers_t* r) {
         case SYS_EXIT:
             task_exit(r->ebx); // ebx: exit_code
             return schedule((uint32_t)r); // Görev değiştir ve asla geri dönme
+        case SYS_KILL:
+            // ebx: target_pid
+            ret = task_kill(r->ebx);
+            break;
+        case SYS_SHM_GET:
+            // ebx: key, ecx: size
+            ret = shm_get(r->ebx, r->ecx);
+            break;
+        case SYS_SHM_AT:
+            // ebx: shm_id
+            ret = (uint32_t)shm_at(r->ebx);
+            break;
         default:
             print("\nUnknown Syscall");
             break;

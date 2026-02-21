@@ -21,7 +21,16 @@ struct idt_ptr {
     uint32_t base;
 } __attribute__((packed));
 
+typedef struct registers {
+    uint32_t ds;
+    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    uint32_t int_no, err_code;
+    uint32_t eip, cs, eflags, useresp, ss;
+} registers_t;
+
 void init_idt();
 void set_idt_gate(int n, uint32_t handler);
+void isr_handler(registers_t* r);
+void irq_handler(registers_t* r);
 
 #endif

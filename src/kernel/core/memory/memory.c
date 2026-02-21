@@ -206,6 +206,60 @@ void kfree(void* ptr) {
     (void)ptr;
 }
 
+// --- SHM (Shared Memory) ---
+#include "../../cpu/task.h"
+
+typedef struct {
+    uint32_t key;
+    void* physical_frame;
+    uint32_t size;
+    int in_use;
+} shm_region_t;
+
+static shm_region_t shm_table[32];
+
+int shm_get(uint32_t key, uint32_t size) {
+    if (size > PAGE_SIZE) return -1; // Şimdilik tek sayfa
+    
+    // Var olanı bul
+    for (int i = 0; i < 32; i++) {
+        if (shm_table[i].in_use && shm_table[i].key == key) {
+            return i;
+        }
+    }
+    
+    // Yeni oluştur
+    for (int i = 0; i < 32; i++) {
+        if (!shm_table[i].in_use) {
+            shm_table[i].key = key;
+            shm_table[i].physical_frame = pmm_alloc_frame();
+            shm_table[i].size = size;
+            shm_table[i].in_use = 1;
+            
+            // Sıfırla
+            switch_page_directory(kernel_directory);
+            memset(shm_table[i].physical_frame, 0, PAGE_SIZE);
+            if (current_task && current_task->page_directory) 
+                switch_page_directory((page_directory_t*)current_task->page_directory);
+
+            return i;
+        }
+    }
+    return -1;
+}
+
+void* shm_at(int shm_id) {
+    if (shm_id < 0 || shm_id >= 32 || !shm_table[shm_id].in_use) return 0;
+    if (!current_task || !current_task->page_directory) return 0;
+    
+    // 0x10000000 (256MB) gibi sabit bir sanal adreste mapleyelim
+    uint32_t shm_virt = 0x10000000 + (shm_id * PAGE_SIZE);
+    map_page_in_dir((page_directory_t*)current_task->page_directory, 
+                    shm_table[shm_id].physical_frame, (void*)shm_virt, 0x7);
+                    
+    return (void*)shm_virt;
+}
+
 void init_memory(uint32_t mem_size) {
     (void)mem_size; // Otomatik algıla veya sabit kullan
     init_paging();

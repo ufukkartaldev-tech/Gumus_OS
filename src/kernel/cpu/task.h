@@ -9,6 +9,11 @@
 #define TASK_SLEEP   2
 #define TASK_DEAD    3
 
+// Syscall Ek
+#define SYS_KILL     8
+#define SYS_SHM_GET  9
+#define SYS_SHM_AT   10
+
 // İşlem Kontrol Bloğu (Process Control Block - PCB)
 typedef struct task_t {
     uint32_t esp;       // Stack Pointer (En önemli kayıt)
@@ -28,6 +33,7 @@ void create_task(void (*entry_point)());
 void create_user_process(void (*entry_point)());
 void create_elf_task(uint32_t entry_point, void* page_directory, uint32_t mem_break);
 void task_exit(int code);
+int task_kill(uint32_t pid);
 void switch_task(uint32_t* current_esp); // Assembly tarafında çağrılacak
 
 // Global: Şu an çalışan işlem
