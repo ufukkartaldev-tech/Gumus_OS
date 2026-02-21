@@ -1,4 +1,6 @@
 #include "ip.h"
+#include "udp.h"
+#include "tcp.h"
 #include "../../core/io.h"
 #include "../../core/string.h"
 #include "../../core/memory.h"
@@ -207,11 +209,11 @@ int ip_process_packet(ip_packet_t* packet, uint32_t size) {
             break;
         case IP_PROTOCOL_TCP:
             printf("IP: TCP paketi\n");
-            // TCP işle
+            tcp_process_packet(packet, size - sizeof(ip_header_t));
             break;
         case IP_PROTOCOL_UDP:
             printf("IP: UDP paketi\n");
-            // UDP işle
+            udp_process_packet(packet, size - sizeof(ip_header_t));
             break;
         default:
             printf("IP: Bilinmeyen protokol: %d\n", packet->header.protocol);

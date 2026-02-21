@@ -26,8 +26,8 @@ Bu belge, GümüşOS'un gelişimini takip eder. Gümüşhane'den doğan bu güne
 - [x] **ARP:** IP'den MAC çözümleme ve cache yönetimi.
 - [x] **IPv4:** Paket yönetimi ve routing.
 - [x] **ICMP:** Ping desteği.
-- [ ] **UDP:** Datagram iletişimi.
-- [ ] **TCP:** Güvenilir bağlantı yönetimi.
+- [x] **UDP:** Datagram iletişimi.
+- [x] **TCP:** Güvenilir bağlantı yönetimi.
 
 ## 5. Dosya Sistemi & GümüşDil 💾
 - [x] **Dosya Sistemi:** FAT12/16 prototipi (Listele, Oku, Kaydet).
