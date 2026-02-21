@@ -110,12 +110,13 @@ void create_user_process(void (*entry_point)()) {
     new_task->next = task_head;
 }
 
-void create_elf_task(uint32_t entry_point, void* page_directory) {
+void create_elf_task(uint32_t entry_point, void* page_directory, uint32_t mem_break) {
     task_t* new_task = (task_t*)kmalloc(sizeof(task_t));
     new_task->id = next_pid++;
     new_task->status = 0;
     new_task->sleep_ticks = 0;
     new_task->page_directory = page_directory;
+    new_task->mem_break = mem_break;
     
     // Kernel Stack
     uint32_t* kstack = (uint32_t*)kmalloc(4096);

@@ -11,6 +11,7 @@ typedef struct task_t {
     uint32_t sleep_ticks; 
     void* page_directory; // Her sürecin kendi sayfa dizini
     uint32_t kernel_stack; // User modundan kernel moduna dönüş stack'i
+    uint32_t mem_break;    // Süreç bellek sınırı (Heap için)
     struct task_t* next;
 } task_t;
 
@@ -18,7 +19,7 @@ typedef struct task_t {
 void init_multitasking();
 void create_task(void (*entry_point)());
 void create_user_process(void (*entry_point)());
-void create_elf_task(uint32_t entry_point, void* page_directory);
+void create_elf_task(uint32_t entry_point, void* page_directory, uint32_t mem_break);
 void switch_task(uint32_t* current_esp); // Assembly tarafında çağrılacak
 
 // Global: Şu an çalışan işlem

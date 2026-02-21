@@ -32,12 +32,15 @@ int elf_load_and_run(const char* path) {
     
     // Iterate through program headers
     elf_program_header_t* phdr = (elf_program_header_t*)(elf_data + header->e_phoff);
+    uint32_t max_vaddr = 0;
     
     for (int i = 0; i < header->e_phnum; i++, phdr++) {
         if (phdr->p_type == PT_LOAD) {
             // Allocate and map memory
             uint32_t start_vaddr = phdr->p_vaddr;
             uint32_t end_vaddr = phdr->p_vaddr + phdr->p_memsz;
+            
+            if (end_vaddr > max_vaddr) max_vaddr = end_vaddr;
             
             // Map each page in the segment
             for (uint32_t v = start_vaddr & 0xFFFFF000; v < end_vaddr; v += PAGE_SIZE) {
@@ -69,8 +72,7 @@ int elf_load_and_run(const char* path) {
     }
 
     // Create the task
-    // We need a modified create_user_process that takes a directory and entry point
-    create_elf_task(header->e_entry, proc_dir);
+    create_elf_task(header->e_entry, proc_dir, max_vaddr);
 
     kfree(elf_data);
     return 0;
