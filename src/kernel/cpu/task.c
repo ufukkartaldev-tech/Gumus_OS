@@ -149,11 +149,52 @@ void create_elf_task(uint32_t entry_point, void* page_directory, uint32_t mem_br
     new_task->next = task_head;
 }
 
+void task_exit(int code) {
+    if (current_task) {
+        current_task->status = TASK_DEAD;
+        current_task->exit_code = code;
+        
+        // Bu noktadan sonra scheduler bir sonraki tick'te bu görevi temizleyecek.
+        // Hemen görev değişimi yapmak için timer kesmesini tetiklemek yerine 
+        // syscall handler'ın görev değiştirmesine güveneceğiz.
+        print_color("\n[GumusOS] Islem sonlandi. (PID: ", YELLOW);
+        char buf[16];
+        itoa(current_task->id, buf); print_color(buf, YELLOW);
+        print_color(", Kod: ", YELLOW);
+        itoa(code, buf); print_color(buf, YELLOW);
+        print_color(")\n", YELLOW);
+    }
+}
+
 uint32_t schedule(uint32_t esp) {
     if (!current_task) return esp;
 
+    // Şu anki görevin stack'ini sakla
     current_task->esp = esp;
-    current_task = current_task->next;
+
+    // 1. Durum: Eğer Mevcut Görev Öldüyse Onu Listeden Çıkar (Cleanup)
+    // Not: PID 0 (Kernel) asla ölmez, bu yüzden dairesel liste asla boş kalmaz.
+    task_t* prev = task_head;
+    while (prev->next != current_task) prev = prev->next;
+
+    if (current_task->status == TASK_DEAD && current_task->id != 0) {
+        task_t* to_delete = current_task;
+        prev->next = current_task->next;
+        current_task = current_task->next; // Bir sonrakine geç
+        
+        // Belleği kısmen temizle (İleride daha kapsamlı yapılacak)
+        // kfree(to_delete->page_directory); 
+        // kfree(page_of_kernel_stack);
+        kfree(to_delete);
+    } else {
+        // Normal geçiş: Bir sonraki göreve atla
+        current_task = current_task->next;
+    }
+
+    // 2. Durum: Eğer yeni seçilen görev de hazır değilse, hazır olanı bulana kadar dön
+    while (current_task->status == TASK_DEAD || current_task->status == TASK_SLEEP) {
+        current_task = current_task->next;
+    }
 
     // Sayfa dizinini değiştir (Bellek İzolasyonu)
     if (current_task->page_directory) {

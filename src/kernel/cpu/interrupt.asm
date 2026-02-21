@@ -56,7 +56,7 @@ isr128:
     
     push esp        ; registers_t*
     call syscall_handler
-    add esp, 4      ; pointer'ı at
+    mov esp, eax    ; YENI: Görev değişmiş olabilir (ör: SYS_EXIT), ESP'yi güncelle!
     
     pop eax         ; DS'i geri al
     mov ds, ax
