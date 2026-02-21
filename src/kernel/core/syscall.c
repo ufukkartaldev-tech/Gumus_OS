@@ -35,6 +35,18 @@ static int validate_user_ptr(void* ptr, uint32_t size) {
     return 1;
 }
 
+// Kullanıcıdan gelen string'in (NULL-terminated) güvenli olup olmadığını kontrol et
+static int validate_user_str(const char* str) {
+    if (!validate_user_ptr((void*)str, 1)) return 0;
+    
+    char* s = (char*)str;
+    while (validate_user_ptr(s, 1)) {
+        if (*s == '\0') return 1;
+        s++;
+    }
+    return 0; // NULL gelmeden kullanıcı alanı dışına çıktı
+}
+
 uint32_t syscall_handler(registers_t* r) {
     uint32_t ret = 0;
     
@@ -42,7 +54,7 @@ uint32_t syscall_handler(registers_t* r) {
         case SYS_WRITE:
             // ebx: fd, ecx: buffer, edx: size
             if (!validate_user_ptr((void*)r->ecx, r->edx)) {
-                print_color("\n[SYSCALL] Guvenlik Ihlali: Gecersiz pointer!", LIGHT_RED);
+                print_color("\n[SYSCALL] Guvenlik Ihlali: Gecersiz buffer pointer!", LIGHT_RED);
                 ret = -1;
                 break;
             }
@@ -63,6 +75,14 @@ uint32_t syscall_handler(registers_t* r) {
                 uint32_t old_break = current_task->mem_break;
                 uint32_t new_break = old_break + r->ebx;
                 
+                // Güvenlik: Çekirdek belleğine (0xC0000000) girmesini engelle
+                // Ayrıca stack ile çakışmadığından emin ol (User stack 0xBFFFF000 civarı başlar)
+                if (new_break >= 0xB0000000) {
+                    print_color("\n[SYSCALL] Hata: Bellek siniri asildi (sbrk)!", LIGHT_RED);
+                    ret = -1;
+                    break;
+                }
+                
                 // Gerekli sayfaları map et
                 for (uint32_t v = (old_break + 4095) & 0xFFFFF000; v < new_break; v += PAGE_SIZE) {
                     void* frame = pmm_alloc_frame();
@@ -79,7 +99,11 @@ uint32_t syscall_handler(registers_t* r) {
             break;
         case SYS_OPEN:
             // ebx: path
-            if (!validate_user_ptr((void*)r->ebx, 1)) return -1; // En azından ilk karakter
+            if (!validate_user_str((char*)r->ebx)) {
+                print_color("\n[SYSCALL] Guvenlik Ihlali: Gecersiz path pointer!", LIGHT_RED);
+                ret = -1;
+                break;
+            }
             ret = vfs_open((char*)r->ebx, r->ecx);
             break;
         case SYS_CLOSE:
