@@ -13,7 +13,7 @@ typedef enum {
     DRIVER_TYPE_INPUT
 } driver_type_t;
 
-// PCI Sınıf Kodları
+// Donanım Sınıf Kodları
 typedef enum {
     PCI_CLASS_UNCLASSIFIED = 0x00,
     PCI_CLASS_STORAGE = 0x01,
@@ -35,15 +35,11 @@ typedef enum {
     PCI_CLASS_SIGNAL_PROCESSING = 0x11
 } pci_class_t;
 
-// PCI Alt Sınıf Kodları
-typedef enum {
-    PCI_SUBCLASS_STORAGE_IDE = 0x01,
-    PCI_SUBCLASS_STORAGE_SATA = 0x06,
-    PCI_SUBCLASS_DISPLAY_VGA = 0x00,
-    PCI_SUBCLASS_NETWORK_ETHERNET = 0x00,
-    PCI_SUBCLASS_MULTIMEDIA_AUDIO = 0x01,
-    PCI_SUBCLASS_SERIAL_USB = 0x03
-} pci_subclass_t;
+typedef pci_class_t driver_class_t;
+
+// Forward declaration
+struct driver;
+typedef struct driver driver_t;
 
 // Sürücü Düğümü (Linked List için)
 typedef struct driver_node {
@@ -77,7 +73,7 @@ typedef struct driver {
     int (*write)(void* buffer, uint32_t size, uint32_t offset);
     int (*ioctl)(uint32_t command, void* arg);
     int (*shutdown)(void);
-} driver_t;
+} driver_t_struct; // Renamed to avoid confusion with typedef
 
 // Sürücü Yöneticisi Fonksiyonları
 void driver_manager_init();
@@ -96,5 +92,6 @@ int driver_unregister(const char* name);
 void driver_list_all();
 void driver_list_active();
 int driver_auto_load_all();
+void pseudo_drivers_init();
 
 #endif

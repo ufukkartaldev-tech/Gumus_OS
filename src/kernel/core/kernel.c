@@ -12,6 +12,7 @@
 #include "vfs.h"
 #include "gdt.h"
 #include "usb_host.h"
+#include "serial.h"
 
 // ... codes ...
 
@@ -377,7 +378,11 @@ void kernel_main() {
     
     // Modüler Sürücü Sistemi Başlatılıyor
     driver_manager_init();
+    pseudo_drivers_init(); // Null, Zero sürücülerini yükle
+    hardware_detect_init(); // Donanım tespiti ve sürücü yükleme
+    
     ata_init_driver();
+    driver_register(create_serial_driver()); // Seri Port Sürücüsünü Kaydet
     vfs_init();
     
     // USB Host Controller Sistemi Başlatılıyor

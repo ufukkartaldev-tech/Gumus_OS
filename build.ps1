@@ -76,12 +76,14 @@ $INCLUDES = @("-Isrc/kernel/core", "-Isrc/kernel/drivers", "-Isrc/kernel/drivers
 & $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/usb_host.c -o usb_host.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/ohci_controller.c -o ohci_controller.o
 & $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/ehci_xhci.c -o ehci_xhci.o
+& $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/serial.c -o serial.o
+& $GCC -ffreestanding $INCLUDES -c src/kernel/drivers/pseudo.c -o pseudo.o
 
 # 4. Kernel'ı Linkle ve Binary'ye Çevir
 Write-Host "[4/5] Kernel dosyaları bağlanıyor ve binary'ye çevriliyor..."
 # 0x1000 adresine yerleştiriyoruz
 # Not: kernel_entry.o en başta olmalı
-& $LD -o kernel.tmp -Ttext 0x1000 kernel_entry.o interrupt.o kernel.o idt.o utf8.o vga_font.o memory.o shell.o string.o gumus_dil.o ata.o fs.o vga_gfx.o cmos.o sound.o advanced_sound.o mouse.o task.o window.o file_manager.o file_manager_gui.o system_monitor.o audio_mixer.o snake.o start_menu.o calculator.o paint.o image_viewer.o driver_manager.o vfs.o syscall.o gdt.o gdt_asm.o ethernet.o arp.o ip.o icmp.o hardware_detect.o ahci.o vesa_vbe.o network_driver.o audio_driver.o usb_host.o ohci_controller.o ehci_xhci.o
+& $LD -o kernel.tmp -Ttext 0x1000 kernel_entry.o interrupt.o kernel.o idt.o utf8.o vga_font.o memory.o shell.o string.o gumus_dil.o ata.o fs.o vga_gfx.o cmos.o sound.o advanced_sound.o mouse.o task.o window.o file_manager.o file_manager_gui.o system_monitor.o audio_mixer.o snake.o start_menu.o calculator.o paint.o image_viewer.o driver_manager.o vfs.o syscall.o gdt.o gdt_asm.o ethernet.o arp.o ip.o icmp.o hardware_detect.o ahci.o vesa_vbe.o network_driver.o audio_driver.o usb_host.o ohci_controller.o ehci_xhci.o serial.o pseudo.o
 & $OBJCOPY -O binary kernel.tmp kernel.bin
 
 # 5. OS Image oluştur (Bootloader + Kernel)

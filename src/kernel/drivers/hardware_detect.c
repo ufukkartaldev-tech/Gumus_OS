@@ -55,7 +55,7 @@ void pci_write_config_byte(uint8_t bus, uint8_t device, uint8_t function, uint8_
 void hardware_detect_init() {
     if (hardware_detect_initialized) return;
     
-    memset(&hw_info, 0, sizeof(hardware_info));
+    memset(&hw_info, 0, sizeof(hardware_info_t));
     
     printf("Donanım tespiti başlatılıyor...\n");
     
@@ -269,9 +269,11 @@ driver_t* hardware_get_best_driver(uint16_t vendor_id, uint16_t device_id, uint8
     switch (class_code) {
         case PCI_CLASS_STORAGE:
             if (subclass == PCI_SUBCLASS_STORAGE_IDE) {
+                // IDE/ATA controller
+                // pci_device_t info can be passed here if create_ide_driver is updated
                 return create_ide_driver(NULL);
             } else if (subclass == PCI_SUBCLASS_STORAGE_SATA) {
-                return create_sata_driver(NULL);
+                return create_sata_driver(NULL); 
             }
             break;
             

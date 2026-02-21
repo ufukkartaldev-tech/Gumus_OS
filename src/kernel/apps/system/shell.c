@@ -278,6 +278,9 @@ void shell_parse_command(char* cmd) {
                 audio_set_loop(channel, 0);
             }
         }
+    } else if (strcmp(cmd, "donanim") == 0 || strcmp(cmd, "lspci") == 0) {
+        hardware_print_summary();
+        driver_list_all();
     } else if (strlen(cmd) > 0) {
         print_color("\nBilinmeyen komut: ", LIGHT_RED);
         print(cmd);
