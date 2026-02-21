@@ -103,9 +103,12 @@ $fullImage = New-Object byte[] (1440 * 1024) # 1.44 MB Floppy Size
 # 6. Uygulama Paketleme (ELF Injection)
 Write-Host "[6/6] Uygulamalar paketleniyor..."
 $INCLUDES_UI = "-Isrc/user/lib"
+& $GCC -m32 -ffreestanding $INCLUDES_UI -c src/user/lib/crt0.c -o crt0.o
 & $GCC -m32 -ffreestanding $INCLUDES_UI -c src/user/hello/hello.c -o hello.o
-# Linker script kullanmadan basitçe 0x400000 adresine bağlıyoruz
-& $LD -m i386pe -Ttext 0x400000 -e main hello.o -o hello.tmp
+# crt0.o en başta olmalı ve giriş noktası _start olmalı
+& $LD -m i386pe -Ttext 0x400000 -e __start crt0.o hello.o -o hello.tmp
+# Not: MinGW ld bazen _start yerine __start (çift alt tire) bekleyebilir. 
+# Symbol kontrolü için objcopy elf çevrimi sonrası tam oturacaktır.
 # Not: i386pe (MinGW) yerine elf_i386 deniyoruz, eğer hata alırsak binary'ye çevirip öyle yüklenebilir.
 # Ancak ELF Loader gerçek ELF bekliyor.
 & $OBJCOPY -O elf32-i386 hello.tmp hello.elf
