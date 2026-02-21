@@ -98,8 +98,40 @@ $fullImage = New-Object byte[] (1440 * 1024) # 1.44 MB Floppy Size
 [Array]::Clear($fullImage, 0, $fullImage.Length) # Sıfırla
 
 [Array]::Copy($bootBin, 0, $fullImage, 0, $bootBin.Length)
-# Kernel bootloader'dan hemen sonra, yani 512. byte'tan başlar
 [Array]::Copy($kernelBin, 0, $fullImage, 512, $kernelBin.Length)
+
+# 6. Uygulama Paketleme (ELF Injection)
+Write-Host "[6/6] Uygulamalar paketleniyor..."
+$INCLUDES_UI = "-Isrc/user/lib"
+& $GCC -m32 -ffreestanding $INCLUDES_UI -c src/user/hello/hello.c -o hello.o
+# Linker script kullanmadan basitçe 0x400000 adresine bağlıyoruz
+& $LD -m i386pe -Ttext 0x400000 -e main hello.o -o hello.tmp
+# Not: i386pe (MinGW) yerine elf_i386 deniyoruz, eğer hata alırsak binary'ye çevirip öyle yüklenebilir.
+# Ancak ELF Loader gerçek ELF bekliyor.
+& $OBJCOPY -O elf32-i386 hello.tmp hello.elf
+
+if (Test-Path "hello.elf") {
+    $helloElf = [System.IO.File]::ReadAllBytes("hello.elf")
+    
+    # Root Dir (Sektör 100 -> Offset 51200)
+    # Basit bir FAT girişi hazırlıyoruz: 8 bayt isim, 3 bayt uzantı...
+    $entry = New-Object byte[] 32
+    $name = [System.Text.Encoding]::ASCII.GetBytes("HELLO   ")
+    $ext = [System.Text.Encoding]::ASCII.GetBytes("ELF")
+    [Array]::Copy($name, 0, $entry, 0, 8)
+    [Array]::Copy($ext, 0, $entry, 8, 3)
+    $entry[11] = 0x20 # Archive
+    $entry[26] = 0x01 # First Cluster (Sektör 201)
+    $entry[28] = ($helloElf.Length -band 0xFF)
+    $entry[29] = ($helloElf.Length -shr 8 -band 0xFF)
+    $entry[30] = ($helloElf.Length -shr 16 -band 0xFF)
+    $entry[31] = ($helloElf.Length -shr 24 -band 0xFF)
+    
+    # 51200 adresine yaz
+    [Array]::Copy($entry, 0, $fullImage, 51200, 32)
+    # Veriyi 102912 adresine yaz (201 * 512)
+    [Array]::Copy($helloElf, 0, $fullImage, 102912, $helloElf.Length)
+}
 
 [System.IO.File]::WriteAllBytes("gumus_os.bin", $fullImage)
 
