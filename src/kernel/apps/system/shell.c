@@ -17,6 +17,7 @@
 #include "system_monitor.h"
 #include "../drivers/advanced_sound.h"
 #include "audio_mixer.h"
+#include "elf.h"
 
 static char command_buffer[MAX_COMMAND_LEN];
 static int buffer_index = 0;
@@ -139,6 +140,14 @@ void shell_parse_command(char* cmd) {
         ata_write_sectors(201, 1, (uint32_t)buffer);
         print_color("Bicimlendirme tamamlandi.\n", LIGHT_GREEN);
         kfree(buffer);
+    } else if (strncmp(cmd, "calistir ", 9) == 0) {
+        char* filename = cmd + 9;
+        print_color("\n[ELF] Program yukleniyor: ", LIGHT_CYAN);
+        print(filename);
+        print("\n");
+        if (elf_load_and_run(filename) != 0) {
+            print_color("Hata: Program yuklenemedi veya gecersiz ELF.\n", LIGHT_RED);
+        }
     } else if (strcmp(cmd, "temizle") == 0 || strcmp(cmd, "clear") == 0) {
         clear_screen();
         draw_logo();

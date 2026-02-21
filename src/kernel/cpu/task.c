@@ -110,6 +110,44 @@ void create_user_process(void (*entry_point)()) {
     new_task->next = task_head;
 }
 
+void create_elf_task(uint32_t entry_point, void* page_directory) {
+    task_t* new_task = (task_t*)kmalloc(sizeof(task_t));
+    new_task->id = next_pid++;
+    new_task->status = 0;
+    new_task->sleep_ticks = 0;
+    new_task->page_directory = page_directory;
+    
+    // Kernel Stack
+    uint32_t* kstack = (uint32_t*)kmalloc(4096);
+    new_task->kernel_stack = (uint32_t)kstack + 4096;
+
+    // User Stack (Kullanıcı Yığını)
+    // 0xBFFFF000 adresine (Kernel sınırının hemen altına) mapliyoruz
+    void* user_stack_phys = pmm_alloc_frame();
+    uint32_t user_stack_virt = 0xBFFFF000; 
+    map_page_in_dir(new_task->page_directory, user_stack_phys, (void*)user_stack_virt, 0x7);
+
+    uint32_t* top = (uint32_t*)(new_task->kernel_stack);
+
+    // IRET stack
+    top--; *top = 0x23; // SS
+    top--; *top = user_stack_virt + 4096; // ESP (Stack top)
+    top--; *top = 0x202; // EFLAGS
+    top--; *top = 0x1B; // CS
+    top--; *top = entry_point;
+
+    // PUSHA
+    for(int i = 0; i < 8; i++) { top--; *top = 0; }
+
+    new_task->esp = (uint32_t)top;
+
+    // Listeye Ekle
+    task_t* temp = task_head;
+    while(temp->next != task_head) temp = temp->next;
+    temp->next = new_task;
+    new_task->next = task_head;
+}
+
 uint32_t schedule(uint32_t esp) {
     if (!current_task) return esp;
 

@@ -105,9 +105,15 @@ page_directory_t* create_process_directory() {
     page_directory_t* dir = (page_directory_t*)kmalloc_aligned(sizeof(page_directory_t), 4096);
     memset(dir, 0, sizeof(page_directory_t));
     
-    // Kernel'ı kopyala (Identity Map 0-16MB)
-    // kernel_directory'nin ilk 4 girişi 16MB eder (4 * 4MB)
+    // 1. Identity Map Kopyala (0-16MB)
     for (int i = 0; i < 4; i++) {
+        dir->tablesPhysical[i] = kernel_directory->tablesPhysical[i];
+        dir->tables[i] = kernel_directory->tables[i];
+    }
+    
+    // 2. Higher Half Kopyala (3GB - 4GB)
+    // 3GB = 768. index
+    for (int i = 768; i < 1024; i++) {
         dir->tablesPhysical[i] = kernel_directory->tablesPhysical[i];
         dir->tables[i] = kernel_directory->tables[i];
     }

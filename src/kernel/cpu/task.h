@@ -18,6 +18,7 @@ typedef struct task_t {
 void init_multitasking();
 void create_task(void (*entry_point)());
 void create_user_process(void (*entry_point)());
+void create_elf_task(uint32_t entry_point, void* page_directory);
 void switch_task(uint32_t* current_esp); // Assembly tarafında çağrılacak
 
 // Global: Şu an çalışan işlem
