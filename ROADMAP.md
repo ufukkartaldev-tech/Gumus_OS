@@ -32,7 +32,7 @@ Bu belge, GümüşOS'un gelişimini takip eder. Gümüşhane'den doğan bu güne
 ## 5. Dosya Sistemi & GümüşDil 💾
 - [x] **Dosya Sistemi:** FAT12/16 prototipi (Listele, Oku, Kaydet).
 - [x] **GümüşDil:** Bellek üzerinde koşan "soyle" interpreter'ı.
-- [ ] **Dinamik Yükleyici:** Diskten program yükleyip çalıştırma.
+- [x] **Dinamik Yükleyici:** Diskten program yükleyip çalıştırma (ELF Loader).
 
 ## 6. Kullanıcı Arayüzü (GUI/TUI) 🎨
 - [x] **Durum Çubuğu:** Sistem bilgilerini gösteren sabit bar.
