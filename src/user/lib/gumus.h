@@ -41,10 +41,14 @@ static inline int write(int fd, const void* buf, uint32_t size) {
     return syscall(SYS_WRITE, fd, (int)buf, size);
 }
 
-static inline void print(const char* str) {
+static inline int read(int fd, void* buf, uint32_t size) {
+    return syscall(SYS_READ, fd, (int)buf, size);
+}
+
+static inline void print(const char* s) {
     int len = 0;
-    while(str[len]) len++;
-    write(1, str, len);
+    while(s[len]) len++;
+    write(1, s, len);
 }
 
 #endif

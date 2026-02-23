@@ -1,10 +1,10 @@
-#include "fs.h"
+﻿#include "fs.h"
 #include "ata.h"
 #include "memory.h"
 #include "kernel.h"
 #include "string.h"
 
-// Root directory sector (GümüşOS için geçici olarak sabit bir sektör seçiyoruz)
+// Root directory sector (GÃ¼mÃ¼ÅŸOS iÃ§in geÃ§ici olarak sabit bir sektÃ¶r seÃ§iyoruz)
 #define ROOT_DIR_SECTOR 100
 
 void fs_init() {
@@ -22,10 +22,10 @@ void fs_ls() {
     print("----------  -----\n");
 
     for (int i = 0; i < 512 / sizeof(fat_directory_entry_t); i++) {
-        if (entry[i].name[0] == 0) break; // Boş giriş
-        if (entry[i].name[0] == 0xE5) continue; // Silinmiş giriş
+        if (entry[i].name[0] == 0) break; // BoÅŸ giriÅŸ
+        if (entry[i].name[0] == 0xE5) continue; // SilinmiÅŸ giriÅŸ
 
-        // İsim basımı
+        // Ä°sim basÄ±mÄ±
         char name[13];
         int k = 0;
         for (int j = 0; j < 8 && entry[i].name[j] != ' '; j++) name[k++] = entry[i].name[j];
@@ -69,7 +69,7 @@ void fs_cat(const char* filename) {
         if (strcmp(name, filename) == 0) {
             found = 1;
             uint32_t cluster = entry[i].first_cluster_lo;
-            // Basitlik için cluster = sektör varsayıyoruz (Pseudo-FAT)
+            // Basitlik iÃ§in cluster = sektÃ¶r varsayÄ±yoruz (Pseudo-FAT)
             uint8_t* data = kmalloc(512);
             ata_read_sectors((uint32_t)data, 200 + cluster, 1);
             print("\n--- "); print(name); print(" ---\n");
@@ -94,14 +94,14 @@ int fs_write_bin(const char* filename, const uint8_t* data, uint32_t size) {
     int free_entry = -1;
     uint32_t max_end_cluster = 0;
 
-    // Boş yer bul ve kullanılan son cluster'ı tespit et
+    // BoÅŸ yer bul ve kullanÄ±lan son cluster'Ä± tespit et
     for (int i = 0; i < 512 / sizeof(fat_directory_entry_t); i++) {
         if (root[i].name[0] == 0 || root[i].name[0] == 0xE5) {
             if (free_entry == -1) free_entry = i;
         } else {
             uint32_t start = root[i].first_cluster_lo;
             uint32_t secs = (root[i].file_size + 511) / 512;
-            if (secs == 0) secs = 1; // En az 1 sektör varsay
+            if (secs == 0) secs = 1; // En az 1 sektÃ¶r varsay
             if (start + secs > max_end_cluster) {
                 max_end_cluster = start + secs;
             }
@@ -113,7 +113,7 @@ int fs_write_bin(const char* filename, const uint8_t* data, uint32_t size) {
         return 0; // Dolu
     }
 
-    // İsim Ayrıştırma
+    // Ä°sim AyrÄ±ÅŸtÄ±rma
     char name[8]; memset(name, ' ', 8);
     char ext[3]; memset(ext, ' ', 3);
     
@@ -125,23 +125,23 @@ int fs_write_bin(const char* filename, const uint8_t* data, uint32_t size) {
         while(filename[i] != 0 && k < 3) ext[k++] = filename[i++];
     }
     
-    // Girişi Yaz
+    // GiriÅŸi Yaz
     memcpy(root[free_entry].name, name, 8);
     memcpy(root[free_entry].ext, ext, 3);
     root[free_entry].file_size = size;
-    root[free_entry].first_cluster_lo = max_end_cluster + 1; // Yeni başlangıç
+    root[free_entry].first_cluster_lo = max_end_cluster + 1; // Yeni baÅŸlangÄ±Ã§
     root[free_entry].attributes = 0x20;
 
-    // Dizin Güncelle
+    // Dizin GÃ¼ncelle
     ata_write_sectors(ROOT_DIR_SECTOR, 1, (uint32_t)buffer);
     
     // Veriyi Yaz
     uint32_t sector_count = (size + 511) / 512;
     uint32_t start_sector = 200 + root[free_entry].first_cluster_lo;
     
-    // Tek seferde veya parça parça yazabiliriz
-    // ata_write_sectors ardışık yazmayı destekliyor
-    // Ancak data buffer linear olmalı.
+    // Tek seferde veya parÃ§a parÃ§a yazabiliriz
+    // ata_write_sectors ardÄ±ÅŸÄ±k yazmayÄ± destekliyor
+    // Ancak data buffer linear olmalÄ±.
     // paint->canvas linear mi? Evet (kmalloc).
     // O zaman tek seferde yazabiliriz.
     
@@ -184,7 +184,7 @@ uint8_t* fs_read_bin(const char* filename, uint32_t* out_size) {
             uint32_t size = entry[i].file_size;
             if (out_size) *out_size = size;
             
-            // Tüm dosyayı oku
+            // TÃ¼m dosyayÄ± oku
             uint32_t sector_count = (size + 511) / 512;
             uint8_t* data = kmalloc(sector_count * 512); // Padding dahil al
             

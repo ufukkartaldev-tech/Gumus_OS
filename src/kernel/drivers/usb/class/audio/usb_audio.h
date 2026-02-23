@@ -1,8 +1,8 @@
-#ifndef USB_AUDIO_H
+﻿#ifndef USB_AUDIO_H
 #define USB_AUDIO_H
 
 #include "usb_host.h"
-#include "../core/types.h"
+#include "types.h"
 
 // USB Audio Class Constants
 #define USB_AUDIO_CLASS            0x01

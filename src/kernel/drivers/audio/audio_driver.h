@@ -1,4 +1,4 @@
-#ifndef AUDIO_DRIVER_H
+﻿#ifndef AUDIO_DRIVER_H
 #define AUDIO_DRIVER_H
 
 #include <stdint.h>
@@ -225,7 +225,7 @@ int audio_start_capture(audio_driver_t* driver);
 int audio_stop_capture(audio_driver_t* driver);
 int audio_write_samples(audio_driver_t* driver, void* samples, uint32_t count);
 int audio_read_samples(audio_driver_t* driver, void* samples, uint32_t count);
-int audio_set_volume(audio_driver_t* driver, uint16_t volume);
+int audio_driver_set_volume(audio_driver_t* driver, uint16_t volume);
 int audio_set_mute(audio_driver_t* driver, uint8_t mute);
 int audio_get_buffer_size(audio_driver_t* driver);
 int audio_get_buffer_position(audio_driver_t* driver);

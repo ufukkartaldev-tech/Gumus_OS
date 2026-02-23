@@ -1,4 +1,4 @@
-#include "usb_host.h"
+﻿#include "usb_host.h"
 #include "usb_mass_storage.h"
 #include "usb_hid_class.h"
 #include "usb_audio.h"
@@ -8,7 +8,7 @@
 
 // USB driver initialization function
 void usb_drivers_init() {
-    printf("USB Drivers: Başlatılıyor\n");
+    printf("USB Drivers: BaÅŸlatÄ±lÄ±yor\n");
     
     // Initialize USB host system
     usb_host_init();
@@ -17,22 +17,22 @@ void usb_drivers_init() {
     driver_t* mass_storage_driver = create_usb_mass_storage_driver();
     if (mass_storage_driver) {
         driver_register(mass_storage_driver);
-        printf("USB Drivers: Mass Storage sürücüsü kaydedildi\n");
+        printf("USB Drivers: Mass Storage sÃ¼rÃ¼cÃ¼sÃ¼ kaydedildi\n");
     }
     
-    driver_t* hid_driver = create_usb_hid_driver();
+    driver_t* hid_driver = create_usb_hid_driver(NULL);
     if (hid_driver) {
         driver_register(hid_driver);
-        printf("USB Drivers: HID sürücüsü kaydedildi\n");
+        printf("USB Drivers: HID sÃ¼rÃ¼cÃ¼sÃ¼ kaydedildi\n");
     }
     
     driver_t* audio_driver = create_usb_audio_driver();
     if (audio_driver) {
         driver_register(audio_driver);
-        printf("USB Drivers: Audio sürücüsü kaydedildi\n");
+        printf("USB Drivers: Audio sÃ¼rÃ¼cÃ¼sÃ¼ kaydedildi\n");
     }
     
-    printf("USB Drivers: Başlatıldı\n");
+    printf("USB Drivers: BaÅŸlatÄ±ldÄ±\n");
 }
 
 // USB device class detection and driver assignment
@@ -41,41 +41,41 @@ void usb_device_class_probe(usb_device_t* usb_device) {
         return;
     }
     
-    printf("USB Drivers: Aygıt sınıfı tespit ediliyor: %04X:%04X (Class: %02X)\n",
+    printf("USB Drivers: AygÄ±t sÄ±nÄ±fÄ± tespit ediliyor: %04X:%04X (Class: %02X)\n",
            usb_device->device_desc.vendor_id, usb_device->device_desc.product_id,
            usb_device->device_desc.class_code);
     
     // Probe device with appropriate class driver
     switch (usb_device->device_desc.class_code) {
         case USB_DEVICE_TYPE_STORAGE:
-            printf("USB Drivers: Mass Storage aygıtı tespit edildi\n");
+            printf("USB Drivers: Mass Storage aygÄ±tÄ± tespit edildi\n");
             usb_mass_storage_probe(usb_device);
             break;
             
         case USB_DEVICE_TYPE_HID:
-            printf("USB Drivers: HID aygıtı tespit edildi\n");
+            printf("USB Drivers: HID aygÄ±tÄ± tespit edildi\n");
             usb_hid_probe(usb_device);
             break;
             
         case USB_DEVICE_TYPE_AUDIO:
-            printf("USB Drivers: Audio aygıtı tespit edildi\n");
+            printf("USB Drivers: Audio aygÄ±tÄ± tespit edildi\n");
             usb_audio_probe(usb_device);
             break;
             
         case USB_DEVICE_TYPE_HUB:
-            printf("USB Drivers: Hub aygıtı tespit edildi (henüz desteklenmiyor)\n");
+            printf("USB Drivers: Hub aygÄ±tÄ± tespit edildi (henÃ¼z desteklenmiyor)\n");
             break;
             
         default:
-            printf("USB Drivers: Bilinmeyen aygıt sınıfı: %02X\n", 
+            printf("USB Drivers: Bilinmeyen aygÄ±t sÄ±nÄ±fÄ±: %02X\n", 
                    usb_device->device_desc.class_code);
             
             // Try to detect by interface class
             if (usb_device->interface_desc.class_code == USB_DEVICE_TYPE_HID) {
-                printf("USB Drivers: HID aygıtı (interface bazında) tespit edildi\n");
+                printf("USB Drivers: HID aygÄ±tÄ± (interface bazÄ±nda) tespit edildi\n");
                 usb_hid_probe(usb_device);
             } else if (usb_device->interface_desc.class_code == USB_DEVICE_TYPE_AUDIO) {
-                printf("USB Drivers: Audio aygıtı (interface bazında) tespit edildi\n");
+                printf("USB Drivers: Audio aygÄ±tÄ± (interface bazÄ±nda) tespit edildi\n");
                 usb_audio_probe(usb_device);
             }
             break;
@@ -88,7 +88,7 @@ void usb_device_remove_notify(usb_device_t* usb_device) {
         return;
     }
     
-    printf("USB Drivers: Aygıt kaldırılıyor: %04X:%04X\n",
+    printf("USB Drivers: AygÄ±t kaldÄ±rÄ±lÄ±yor: %04X:%04X\n",
            usb_device->device_desc.vendor_id, usb_device->device_desc.product_id);
     
     // Remove device from all class drivers
@@ -124,8 +124,8 @@ void usb_drivers_status() {
 
 // USB hot-plug event handler
 void usb_hotplug_event_handler(uint8_t controller_type, uint8_t port, uint8_t connected) {
-    printf("USB Drivers: Hot-plug olayı - Controller: %d, Port: %d, %s\n",
-           controller_type, port, connected ? "bağlandı" : "kaldırıldı");
+    printf("USB Drivers: Hot-plug olayÄ± - Controller: %d, Port: %d, %s\n",
+           controller_type, port, connected ? "baÄŸlandÄ±" : "kaldÄ±rÄ±ldÄ±");
     
     if (connected) {
         // Device connected - try to enumerate
@@ -160,11 +160,11 @@ void usb_drivers_cleanup() {
 
 // USB driver test function
 void usb_drivers_test() {
-    printf("USB Drivers: Test başlatılıyor\n");
+    printf("USB Drivers: Test baÅŸlatÄ±lÄ±yor\n");
     
     // Test USB host system
-    printf("USB Host Controller sayısı: %d\n", usb_host_count_controllers());
-    printf("USB Aygıt sayısı: %d\n", usb_host_count_devices());
+    printf("USB Host Controller sayÄ±sÄ±: %d\n", usb_host_count_controllers());
+    printf("USB AygÄ±t sayÄ±sÄ±: %d\n", usb_host_count_devices());
     
     // Test device enumeration
     usb_host_check_hotplug();
@@ -172,12 +172,12 @@ void usb_drivers_test() {
     // Show status
     usb_drivers_status();
     
-    printf("USB Drivers: Test tamamlandı\n");
+    printf("USB Drivers: Test tamamlandÄ±\n");
 }
 
 // USB driver initialization for system startup
 int usb_system_init() {
-    printf("USB System: Başlatılıyor\n");
+    printf("USB System: BaÅŸlatÄ±lÄ±yor\n");
     
     // Initialize driver manager
     driver_manager_init();
@@ -191,13 +191,13 @@ int usb_system_init() {
     // Test the system
     usb_drivers_test();
     
-    printf("USB System: Başlatıldı\n");
+    printf("USB System: BaÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
 // USB driver shutdown for system shutdown
 void usb_system_shutdown() {
-    printf("USB System: Kapatılıyor\n");
+    printf("USB System: KapatÄ±lÄ±yor\n");
     
     // Cleanup USB drivers
     usb_drivers_cleanup();
@@ -205,5 +205,5 @@ void usb_system_shutdown() {
     // Cleanup driver manager
     driver_manager_cleanup();
     
-    printf("USB System: Kapatıldı\n");
+    printf("USB System: KapatÄ±ldÄ±\n");
 }

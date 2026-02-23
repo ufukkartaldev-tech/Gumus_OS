@@ -1,4 +1,4 @@
-#ifndef SHELL_H
+﻿#ifndef SHELL_H
 #define SHELL_H
 
 #define MAX_COMMAND_LEN 128

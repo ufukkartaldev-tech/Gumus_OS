@@ -1,5 +1,5 @@
-#include "usb_hid_class.h"
-#include "../core/memory.h"
+﻿#include "usb_hid_class.h"
+#include "memory.h"
 #include "string.h"
 #include "stdio.h"
 
@@ -23,7 +23,7 @@ static const char* key_names[] = {
 
 // Initialize USB HID driver
 int usb_hid_init() {
-    printf("USB HID: Sürücü başlatılıyor\n");
+    printf("USB HID: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±lÄ±yor\n");
     
     hid_driver.devices = NULL;
     hid_driver.device_count = 0;
@@ -34,7 +34,7 @@ int usb_hid_init() {
     hid_driver.base.vendor_id = 0;
     hid_driver.base.device_id = 0;
     
-    printf("USB HID: Sürücü başlatıldı\n");
+    printf("USB HID: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -59,7 +59,7 @@ int usb_hid_get_report(usb_hid_device_t* device, uint8_t report_id,
     );
     
     if (result != 0) {
-        printf("USB HID: Report alma başarısız\n");
+        printf("USB HID: Report alma baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -87,7 +87,7 @@ int usb_hid_set_report(usb_hid_device_t* device, uint8_t report_id,
     );
     
     if (result != 0) {
-        printf("USB HID: Report ayarlama başarısız\n");
+        printf("USB HID: Report ayarlama baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -114,7 +114,7 @@ int usb_hid_get_idle(usb_hid_device_t* device, uint8_t report_id, uint8_t* durat
     );
     
     if (result != 0) {
-        printf("USB HID: Idle rate alma başarısız\n");
+        printf("USB HID: Idle rate alma baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -141,7 +141,7 @@ int usb_hid_set_idle(usb_hid_device_t* device, uint8_t report_id, uint8_t durati
     );
     
     if (result != 0) {
-        printf("USB HID: Idle rate ayarlama başarısız\n");
+        printf("USB HID: Idle rate ayarlama baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -169,7 +169,7 @@ int usb_hid_get_protocol(usb_hid_device_t* device, uint8_t* protocol) {
     );
     
     if (result != 0) {
-        printf("USB HID: Protocol alma başarısız\n");
+        printf("USB HID: Protocol alma baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -196,7 +196,7 @@ int usb_hid_set_protocol(usb_hid_device_t* device, uint8_t protocol) {
     );
     
     if (result != 0) {
-        printf("USB HID: Protocol ayarlama başarısız\n");
+        printf("USB HID: Protocol ayarlama baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -244,7 +244,7 @@ int usb_hid_parse_report_descriptor(usb_hid_device_t* device) {
         printf("USB HID: Fare tespit edildi\n");
     } else {
         device->hid_type = 3; // Other
-        printf("USB HID: Diğer HID aygıtı\n");
+        printf("USB HID: DiÄŸer HID aygÄ±tÄ±\n");
     }
     
     return 0;
@@ -261,7 +261,7 @@ int usb_keyboard_init(usb_keyboard_t* keyboard) {
     keyboard->modifier_keys = 0;
     keyboard->last_modifier_keys = 0;
     
-    printf("USB Keyboard: Başlatıldı\n");
+    printf("USB Keyboard: BaÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -290,7 +290,7 @@ void usb_keyboard_process_report(usb_keyboard_t* keyboard, const uint8_t* report
                     keyboard->modifier_handler(modifier, pressed);
                 }
                 
-                printf("USB Keyboard: Modifier %d %s\n", modifier, pressed ? "basıldı" : "bırakıldı");
+                printf("USB Keyboard: Modifier %d %s\n", modifier, pressed ? "basÄ±ldÄ±" : "bÄ±rakÄ±ldÄ±");
             }
         }
     }
@@ -314,7 +314,7 @@ void usb_keyboard_process_report(usb_keyboard_t* keyboard, const uint8_t* report
                 
                 const char* key_name = (keyboard->last_key_states[i] < sizeof(key_names)/sizeof(key_names[0])) ?
                                       key_names[keyboard->last_key_states[i]] : "Unknown";
-                printf("USB Keyboard: %s bırakıldı\n", key_name);
+                printf("USB Keyboard: %s bÄ±rakÄ±ldÄ±\n", key_name);
             }
         }
     }
@@ -337,7 +337,7 @@ void usb_keyboard_process_report(usb_keyboard_t* keyboard, const uint8_t* report
                 
                 const char* key_name = (new_key_states[i] < sizeof(key_names)/sizeof(key_names[0])) ?
                                       key_names[new_key_states[i]] : "Unknown";
-                printf("USB Keyboard: %s basıldı\n", key_name);
+                printf("USB Keyboard: %s basÄ±ldÄ±\n", key_name);
             }
         }
     }
@@ -359,7 +359,7 @@ int usb_mouse_init(usb_mouse_t* mouse) {
     mouse->buttons = 0;
     mouse->last_buttons = 0;
     
-    printf("USB Mouse: Başlatıldı\n");
+    printf("USB Mouse: BaÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -395,7 +395,7 @@ void usb_mouse_process_report(usb_mouse_t* mouse, const uint8_t* report) {
                     mouse->button_handler(i, pressed);
                 }
                 
-                printf("USB Mouse: Button %d %s\n", i, pressed ? "basıldı" : "bırakıldı");
+                printf("USB Mouse: Button %d %s\n", i, pressed ? "basÄ±ldÄ±" : "bÄ±rakÄ±ldÄ±");
             }
         }
     }
@@ -429,13 +429,13 @@ int usb_hid_probe(usb_device_t* usb_device) {
         return -1;
     }
     
-    printf("USB HID: Aygıt tespit edildi: VID:PID=%04X:%04X\n",
+    printf("USB HID: AygÄ±t tespit edildi: VID:PID=%04X:%04X\n",
            usb_device->device_desc.vendor_id, usb_device->device_desc.product_id);
     
     // Create HID device structure
     usb_hid_device_t* device = malloc(sizeof(usb_hid_device_t));
     if (!device) {
-        printf("USB HID: Bellek tahsis hatası\n");
+        printf("USB HID: Bellek tahsis hatasÄ±\n");
         return -1;
     }
     
@@ -461,7 +461,7 @@ int usb_hid_probe(usb_device_t* usb_device) {
     // Allocate report descriptor buffer
     device->report_descriptor = malloc(device->hid_descriptor.descriptor_length);
     if (!device->report_descriptor) {
-        printf("USB HID: Report descriptor bellek tahsis hatası\n");
+        printf("USB HID: Report descriptor bellek tahsis hatasÄ±\n");
         free(device);
         return -1;
     }
@@ -486,7 +486,7 @@ int usb_hid_probe(usb_device_t* usb_device) {
     hid_devices = device;
     hid_driver.device_count++;
     
-    printf("USB HID: Aygıt eklendi (Tip: %d)\n", device->hid_type);
+    printf("USB HID: AygÄ±t eklendi (Tip: %d)\n", device->hid_type);
     
     // Create specific device structures based on type
     if (device->hid_type == 1) { // Keyboard
@@ -518,7 +518,7 @@ int usb_hid_remove(usb_device_t* usb_device) {
             *current = (*current)->next;
             hid_driver.device_count--;
             
-            printf("USB HID: Aygıt kaldırıldı (Tip: %d)\n", to_remove->hid_type);
+            printf("USB HID: AygÄ±t kaldÄ±rÄ±ldÄ± (Tip: %d)\n", to_remove->hid_type);
             
             if (to_remove->report_descriptor) {
                 free(to_remove->report_descriptor);
@@ -535,7 +535,7 @@ int usb_hid_remove(usb_device_t* usb_device) {
 
 // List all HID devices
 void usb_hid_list_devices() {
-    printf("\n=== USB HID Aygıtları ===\n");
+    printf("\n=== USB HID AygÄ±tlarÄ± ===\n");
     
     usb_hid_device_t* current = hid_devices;
     int count = 1;
@@ -545,11 +545,11 @@ void usb_hid_list_devices() {
         switch (current->hid_type) {
             case 1: type_str = "Klavye"; break;
             case 2: type_str = "Fare"; break;
-            case 3: type_str = "Diğer"; break;
+            case 3: type_str = "DiÄŸer"; break;
         }
         
         printf("%d. %s %04X:%04X (%s)\n", count++,
-               current->usb_device->device_desc.vendor_id ? "VID:PID" : "Aygıt",
+               current->usb_device->device_desc.vendor_id ? "VID:PID" : "AygÄ±t",
                current->usb_device->device_desc.vendor_id,
                current->usb_device->device_desc.product_id,
                type_str);
@@ -561,7 +561,7 @@ void usb_hid_list_devices() {
     }
     
     if (count == 1) {
-        printf("Hiçbir USB HID aygıtı bağlı değil\n");
+        printf("HiÃ§bir USB HID aygÄ±tÄ± baÄŸlÄ± deÄŸil\n");
     }
     
     printf("========================\n");
@@ -596,7 +596,7 @@ const char* usb_key_to_string(uint8_t key) {
 }
 
 // Create USB HID driver
-driver_t* create_usb_hid_driver() {
+driver_t* create_usb_hid_driver(pci_device_t* device) {
     if (usb_hid_init() != 0) {
         return NULL;
     }

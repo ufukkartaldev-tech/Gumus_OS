@@ -1,10 +1,10 @@
-#include "gumus_dil.h"
+﻿#include "gumus_dil.h"
 #include "kernel.h"
 #include "memory.h"
 #include "string.h"
 #include "vga_gfx.h"
 
-// GümüşDil (v0.2.0) - Modern Türkçe Sözdizimi
+// GÃ¼mÃ¼ÅŸDil (v0.2.0) - Modern TÃ¼rkÃ§e SÃ¶zdizimi
 void gumus_execute(const char* input) {
     char cmd[256];
     strncpy(cmd, input, 255);
@@ -51,7 +51,7 @@ void gumus_execute(const char* input) {
         beep_hz(hz, ms);
     }
     else if (strcmp(token, "dongu") == 0) {
-        // İleride eklenecek
+        // Ä°leride eklenecek
         print("\n[GumusDil] Dongu henuz desteklenmiyor.");
     }
     else {

@@ -1,10 +1,10 @@
-#ifndef DRIVER_H
+﻿#ifndef DRIVER_H
 #define DRIVER_H
 
 #include <stdint.h>
 #include <stddef.h>
 
-// Sürücü Tipleri
+// SÃ¼rÃ¼cÃ¼ Tipleri
 typedef enum {
     DRIVER_TYPE_CHAR,
     DRIVER_TYPE_BLOCK,
@@ -13,7 +13,7 @@ typedef enum {
     DRIVER_TYPE_INPUT
 } driver_type_t;
 
-// Donanım Sınıf Kodları
+// DonanÄ±m SÄ±nÄ±f KodlarÄ±
 typedef enum {
     PCI_CLASS_UNCLASSIFIED = 0x00,
     PCI_CLASS_STORAGE = 0x01,
@@ -35,19 +35,28 @@ typedef enum {
     PCI_CLASS_SIGNAL_PROCESSING = 0x11
 } pci_class_t;
 
+// SÃ¼rÃ¼cÃ¼ SÄ±nÄ±fÄ± Aliases
+#define DRIVER_CLASS_STORAGE    PCI_CLASS_STORAGE
+#define DRIVER_CLASS_NETWORK    PCI_CLASS_NETWORK
+#define DRIVER_CLASS_DISPLAY    PCI_CLASS_DISPLAY
+#define DRIVER_CLASS_MULTIMEDIA PCI_CLASS_MULTIMEDIA
+#define DRIVER_CLASS_SERIAL     PCI_CLASS_SERIAL
+#define DRIVER_CLASS_INPUT      PCI_CLASS_INPUT
+#define DRIVER_CLASS_SYSTEM     PCI_CLASS_SYSTEM
+
 typedef pci_class_t driver_class_t;
 
 // Forward declaration
 struct driver;
 typedef struct driver driver_t;
 
-// Sürücü Düğümü (Linked List için)
+// SÃ¼rÃ¼cÃ¼ DÃ¼ÄŸÃ¼mÃ¼ (Linked List iÃ§in)
 typedef struct driver_node {
     driver_t* driver;
     struct driver_node* next;
 } driver_node_t;
 
-// Sürücü Yöneticisi Yapısı
+// SÃ¼rÃ¼cÃ¼ YÃ¶neticisi YapÄ±sÄ±
 typedef struct {
     driver_node_t* driver_list;
     driver_node_t* active_list;
@@ -56,7 +65,7 @@ typedef struct {
     uint32_t next_unique_id;
 } driver_manager_t;
 
-// Sürücü Arayüzü (Interface)
+// SÃ¼rÃ¼cÃ¼ ArayÃ¼zÃ¼ (Interface)
 typedef struct driver {
     char name[32];
     driver_type_t type;
@@ -65,9 +74,9 @@ typedef struct driver {
     uint16_t device_id;
     uint16_t subsystem_vendor_id;
     uint16_t subsystem_device_id;
-    uint32_t unique_id; // Her sürücü için unique ID
+    uint32_t unique_id; // Her sÃ¼rÃ¼cÃ¼ iÃ§in unique ID
     
-    // Fonksiyon İşaretçileri (Virtual Functions)
+    // Fonksiyon Ä°ÅŸaretÃ§ileri (Virtual Functions)
     int (*init)(void);
     int (*read)(void* buffer, uint32_t size, uint32_t offset);
     int (*write)(void* buffer, uint32_t size, uint32_t offset);
@@ -75,7 +84,7 @@ typedef struct driver {
     int (*shutdown)(void);
 } driver_t_struct; // Renamed to avoid confusion with typedef
 
-// Sürücü Yöneticisi Fonksiyonları
+// SÃ¼rÃ¼cÃ¼ YÃ¶neticisi FonksiyonlarÄ±
 void driver_manager_init();
 void driver_manager_cleanup();
 void driver_register(driver_t* driver);

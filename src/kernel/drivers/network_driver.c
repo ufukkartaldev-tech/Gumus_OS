@@ -1,8 +1,33 @@
-#include "network_driver.h"
-#include "../core/memory.h"
-#include "../core/io.h"
-#include "../core/string.h"
-#include "../core/printf.h"
+﻿#include "network_driver.h"
+#include "memory.h"
+#include "io.h"
+#include "string.h"
+#include "printf.h"
+#include "stdio.h"
+#include "stdlib.h"
+
+// Network byte order functions
+static uint16_t htons(uint16_t hostshort) {
+    return ((hostshort >> 8) & 0xFF) | ((hostshort & 0xFF) << 8);
+}
+
+static uint16_t ntohs(uint16_t netshort) {
+    return htons(netshort);
+}
+
+// Memory comparison function
+static int memcmp(const void* s1, const void* s2, size_t n) {
+    const unsigned char* p1 = s1;
+    const unsigned char* p2 = s2;
+    while (n--) {
+        if (*p1 != *p2) {
+            return *p1 - *p2;
+        }
+        p1++;
+        p2++;
+    }
+    return 0;
+}
 
 static rtl8139_driver_t rtl8139_driver;
 static e1000_driver_t e1000_driver;
@@ -40,6 +65,7 @@ static int e1000_initialized = 0;
 #define RTL8139_REG_PHY_ANAR     0x70
 #define RTL8139_REG_PHY_ANLPAR   0x74
 #define RTL8139_REG_PHY_ANER     0x78
+#define RTL8139_REG_RBSTART      0x30
 
 // RTL8139 Command Bits
 #define RTL8139_CMD_TX_ENABLE    0x04
@@ -81,7 +107,7 @@ static int e1000_initialized = 0;
 // Network Driver Functions
 static int network_driver_init(void* driver) {
     network_driver_t* net_driver = (network_driver_t*)driver;
-    printf("Network sürücüsü başlatılıyor...\n");
+    printf("Network sÃ¼rÃ¼cÃ¼sÃ¼ baÅŸlatÄ±lÄ±yor...\n");
     return network_init(net_driver);
 }
 
@@ -123,14 +149,14 @@ static int network_driver_ioctl(uint32_t command, void* arg) {
 
 static int network_driver_shutdown(void* driver) {
     network_driver_t* net_driver = (network_driver_t*)driver;
-    printf("Network sürücüsü kapatılıyor...\n");
+    printf("Network sÃ¼rÃ¼cÃ¼sÃ¼ kapatÄ±lÄ±yor...\n");
     net_driver->initialized = 0;
     return 0;
 }
 
 // RTL8139 Driver Functions
 static int rtl8139_driver_init(void) {
-    printf("RTL8139 sürücüsü başlatılıyor...\n");
+    printf("RTL8139 sÃ¼rÃ¼cÃ¼sÃ¼ baÅŸlatÄ±lÄ±yor...\n");
     return rtl8139_init(&rtl8139_driver.base);
 }
 
@@ -150,14 +176,14 @@ static int rtl8139_driver_ioctl(uint32_t command, void* arg) {
 }
 
 static int rtl8139_driver_shutdown(void) {
-    printf("RTL8139 sürücüsü kapatılıyor...\n");
+    printf("RTL8139 sÃ¼rÃ¼cÃ¼sÃ¼ kapatÄ±lÄ±yor...\n");
     rtl8139_initialized = 0;
     return 0;
 }
 
 // E1000 Driver Functions
 static int e1000_driver_init(void) {
-    printf("Intel E1000 sürücüsü başlatılıyor...\n");
+    printf("Intel E1000 sÃ¼rÃ¼cÃ¼sÃ¼ baÅŸlatÄ±lÄ±yor...\n");
     return e1000_init(&e1000_driver.base);
 }
 
@@ -177,7 +203,7 @@ static int e1000_driver_ioctl(uint32_t command, void* arg) {
 }
 
 static int e1000_driver_shutdown(void) {
-    printf("Intel E1000 sürücüsü kapatılıyor...\n");
+    printf("Intel E1000 sÃ¼rÃ¼cÃ¼sÃ¼ kapatÄ±lÄ±yor...\n");
     e1000_initialized = 0;
     return 0;
 }
@@ -186,18 +212,18 @@ static int e1000_driver_shutdown(void) {
 int network_init(network_driver_t* driver) {
     if (!driver) return -1;
     
-    printf("Network aygıtı başlatılıyor...\n");
+    printf("Network aygÄ±tÄ± baÅŸlatÄ±lÄ±yor...\n");
     
-    // Buffer'ları başlat
+    // Buffer'larÄ± baÅŸlat
     driver->rx_head = 0;
     driver->rx_tail = 0;
     driver->tx_head = 0;
     driver->tx_tail = 0;
     
-    // Statistics'ı sıfırla
+    // Statistics'Ä± sÄ±fÄ±rla
     memset(&driver->stats, 0, sizeof(network_stats_t));
     
-    // Varsayılan konfigürasyon
+    // VarsayÄ±lan konfigÃ¼rasyon
     memset(&driver->config, 0, sizeof(network_config_t));
     
     driver->initialized = 1;
@@ -209,8 +235,8 @@ int network_send_packet(network_driver_t* driver, uint8_t* data, uint32_t size) 
         return -1;
     }
     
-    // Hardware-specific send fonksiyonunu çağır
-    // Bu fonksiyon hardware driver tarafından override edilir
+    // Hardware-specific send fonksiyonunu Ã§aÄŸÄ±r
+    // Bu fonksiyon hardware driver tarafÄ±ndan override edilir
     driver->stats.packets_sent++;
     driver->stats.bytes_sent += size;
     
@@ -222,7 +248,7 @@ int network_receive_packet(network_driver_t* driver, uint8_t* buffer, uint32_t* 
         return -1;
     }
     
-    // RX buffer'ından paket al
+    // RX buffer'Ä±ndan paket al
     if (driver->rx_head == driver->rx_tail) {
         return -1; // No packets available
     }
@@ -253,7 +279,7 @@ int network_set_mac_address(network_driver_t* driver, uint8_t* mac) {
     
     char mac_str[18];
     network_format_mac(mac, mac_str);
-    printf("MAC adresi ayarlandı: %s\n", mac_str);
+    printf("MAC adresi ayarlandÄ±: %s\n", mac_str);
     
     return 0;
 }
@@ -272,7 +298,7 @@ int network_set_ip_config(network_driver_t* driver, uint32_t ip, uint32_t subnet
     network_format_ip(subnet_mask, subnet_str);
     network_format_ip(gateway, gateway_str);
     
-    printf("IP konfigürasyonu: IP=%s, Subnet=%s, Gateway=%s\n", ip_str, subnet_str, gateway_str);
+    printf("IP konfigÃ¼rasyonu: IP=%s, Subnet=%s, Gateway=%s\n", ip_str, subnet_str, gateway_str);
     
     return 0;
 }
@@ -284,9 +310,9 @@ int network_send_arp_request(network_driver_t* driver, uint32_t target_ip) {
     
     char target_ip_str[16];
     network_format_ip(target_ip, target_ip_str);
-    printf("ARP request gönderiliyor: %s\n", target_ip_str);
+    printf("ARP request gÃ¶nderiliyor: %s\n", target_ip_str);
     
-    // ARP packet oluştur
+    // ARP packet oluÅŸtur
     uint8_t packet[NETWORK_ARP_SIZE];
     eth_header_t* eth = (eth_header_t*)packet;
     arp_packet_t* arp = (arp_packet_t*)(packet + sizeof(eth_header_t));
@@ -317,16 +343,16 @@ int network_send_ping(network_driver_t* driver, uint32_t target_ip) {
     
     char target_ip_str[16];
     network_format_ip(target_ip, target_ip_str);
-    printf("Ping gönderiliyor: %s\n", target_ip_str);
+    printf("Ping gÃ¶nderiliyor: %s\n", target_ip_str);
     
-    // ICMP echo request oluştur
+    // ICMP echo request oluÅŸtur
     uint8_t packet[NETWORK_ICMP_SIZE];
     eth_header_t* eth = (eth_header_t*)packet;
     ip_header_t* ip = (ip_header_t*)(packet + sizeof(eth_header_t));
     icmp_header_t* icmp = (icmp_header_t*)(packet + sizeof(eth_header_t) + sizeof(ip_header_t));
     
     // Ethernet header
-    // Target MAC address'i ARP table'dan almalıyız (şimdilik broadcast)
+    // Target MAC address'i ARP table'dan almalÄ±yÄ±z (ÅŸimdilik broadcast)
     memcpy(eth->dest_mac, "\xFF\xFF\xFF\xFF\xFF\xFF", 6);
     memcpy(eth->src_mac, driver->mac_address, 6);
     eth->ethertype = htons(ETH_TYPE_IPv4);
@@ -362,12 +388,12 @@ int network_send_ping(network_driver_t* driver, uint32_t target_ip) {
 uint16_t network_checksum(uint8_t* data, uint32_t size) {
     uint32_t sum = 0;
     
-    // 16-bit word'ları topla
+    // 16-bit word'larÄ± topla
     for (uint32_t i = 0; i < size; i += 2) {
         uint16_t word = (data[i] << 8) | (i + 1 < size ? data[i + 1] : 0);
         sum += word;
         
-        // Overflow'ı handle et
+        // Overflow'Ä± handle et
         if (sum > 0xFFFF) {
             sum = (sum & 0xFFFF) + (sum >> 16);
         }
@@ -412,9 +438,9 @@ int rtl8139_init(network_driver_t* driver) {
     
     if (!rtl) return -1;
     
-    printf("RTL8139 başlatılıyor...\n");
+    printf("RTL8139 baÅŸlatÄ±lÄ±yor...\n");
     
-    // Reset kartı
+    // Reset kartÄ±
     outb(rtl->io_base + RTL8139_REG_CMD, RTL8139_CMD_RESET);
     while (inb(rtl->io_base + RTL8139_REG_CMD) & RTL8139_CMD_RESET) {
         // Reset bit'i temizlenene kadar bekle
@@ -435,24 +461,24 @@ int rtl8139_init(network_driver_t* driver) {
     network_format_mac(rtl->base.mac_address, mac_str);
     printf("RTL8139 MAC adresi: %s\n", mac_str);
     
-    // TX buffer'ları ayarla
+    // TX buffer'larÄ± ayarla
     for (int i = 0; i < 4; i++) {
         rtl->tx_buffers[i] = malloc(1518);
         outl(rtl->io_base + RTL8139_REG_TX_ADDR0 + i * 4, (uint32_t)rtl->tx_buffers[i]);
     }
     
-    // RX buffer'ı ayarla
+    // RX buffer'Ä± ayarla
     rtl->rx_buffer_size = 8192 + 16;
     rtl->rx_buffer = malloc(rtl->rx_buffer_size);
     outl(rtl->io_base + RTL8139_REG_RBSTART, (uint32_t)rtl->rx_buffer);
     
-    // RX konfigürasyonu
+    // RX konfigÃ¼rasyonu
     outl(rtl->io_base + RTL8139_REG_RX_CONFIG, 0xF | (1 << 7)); // Accept all packets
     
-    // Interrupt'ları etkinleştir
+    // Interrupt'larÄ± etkinleÅŸtir
     outw(rtl->io_base + RTL8139_REG_IMR, 0x0005); // TX OK + RX OK
     
-    // TX ve RX'i etkinleştir
+    // TX ve RX'i etkinleÅŸtir
     uint8_t cmd = inb(rtl->io_base + RTL8139_REG_CMD);
     cmd |= RTL8139_CMD_TX_ENABLE | RTL8139_CMD_RX_ENABLE;
     outb(rtl->io_base + RTL8139_REG_CMD, cmd);
@@ -470,7 +496,7 @@ int rtl8139_send(network_driver_t* driver, uint8_t* data, uint32_t size) {
         return -1;
     }
     
-    // TX buffer'ına kopyala
+    // TX buffer'Ä±na kopyala
     memcpy(rtl->tx_buffers[rtl->current_tx_buffer], data, size);
     
     // TX status'u ayarla (packet length + send bit)
@@ -480,7 +506,7 @@ int rtl8139_send(network_driver_t* driver, uint8_t* data, uint32_t size) {
     // Packet length'i ayarla
     outl(rtl->io_base + RTL8139_REG_TX_CONFIG + rtl->current_tx_buffer * 4, size);
     
-    // Sonraki buffer'a geç
+    // Sonraki buffer'a geÃ§
     rtl->current_tx_buffer = (rtl->current_tx_buffer + 1) % 4;
     
     return 0;
@@ -493,7 +519,7 @@ int rtl8139_receive(network_driver_t* driver, uint8_t* buffer, uint32_t* size) {
         return -1;
     }
     
-    // Current buffer pointer'ı al
+    // Current buffer pointer'Ä± al
     uint16_t capr = inw(rtl->io_base + RTL8139_REG_CAPR);
     uint16_t cbr = inw(rtl->io_base + RTL8139_REG_CBR);
     
@@ -501,7 +527,7 @@ int rtl8139_receive(network_driver_t* driver, uint8_t* buffer, uint32_t* size) {
         return -1; // No packets available
     }
     
-    // Packet header'ı oku
+    // Packet header'Ä± oku
     uint8_t* rx_ptr = rtl->rx_buffer + capr;
     uint16_t packet_length = *(uint16_t*)(rx_ptr + 2);
     uint16_t packet_status = *(uint16_t*)rx_ptr;
@@ -527,7 +553,7 @@ int e1000_init(network_driver_t* driver) {
     
     if (!e1000) return -1;
     
-    printf("Intel E1000 başlatılıyor...\n");
+    printf("Intel E1000 baÅŸlatÄ±lÄ±yor...\n");
     
     // Reset
     uint32_t ctrl = inl(e1000->mmio_base + E1000_REG_CTRL);
@@ -570,7 +596,7 @@ int e1000_receive(network_driver_t* driver, uint8_t* buffer, uint32_t* size) {
 
 driver_t* create_rtl8139_driver(pci_device_t* device) {
     if (rtl8139_initialized) {
-        printf("RTL8139 zaten başlatılmış\n");
+        printf("RTL8139 zaten baÅŸlatÄ±lmÄ±ÅŸ\n");
         return &rtl8139_driver.base.base;
     }
     
@@ -583,7 +609,7 @@ driver_t* create_rtl8139_driver(pci_device_t* device) {
         return NULL;
     }
     
-    // Sürücü yapısını ayarla
+    // SÃ¼rÃ¼cÃ¼ yapÄ±sÄ±nÄ± ayarla
     strcpy(rtl8139_driver.base.base.name, "RTL8139 Ethernet");
     rtl8139_driver.base.base.type = DRIVER_TYPE_NET;
     rtl8139_driver.base.base.class = DRIVER_CLASS_NETWORK;
@@ -595,7 +621,7 @@ driver_t* create_rtl8139_driver(pci_device_t* device) {
     rtl8139_driver.base.base.ioctl = rtl8139_driver_ioctl;
     rtl8139_driver.base.base.shutdown = rtl8139_driver_shutdown;
     
-    printf("RTL8139 sürücüsü oluşturuldu, I/O base: 0x%04X (%04X:%04X)\n", 
+    printf("RTL8139 sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuldu, I/O base: 0x%04X (%04X:%04X)\n", 
            rtl8139_driver.io_base, 
            device ? device->vendor_id : 0x10EC, 
            device ? device->device_id : 0x8139);
@@ -604,7 +630,7 @@ driver_t* create_rtl8139_driver(pci_device_t* device) {
 
 driver_t* create_e1000_driver(pci_device_t* device) {
     if (e1000_initialized) {
-        printf("Intel E1000 zaten başlatılmış\n");
+        printf("Intel E1000 zaten baÅŸlatÄ±lmÄ±ÅŸ\n");
         return &e1000_driver.base.base;
     }
     
@@ -617,7 +643,7 @@ driver_t* create_e1000_driver(pci_device_t* device) {
         return NULL;
     }
     
-    // Sürücü yapısını ayarla
+    // SÃ¼rÃ¼cÃ¼ yapÄ±sÄ±nÄ± ayarla
     strcpy(e1000_driver.base.base.name, "Intel E1000 Ethernet");
     e1000_driver.base.base.type = DRIVER_TYPE_NET;
     e1000_driver.base.base.class = DRIVER_CLASS_NETWORK;
@@ -629,7 +655,7 @@ driver_t* create_e1000_driver(pci_device_t* device) {
     e1000_driver.base.base.ioctl = e1000_driver_ioctl;
     e1000_driver.base.base.shutdown = e1000_driver_shutdown;
     
-    printf("Intel E1000 sürücüsü oluşturuldu, MMIO base: 0x%08X (%04X:%04X)\n", 
+    printf("Intel E1000 sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuldu, MMIO base: 0x%08X (%04X:%04X)\n", 
            e1000_driver.mmio_base,
            device ? device->vendor_id : 0x8086, 
            device ? device->device_id : 0x1000);

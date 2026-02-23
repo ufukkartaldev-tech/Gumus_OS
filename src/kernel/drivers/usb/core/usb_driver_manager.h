@@ -1,4 +1,4 @@
-#ifndef USB_DRIVER_MANAGER_H
+﻿#ifndef USB_DRIVER_MANAGER_H
 #define USB_DRIVER_MANAGER_H
 
 #include "usb_host.h"

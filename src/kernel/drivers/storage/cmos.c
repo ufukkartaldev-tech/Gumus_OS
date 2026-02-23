@@ -1,4 +1,4 @@
-#include "cmos.h"
+﻿#include "cmos.h"
 #include "io.h"
 
 #define CMOS_ADDR 0x70
@@ -23,14 +23,14 @@ void get_rtc_time(uint8_t *second, uint8_t *minute, uint8_t *hour) {
 
     uint8_t status_b = read_cmos_reg(0x0B);
 
-    // BCD'den çevir (eğer gerekliyse)
+    // BCD'den Ã§evir (eÄŸer gerekliyse)
     if (!(status_b & 0x04)) {
         *second = (*second & 0x0F) + ((*second / 16) * 10);
         *minute = (*minute & 0x0F) + ((*minute / 16) * 10);
         *hour = ((*hour & 0x0F) + (((*hour & 0x70) / 16) * 10)) | (*hour & 0x80);
     }
     
-    // 24 saat formatı kontrolü
+    // 24 saat formatÄ± kontrolÃ¼
     if (!(status_b & 0x02) && (*hour & 0x80)) {
         *hour = ((*hour & 0x7F) + 12) % 24;
     }

@@ -1,12 +1,12 @@
-#ifndef AUDIO_MIXER_H
+﻿#ifndef AUDIO_MIXER_H
 #define AUDIO_MIXER_H
 
 #include <stdint.h>
-#include "../core/window.h"
-#include "../drivers/vga_gfx.h"
-#include "../drivers/advanced_sound.h"
+#include "window.h"
+#include "vga_gfx.h"
+#include "advanced_sound.h"
 
-// Ses Arayüzü Sabitleri
+// Ses ArayÃ¼zÃ¼ Sabitleri
 #define AUDIO_MIXER_WIDTH 70
 #define AUDIO_MIXER_HEIGHT 25
 #define CHANNEL_STRIP_WIDTH 8
@@ -14,16 +14,16 @@
 #define EQ_BANDS 10
 #define VISUALIZER_BARS 32
 
-// Ses Arayüzü Renkleri
+// Ses ArayÃ¼zÃ¼ Renkleri
 #define AUDIO_BG_COLOR 15          // Beyaz
 #define AUDIO_BORDER_COLOR 8       // Gri
 #define AUDIO_TEXT_COLOR 0         // Siyah
-#define AUDIO_ACTIVE_COLOR 4       // Kırmızı
-#define AUDIO_METER_COLOR 2       // Yeşil
+#define AUDIO_ACTIVE_COLOR 4       // KÄ±rmÄ±zÄ±
+#define AUDIO_METER_COLOR 2       // YeÅŸil
 #define AUDIO_SLIDER_COLOR 1       // Mavi
-#define AUDIO_PEAK_COLOR 12       // Açık kırmızı
+#define AUDIO_PEAK_COLOR 12       // AÃ§Ä±k kÄ±rmÄ±zÄ±
 
-// Ses Arayüzü Pencere Verisi
+// Ses ArayÃ¼zÃ¼ Pencere Verisi
 typedef struct {
     int selected_channel;
     int show_equalizer;
@@ -45,7 +45,7 @@ typedef struct {
     int dragged_eq_band;
 } audio_mixer_ui_t;
 
-// Ses Arayüzü Fonksiyonları
+// Ses ArayÃ¼zÃ¼ FonksiyonlarÄ±
 void audio_mixer_init();
 void audio_mixer_draw_window(window_t* win);
 void audio_mixer_handle_click(window_t* win, int x, int y);
@@ -53,7 +53,7 @@ void audio_mixer_handle_key(window_t* win, char c);
 void audio_mixer_handle_mouse(window_t* win, int x, int y, int pressed);
 void audio_mixer_update(window_t* win);
 
-// Çizim fonksiyonları
+// Ã‡izim fonksiyonlarÄ±
 void audio_draw_channel_strip(window_t* win, int channel, int x, int y, int width, int height);
 void audio_draw_equalizer(window_t* win, int x, int y, int width, int height);
 void audio_draw_visualizer(window_t* win, int x, int y, int width, int height);
@@ -61,14 +61,14 @@ void audio_draw_volume_slider(int x, int y, int width, int height, uint8_t volum
 void audio_draw_pan_slider(int x, int y, int width, int height, uint8_t pan, int active);
 void audio_draw_vu_meter(int x, int y, int width, int height, uint8_t level);
 
-// Interaction fonksiyonları
+// Interaction fonksiyonlarÄ±
 int audio_get_channel_at_position(int x, int y);
 int audio_get_eq_band_at_position(int x, int y);
 void audio_handle_channel_click(int channel, int y);
 void audio_handle_eq_click(int band, int y);
 void audio_update_visualizer();
 
-// Ana giriş fonksiyonu
+// Ana giriÅŸ fonksiyonu
 void launch_audio_mixer();
 
 #endif

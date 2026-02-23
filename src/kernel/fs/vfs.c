@@ -1,4 +1,4 @@
-#include "vfs.h"
+﻿#include "vfs.h"
 #include "fs.h"
 #include "string.h"
 #include "memory.h"
@@ -16,7 +16,7 @@ static struct file_desc {
 
 void vfs_init() {
     for(int i=0; i<MAX_OPEN_FILES; i++) file_table[i].used = 0;
-    fs_init(); // ATA tabanlı ilkel FS başlat
+    fs_init(); // ATA tabanlÄ± ilkel FS baÅŸlat
 }
 
 // Wrapper Functions to bridge gap between new VFS and old FS code
@@ -31,11 +31,11 @@ int vfs_mount(const char* path, vfs_node_t* fs_root) {
 }
 
 int vfs_open(const char* path, int flags) {
-    // Basit implementasyon: Path'i doğrudan fs_read_bin ile aç
-    // Gerçek VFS'de path parsing ve mount point lookup yapılır
+    // Basit implementasyon: Path'i doÄŸrudan fs_read_bin ile aÃ§
+    // GerÃ§ek VFS'de path parsing ve mount point lookup yapÄ±lÄ±r
     
-    // Şimdilik sadece tek bir dosya sistemi var (fs.c)
-    // Ve descriptor tablosu üzerinden yönetelim
+    // Åimdilik sadece tek bir dosya sistemi var (fs.c)
+    // Ve descriptor tablosu Ã¼zerinden yÃ¶netelim
     
     int fd = -1;
     for(int i=0; i<MAX_OPEN_FILES; i++) {
@@ -47,10 +47,10 @@ int vfs_open(const char* path, int flags) {
     
     if (fd == -1) return -1;
     
-    // Node oluştur (Geçici)
+    // Node oluÅŸtur (GeÃ§ici)
     vfs_node_t* node = kmalloc(sizeof(vfs_node_t));
     strcpy(node->name, path);
-    // Boyut vs. fs_read_bin ile öğrenilecek
+    // Boyut vs. fs_read_bin ile Ã¶ÄŸrenilecek
     
     file_table[fd].node = node;
     file_table[fd].offset = 0;
@@ -62,10 +62,10 @@ int vfs_open(const char* path, int flags) {
 int vfs_read(int fd, void* buf, int size) {
     if (fd < 0 || fd >= MAX_OPEN_FILES || !file_table[fd].used) return -1;
     
-    // fs_read_bin tüm dosyayı yüklüyor. 
-    // VFS ise parça parça okuyabilir.
-    // Şimdilik "hack": fs_read_bin ile oku, ofset kadar kopyala.
-    // BU ÇOK VERİMSİZ AMA GEÇİT TÖRENİ İÇİN YETERLİ.
+    // fs_read_bin tÃ¼m dosyayÄ± yÃ¼klÃ¼yor. 
+    // VFS ise parÃ§a parÃ§a okuyabilir.
+    // Åimdilik "hack": fs_read_bin ile oku, ofset kadar kopyala.
+    // BU Ã‡OK VERÄ°MSÄ°Z AMA GEÃ‡Ä°T TÃ–RENÄ° Ä°Ã‡Ä°N YETERLÄ°.
     
     uint32_t fsize;
     uint8_t* data = fs_read_bin(file_table[fd].node->name, &fsize);
@@ -86,8 +86,8 @@ int vfs_read(int fd, void* buf, int size) {
 }
 
 int vfs_write(int fd, void* buf, int size) {
-    // Yazma işlemi daha karmaşık.
-    // Şimdilik tek seferde yazma destekliyoruz (fs_write_bin)
+    // Yazma iÅŸlemi daha karmaÅŸÄ±k.
+    // Åimdilik tek seferde yazma destekliyoruz (fs_write_bin)
     // Append desteklemiyoruz.
     if (fd < 0 || fd >= MAX_OPEN_FILES || !file_table[fd].used) return -1;
     

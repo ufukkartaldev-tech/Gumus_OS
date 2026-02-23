@@ -1,11 +1,11 @@
-#include "ohci.h"
-#include "../../../core/memory.h"
-#include "../../../core/pci.h"
-#include "../../../core/interrupts.h"
-#include "../../../core/io.h"
-#include "../../core/usb_host.h"
-#include "../../../core/string.h"
-#include "../../../core/stdio.h"
+﻿#include "ohci.h"
+#include "memory.h"
+#include "pci.h"
+#include "interrupts.h"
+#include "io.h"
+#include "usb_host.h"
+#include "string.h"
+#include "stdio.h"
 
 // Global OHCI controller list
 static ohci_controller_t* ohci_controllers = NULL;
@@ -29,7 +29,7 @@ static int ohci_allocate_hcca(ohci_controller_t* controller) {
     // HCCA must be 256-byte aligned
     controller->hcca = (ohci_hcca_t*)malloc(sizeof(ohci_hcca_t) + 255);
     if (!controller->hcca) {
-        printf("OHCI: HCCA bellek tahsisatı başarısız\n");
+        printf("OHCI: HCCA bellek tahsisatÄ± baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -73,7 +73,7 @@ static ohci_td_t* ohci_allocate_td(ohci_controller_t* controller) {
 
 // OHCI controller reset
 static int ohci_controller_reset(ohci_controller_t* controller) {
-    printf("OHCI: Controller reset başlatılıyor\n");
+    printf("OHCI: Controller reset baÅŸlatÄ±lÄ±yor\n");
     
     // Wait for controller to be ready
     uint32_t timeout = 10000;
@@ -82,7 +82,7 @@ static int ohci_controller_reset(ohci_controller_t* controller) {
     }
     
     if (timeout == 0) {
-        printf("OHCI: Controller hazır değil\n");
+        printf("OHCI: Controller hazÄ±r deÄŸil\n");
         return -1;
     }
     
@@ -96,24 +96,24 @@ static int ohci_controller_reset(ohci_controller_t* controller) {
     }
     
     if (timeout == 0) {
-        printf("OHCI: Reset tamamlanamadı\n");
+        printf("OHCI: Reset tamamlanamadÄ±\n");
         return -1;
     }
     
-    printf("OHCI: Controller reset tamamlandı\n");
+    printf("OHCI: Controller reset tamamlandÄ±\n");
     return 0;
 }
 
 // OHCI controller initialization
 static int ohci_controller_init(ohci_controller_t* controller) {
-    printf("OHCI: Controller başlatılıyor\n");
+    printf("OHCI: Controller baÅŸlatÄ±lÄ±yor\n");
     
     // Allocate memory pools
     controller->ed_pool = (uint32_t)malloc(1000 * sizeof(ohci_ed_t) + 255);
     controller->td_pool = (uint32_t)malloc(1000 * sizeof(ohci_td_t) + 255);
     
     if (!controller->ed_pool || !controller->td_pool) {
-        printf("OHCI: Bellek havuzları oluşturulamadı\n");
+        printf("OHCI: Bellek havuzlarÄ± oluÅŸturulamadÄ±\n");
         return -1;
     }
     
@@ -154,7 +154,7 @@ static int ohci_controller_init(ohci_controller_t* controller) {
     uint32_t rh_desc_a = ohci_read_reg(controller, OHCI_RH_DESCRIPTOR_A);
     controller->num_ports = (rh_desc_a & 0xFF);
     
-    printf("OHCI: Controller başlatıldı, %d port\n", controller->num_ports);
+    printf("OHCI: Controller baÅŸlatÄ±ldÄ±, %d port\n", controller->num_ports);
     return 0;
 }
 
@@ -162,11 +162,11 @@ static int ohci_controller_init(ohci_controller_t* controller) {
 static int ohci_enumerate_device_impl(usb_host_controller_t* base_controller, uint8_t port) {
     ohci_controller_t* controller = (ohci_controller_t*)base_controller;
     
-    printf("OHCI: Aygıt enumeration başlatılıyor (port %d)\n", port);
+    printf("OHCI: AygÄ±t enumeration baÅŸlatÄ±lÄ±yor (port %d)\n", port);
     
     // Check if port is valid
     if (port >= controller->num_ports) {
-        printf("OHCI: Geçersiz port: %d\n", port);
+        printf("OHCI: GeÃ§ersiz port: %d\n", port);
         return -1;
     }
     
@@ -174,7 +174,7 @@ static int ohci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     uint32_t port_status = ohci_read_reg(controller, OHCI_RH_PORT_STATUS + (port * 4));
     
     if (!(port_status & OHCI_PORT_CCS)) {
-        printf("OHCI: Port %d'de aygıt bağlı değil\n", port);
+        printf("OHCI: Port %d'de aygÄ±t baÄŸlÄ± deÄŸil\n", port);
         return -1;
     }
     
@@ -189,7 +189,7 @@ static int ohci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     }
     
     if (timeout == 0) {
-        printf("OHCI: Port reset tamamlanamadı\n");
+        printf("OHCI: Port reset tamamlanamadÄ±\n");
         return -1;
     }
     
@@ -199,13 +199,13 @@ static int ohci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     // Check if device is enabled
     port_status = ohci_read_reg(controller, OHCI_RH_PORT_STATUS + (port * 4));
     if (!(port_status & OHCI_PORT_PES)) {
-        printf("OHCI: Aygıt enable edilemedi\n");
+        printf("OHCI: AygÄ±t enable edilemedi\n");
         return -1;
     }
     
     // Determine device speed
     usb_speed_t speed = (port_status & OHCI_PORT_LSDA) ? USB_SPEED_LOW : USB_SPEED_FULL;
-    printf("OHCI: Aygıt hız: %s\n", speed == USB_SPEED_LOW ? "Low" : "Full");
+    printf("OHCI: AygÄ±t hÄ±z: %s\n", speed == USB_SPEED_LOW ? "Low" : "Full");
     
     // TODO: Complete device enumeration
     // - Set device address
@@ -213,7 +213,7 @@ static int ohci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     // - Get configuration descriptor
     // - Set configuration
     
-    printf("OHCI: Aygıt enumeration tamamlandı\n");
+    printf("OHCI: AygÄ±t enumeration tamamlandÄ±\n");
     return 0;
 }
 
@@ -230,7 +230,7 @@ static int ohci_control_transfer_impl(usb_host_controller_t* base_controller,
     ohci_td_t* td_status = ohci_allocate_td(controller);
     
     if (!ed || !td_setup || !td_status) {
-        printf("OHCI: Descriptor tahsis hatası\n");
+        printf("OHCI: Descriptor tahsis hatasÄ±\n");
         return -1;
     }
     
@@ -250,7 +250,7 @@ static int ohci_control_transfer_impl(usb_host_controller_t* base_controller,
     if (data && length > 0) {
         td_data = ohci_allocate_td(controller);
         if (!td_data) {
-            printf("OHCI: Data TD tahsis hatası\n");
+            printf("OHCI: Data TD tahsis hatasÄ±\n");
             return -1;
         }
         
@@ -284,7 +284,7 @@ static int ohci_control_transfer_impl(usb_host_controller_t* base_controller,
     // Check result
     uint32_t condition_code = td_status->control & OHCI_TD_CC;
     if (condition_code != OHCI_TD_NOERROR) {
-        printf("OHCI: Control transfer başarısız, kod: %d\n", condition_code);
+        printf("OHCI: Control transfer baÅŸarÄ±sÄ±z, kod: %d\n", condition_code);
         return -1;
     }
     
@@ -302,7 +302,7 @@ static int ohci_bulk_transfer_impl(usb_host_controller_t* base_controller,
     ohci_td_t* td = ohci_allocate_td(controller);
     
     if (!ed || !td) {
-        printf("OHCI: Descriptor tahsis hatası\n");
+        printf("OHCI: Descriptor tahsis hatasÄ±\n");
         return -1;
     }
     
@@ -335,7 +335,7 @@ static int ohci_bulk_transfer_impl(usb_host_controller_t* base_controller,
     // Check result
     uint32_t condition_code = td->control & OHCI_TD_CC;
     if (condition_code != OHCI_TD_NOERROR) {
-        printf("OHCI: Bulk transfer başarısız, kod: %d\n", condition_code);
+        printf("OHCI: Bulk transfer baÅŸarÄ±sÄ±z, kod: %d\n", condition_code);
         return -1;
     }
     
@@ -354,7 +354,7 @@ static int ohci_interrupt_transfer_impl(usb_host_controller_t* base_controller,
 
 // OHCI interrupt handler
 void ohci_irq_handler() {
-    printf("OHCI: Interrupt alındı\n");
+    printf("OHCI: Interrupt alÄ±ndÄ±\n");
     
     ohci_controller_t* current = ohci_controllers;
     while (current) {
@@ -372,7 +372,7 @@ void ohci_irq_handler() {
             
             // Handle done head
             if (interrupt_status & OHCI_INTR_WDH) {
-                printf("OHCI: Transfer tamamlandı\n");
+                printf("OHCI: Transfer tamamlandÄ±\n");
                 // TODO: Process completed transfers
             }
         }
@@ -385,14 +385,14 @@ void ohci_irq_handler() {
 int ohci_init(usb_host_controller_t* controller) {
     ohci_controller_t* ohci_ctrl = (ohci_controller_t*)controller;
     
-    printf("OHCI: Sürücü başlatılıyor\n");
+    printf("OHCI: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±lÄ±yor\n");
     
     // Map MMIO registers
     pci_device_t* pci_dev = (pci_device_t*)controller->mmio_base;
     ohci_ctrl->registers = (volatile uint32_t*)pci_dev->bar[0] & ~0xF;
     
     if (!ohci_ctrl->registers) {
-        printf("OHCI: Register haritalaması başarısız\n");
+        printf("OHCI: Register haritalamasÄ± baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     

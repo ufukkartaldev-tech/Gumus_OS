@@ -1,11 +1,11 @@
-#include "ehci.h"
-#include "../../../core/memory.h"
-#include "../../../core/pci.h"
-#include "../../../core/interrupts.h"
-#include "../../../core/io.h"
-#include "../../core/usb_host.h"
-#include "../../../core/string.h"
-#include "../../../core/stdio.h"
+﻿#include "ehci.h"
+#include "memory.h"
+#include "pci.h"
+#include "interrupts.h"
+#include "io.h"
+#include "usb_host.h"
+#include "string.h"
+#include "stdio.h"
 
 // Global EHCI controller list
 static ehci_controller_t* ehci_controllers = NULL;
@@ -63,7 +63,7 @@ ehci_qh_t* ehci_allocate_qh(ehci_controller_t* controller) {
 
 // EHCI controller reset
 static int ehci_controller_reset(ehci_controller_t* controller) {
-    printf("EHCI: Controller reset başlatılıyor\n");
+    printf("EHCI: Controller reset baÅŸlatÄ±lÄ±yor\n");
     
     // Check if controller is already halted
     uint32_t status = ehci_read_op_reg(controller, EHCI_USBSTS);
@@ -80,7 +80,7 @@ static int ehci_controller_reset(ehci_controller_t* controller) {
         }
         
         if (timeout == 0) {
-            printf("EHCI: Controller durdurulamadı\n");
+            printf("EHCI: Controller durdurulamadÄ±\n");
             return -1;
         }
     }
@@ -97,11 +97,11 @@ static int ehci_controller_reset(ehci_controller_t* controller) {
     }
     
     if (timeout == 0) {
-        printf("EHCI: Reset tamamlanamadı\n");
+        printf("EHCI: Reset tamamlanamadÄ±\n");
         return -1;
     }
     
-    printf("EHCI: Controller reset tamamlandı\n");
+    printf("EHCI: Controller reset tamamlandÄ±\n");
     return 0;
 }
 
@@ -118,7 +118,7 @@ static int ehci_allocate_frame_list(ehci_controller_t* controller) {
     // Allocate frame list (must be page-aligned)
     controller->frame_list = (ehci_fle_t*)malloc(controller->frame_list_size * sizeof(ehci_fle_t) + 4095);
     if (!controller->frame_list) {
-        printf("EHCI: Frame list bellek tahsisatı başarısız\n");
+        printf("EHCI: Frame list bellek tahsisatÄ± baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -132,7 +132,7 @@ static int ehci_allocate_frame_list(ehci_controller_t* controller) {
     // Set frame list base address
     ehci_write_op_reg(controller, EHCI_PERIODICLISTBASE, (uint32_t)controller->frame_list);
     
-    printf("EHCI: Frame list oluşturuldu, boyut: %d\n", controller->frame_list_size);
+    printf("EHCI: Frame list oluÅŸturuldu, boyut: %d\n", controller->frame_list_size);
     return 0;
 }
 
@@ -141,7 +141,7 @@ static int ehci_setup_async_queue(ehci_controller_t* controller) {
     // Allocate async queue head
     controller->async_qh = ehci_allocate_qh(controller);
     if (!controller->async_qh) {
-        printf("EHCI: Async QH oluşturulamadı\n");
+        printf("EHCI: Async QH oluÅŸturulamadÄ±\n");
         return -1;
     }
     
@@ -153,13 +153,13 @@ static int ehci_setup_async_queue(ehci_controller_t* controller) {
     // Set async list address
     ehci_write_op_reg(controller, EHCI_ASYNCLISTADDR, (uint32_t)controller->async_qh);
     
-    printf("EHCI: Async queue ayarlandı\n");
+    printf("EHCI: Async queue ayarlandÄ±\n");
     return 0;
 }
 
 // EHCI controller initialization
 static int ehci_controller_init(ehci_controller_t* controller) {
-    printf("EHCI: Controller başlatılıyor\n");
+    printf("EHCI: Controller baÅŸlatÄ±lÄ±yor\n");
     
     // Get controller parameters
     controller->hcs_params = ehci_read_cap_reg(controller, EHCI_HCSPARAMS);
@@ -177,7 +177,7 @@ static int ehci_controller_init(ehci_controller_t* controller) {
     controller->qh_pool = (uint32_t)malloc(1000 * sizeof(ehci_qh_t) + 4095);
     
     if (!controller->qtd_pool || !controller->qh_pool) {
-        printf("EHCI: Bellek havuzları oluşturulamadı\n");
+        printf("EHCI: Bellek havuzlarÄ± oluÅŸturulamadÄ±\n");
         return -1;
     }
     
@@ -220,7 +220,7 @@ static int ehci_controller_init(ehci_controller_t* controller) {
     cmd |= EHCI_CMD_ASEN; // Enable async schedule
     ehci_write_op_reg(controller, EHCI_USBCMD, cmd);
     
-    printf("EHCI: Controller başlatıldı\n");
+    printf("EHCI: Controller baÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -228,11 +228,11 @@ static int ehci_controller_init(ehci_controller_t* controller) {
 static int ehci_enumerate_device_impl(usb_host_controller_t* base_controller, uint8_t port) {
     ehci_controller_t* controller = (ehci_controller_t*)base_controller;
     
-    printf("EHCI: Aygıt enumeration başlatılıyor (port %d)\n", port);
+    printf("EHCI: AygÄ±t enumeration baÅŸlatÄ±lÄ±yor (port %d)\n", port);
     
     // Check if port is valid
     if (port >= controller->num_ports) {
-        printf("EHCI: Geçersiz port: %d\n", port);
+        printf("EHCI: GeÃ§ersiz port: %d\n", port);
         return -1;
     }
     
@@ -240,13 +240,13 @@ static int ehci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     uint32_t port_status = ehci_read_op_reg(controller, EHCI_PORTSC + (port * 4));
     
     if (!(port_status & EHCI_PORT_CCS)) {
-        printf("EHCI: Port %d'de aygıt bağlı değil\n", port);
+        printf("EHCI: Port %d'de aygÄ±t baÄŸlÄ± deÄŸil\n", port);
         return -1;
     }
     
     // Check if this is a low-speed device (should be handled by companion controller)
     if (port_status & EHCI_PORT_LS) {
-        printf("EHCI: Low-speed aygıt tespit edildi, companion controller'a yönlendiriliyor\n");
+        printf("EHCI: Low-speed aygÄ±t tespit edildi, companion controller'a yÃ¶nlendiriliyor\n");
         // TODO: Hand off to companion OHCI controller
         return -1;
     }
@@ -264,7 +264,7 @@ static int ehci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     } while (timeout && (port_status & EHCI_PORT_RESET));
     
     if (timeout == 0) {
-        printf("EHCI: Port reset tamamlanamadı\n");
+        printf("EHCI: Port reset tamamlanamadÄ±\n");
         return -1;
     }
     
@@ -274,13 +274,13 @@ static int ehci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     // Check if device is enabled
     port_status = ehci_read_op_reg(controller, EHCI_PORTSC + (port * 4));
     if (!(port_status & EHCI_PORT_PE)) {
-        printf("EHCI: Aygıt enable edilemedi\n");
+        printf("EHCI: AygÄ±t enable edilemedi\n");
         return -1;
     }
     
     // Determine device speed
     usb_speed_t speed = USB_SPEED_HIGH; // EHCI supports high-speed
-    printf("EHCI: Aygıt hız: High\n");
+    printf("EHCI: AygÄ±t hÄ±z: High\n");
     
     // TODO: Complete device enumeration
     // - Set device address
@@ -288,7 +288,7 @@ static int ehci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     // - Get configuration descriptor
     // - Set configuration
     
-    printf("EHCI: Aygıt enumeration tamamlandı\n");
+    printf("EHCI: AygÄ±t enumeration tamamlandÄ±\n");
     return 0;
 }
 
@@ -305,7 +305,7 @@ static int ehci_control_transfer_impl(usb_host_controller_t* base_controller,
     ehci_qtd_t* qtd_status = ehci_allocate_qtd(controller);
     
     if (!qh || !qtd_setup || !qtd_status) {
-        printf("EHCI: Descriptor tahsis hatası\n");
+        printf("EHCI: Descriptor tahsis hatasÄ±\n");
         return -1;
     }
     
@@ -332,7 +332,7 @@ static int ehci_control_transfer_impl(usb_host_controller_t* base_controller,
     if (data && length > 0) {
         qtd_data = ehci_allocate_qtd(controller);
         if (!qtd_data) {
-            printf("EHCI: Data QTD tahsis hatası\n");
+            printf("EHCI: Data QTD tahsis hatasÄ±\n");
             return -1;
         }
         
@@ -374,7 +374,7 @@ static int ehci_control_transfer_impl(usb_host_controller_t* base_controller,
     // Check result
     uint32_t status = qtd_status->token;
     if (status & EHCI_QTD_HALTED) {
-        printf("EHCI: Control transfer başarısız, status: 0x%08X\n", status);
+        printf("EHCI: Control transfer baÅŸarÄ±sÄ±z, status: 0x%08X\n", status);
         return -1;
     }
     
@@ -392,7 +392,7 @@ static int ehci_bulk_transfer_impl(usb_host_controller_t* base_controller,
     ehci_qtd_t* qtd = ehci_allocate_qtd(controller);
     
     if (!qh || !qtd) {
-        printf("EHCI: Descriptor tahsis hatası\n");
+        printf("EHCI: Descriptor tahsis hatasÄ±\n");
         return -1;
     }
     
@@ -435,7 +435,7 @@ static int ehci_bulk_transfer_impl(usb_host_controller_t* base_controller,
     // Check result
     uint32_t status = qtd->token;
     if (status & EHCI_QTD_HALTED) {
-        printf("EHCI: Bulk transfer başarısız, status: 0x%08X\n", status);
+        printf("EHCI: Bulk transfer baÅŸarÄ±sÄ±z, status: 0x%08X\n", status);
         return -1;
     }
     
@@ -454,7 +454,7 @@ static int ehci_interrupt_transfer_impl(usb_host_controller_t* base_controller,
 
 // EHCI interrupt handler
 void ehci_irq_handler() {
-    printf("EHCI: Interrupt alındı\n");
+    printf("EHCI: Interrupt alÄ±ndÄ±\n");
     
     ehci_controller_t* current = ehci_controllers;
     while (current) {
@@ -491,7 +491,7 @@ void ehci_irq_handler() {
 int ehci_init(usb_host_controller_t* controller) {
     ehci_controller_t* ehci_ctrl = (ehci_controller_t*)controller;
     
-    printf("EHCI: Sürücü başlatılıyor\n");
+    printf("EHCI: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±lÄ±yor\n");
     
     // Map MMIO registers
     pci_device_t* pci_dev = (pci_device_t*)controller->mmio_base;
@@ -508,7 +508,7 @@ int ehci_init(usb_host_controller_t* controller) {
     }
     
     if (!ehci_ctrl->cap_regs || !ehci_ctrl->op_regs) {
-        printf("EHCI: Register haritalaması başarısız\n");
+        printf("EHCI: Register haritalamasÄ± baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     

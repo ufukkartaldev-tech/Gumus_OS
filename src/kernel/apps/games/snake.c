@@ -1,4 +1,4 @@
-#include "snake.h"
+﻿#include "snake.h"
 #include "window.h"
 #include "kernel.h"
 #include "memory.h"
@@ -16,7 +16,7 @@ void snake_update(window_t* win);
 #define GAME_HEIGHT 20
 #define CELL_SIZE 5
 
-// Yılan Yönleri (WASD veya Ok Tuşları)
+// YÄ±lan YÃ¶nleri (WASD veya Ok TuÅŸlarÄ±)
 // dx, dy: -1, 0, 1
 
 typedef struct {
@@ -32,7 +32,7 @@ typedef struct {
     uint32_t last_update;
 } snake_game_t;
 
-// Basit Rastgele Sayı Üreteci (Linear Congruential Generator)
+// Basit Rastgele SayÄ± Ãœreteci (Linear Congruential Generator)
 static uint32_t rand_seed = 123456789;
 uint32_t rand() {
     rand_seed = (rand_seed * 1103515245 + 12345) & 0x7FFFFFFF;
@@ -50,18 +50,18 @@ void snake_update(window_t* win) {
     snake_game_t* game = (snake_game_t*)win->data;
     if (!game) return;
 
-    // Oyun zamanlaması (Update Logic)
+    // Oyun zamanlamasÄ± (Update Logic)
     uint32_t now = get_timer_ticks();
-    if (!game->game_over && (now - game->last_update) > 2) { // Hız kontrolü
+    if (!game->game_over && (now - game->last_update) > 2) { // HÄ±z kontrolÃ¼
         game->last_update = now;
         
         // Hareket vs... (Eski logic buraya)
-        // Gövdeyi kaydır
+        // GÃ¶vdeyi kaydÄ±r
         for (int i = game->length - 1; i > 0; i--) {
             game->x[i] = game->x[i-1];
             game->y[i] = game->y[i-1];
         }
-        // Kafayı ilerlet
+        // KafayÄ± ilerlet
         game->x[0] += game->dx;
         game->y[0] += game->dy;
         
@@ -83,11 +83,11 @@ void snake_update(window_t* win) {
             spawn_food(game);
         }
         
-        // Ekranı Yenile
-        // Sadece bu pencere için değil, tüm sahne için (Z-Order bozulmasın diye)
-        // TODO: Sadece pencereyi çizip altına/üstüne gelenleri clipleyerek performans artırılabilir.
+        // EkranÄ± Yenile
+        // Sadece bu pencere iÃ§in deÄŸil, tÃ¼m sahne iÃ§in (Z-Order bozulmasÄ±n diye)
+        // TODO: Sadece pencereyi Ã§izip altÄ±na/Ã¼stÃ¼ne gelenleri clipleyerek performans artÄ±rÄ±labilir.
         draw_windows();
-        draw_mouse_cursor(); // İmleci en üste koy
+        draw_mouse_cursor(); // Ä°mleci en Ã¼ste koy
     }
 }
 
@@ -101,14 +101,14 @@ void snake_draw(window_t* win) {
     int content_y = py + 12;
     // Logic removed, only drawing now
     
-    // Çizim
+    // Ã‡izim
     
     // Arkaplan
     vga_draw_rect(content_x, content_y, GAME_WIDTH * CELL_SIZE, GAME_HEIGHT * CELL_SIZE, 0); // Siyah
     
-    // Yılan
+    // YÄ±lan
     for (int i = 0; i < game->length; i++) {
-        uint8_t color = (i == 0) ? 10 : 2; // Kafa açık yeşil, gövde koyu yeşil
+        uint8_t color = (i == 0) ? 10 : 2; // Kafa aÃ§Ä±k yeÅŸil, gÃ¶vde koyu yeÅŸil
         vga_draw_rect(content_x + game->x[i] * CELL_SIZE, 
                       content_y + game->y[i] * CELL_SIZE, 
                       CELL_SIZE - 1, CELL_SIZE - 1, color);
@@ -117,7 +117,7 @@ void snake_draw(window_t* win) {
     // Yemek
     vga_draw_rect(content_x + game->food_x * CELL_SIZE, 
                   content_y + game->food_y * CELL_SIZE, 
-                  CELL_SIZE - 1, CELL_SIZE - 1, 4); // Kırmızı
+                  CELL_SIZE - 1, CELL_SIZE - 1, 4); // KÄ±rmÄ±zÄ±
                   
     // Puan
     char score_buf[16];
@@ -165,7 +165,7 @@ void snake_close(window_t* win) {
 void init_snake_game() {
     snake_game_t* game = (snake_game_t*)kmalloc(sizeof(snake_game_t));
     
-    // Varsayılanlar
+    // VarsayÄ±lanlar
     game->length = 3;
     game->x[0] = 5; game->y[0] = 5;
     game->x[1] = 4; game->y[1] = 5;

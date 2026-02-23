@@ -1,4 +1,4 @@
-#ifndef OHCI_H
+﻿#ifndef OHCI_H
 #define OHCI_H
 
 #include "usb_host.h"
@@ -142,7 +142,7 @@ typedef struct ohci_td {
 #define OHCI_ED_FORMAT      0x00008000  // Format
 #define OHCI_ED_MPS         0x07FF0000  // Maximum Packet Size
 
-// OHCI Controller Yapısı
+// OHCI Controller YapÄ±sÄ±
 typedef struct {
     usb_host_controller_t base;
     

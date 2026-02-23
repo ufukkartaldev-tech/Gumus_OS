@@ -1,4 +1,4 @@
-#ifndef CALCULATOR_H
+﻿#ifndef CALCULATOR_H
 #define CALCULATOR_H
 
 void init_calculator();

@@ -1,9 +1,11 @@
-#include "icmp.h"
-#include "../../core/io.h"
-#include "../../core/string.h"
-#include "../../core/memory.h"
+﻿#include "icmp.h"
+#include "io.h"
+#include "string.h"
+#include "memory.h"
+#include "printf.h"
+#include "ip.h"
 
-// Global Değişkenler
+// Global DeÄŸiÅŸkenler
 static int icmp_initialized = 0;
 static uint16_t ping_sequence = 1;
 static uint32_t ping_sent = 0;
@@ -61,7 +63,7 @@ int icmp_init() {
     ping_received = 0;
     icmp_initialized = 1;
     
-    printf("ICMP protokolü başlatıldı\n");
+    printf("ICMP protokolÃ¼ baÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -72,7 +74,7 @@ int icmp_send_echo(uint8_t* dest_ip, uint16_t identifier, uint16_t sequence) {
     
     icmp_echo_t echo_packet;
     
-    // ICMP Header'ı oluştur
+    // ICMP Header'Ä± oluÅŸtur
     echo_packet.header.type = ICMP_TYPE_ECHO_REQUEST;
     echo_packet.header.code = 0;
     echo_packet.header.checksum = 0;
@@ -89,14 +91,14 @@ int icmp_send_echo(uint8_t* dest_ip, uint16_t identifier, uint16_t sequence) {
     // Checksum hesapla
     echo_packet.header.checksum = icmp_calculate_checksum(&echo_packet, sizeof(echo_packet));
     
-    printf("ICMP Echo gönderiliyor: ");
+    printf("ICMP Echo gÃ¶nderiliyor: ");
     char dst_str[16];
     ip_to_string(dest_ip, dst_str);
     printf("%s [ID: %d, Seq: %d]\n", dst_str, identifier, sequence);
     
     ping_sent++;
     
-    // IP üzerinden gönder
+    // IP Ã¼zerinden gÃ¶nder
     return ip_send_packet(dest_ip, IP_PROTOCOL_ICMP, &echo_packet, sizeof(echo_packet));
 }
 
@@ -107,7 +109,7 @@ int icmp_send_echo_reply(uint8_t* dest_ip, uint16_t identifier, uint16_t sequenc
     
     icmp_echo_t echo_packet;
     
-    // ICMP Header'ı oluştur
+    // ICMP Header'Ä± oluÅŸtur
     echo_packet.header.type = ICMP_TYPE_ECHO_REPLY;
     echo_packet.header.code = 0;
     echo_packet.header.checksum = 0;
@@ -124,12 +126,12 @@ int icmp_send_echo_reply(uint8_t* dest_ip, uint16_t identifier, uint16_t sequenc
     // Checksum hesapla
     echo_packet.header.checksum = icmp_calculate_checksum(&echo_packet, sizeof(echo_packet));
     
-    printf("ICMP Echo Reply gönderiliyor: ");
+    printf("ICMP Echo Reply gÃ¶nderiliyor: ");
     char dst_str[16];
     ip_to_string(dest_ip, dst_str);
     printf("%s [ID: %d, Seq: %d]\n", dst_str, identifier, sequence);
     
-    // IP üzerinden gönder
+    // IP Ã¼zerinden gÃ¶nder
     return ip_send_packet(dest_ip, IP_PROTOCOL_ICMP, &echo_packet, sizeof(echo_packet));
 }
 
@@ -138,22 +140,22 @@ int icmp_process_packet(icmp_header_t* packet, uint32_t size, uint8_t* source_ip
         return -1;
     }
     
-    // Checksum kontrolü
+    // Checksum kontrolÃ¼
     uint16_t received_checksum = packet->checksum;
     packet->checksum = 0;
     uint16_t calculated_checksum = icmp_calculate_checksum(packet, size);
     
     if (received_checksum != calculated_checksum) {
-        printf("ICMP: Checksum hatası\n");
+        printf("ICMP: Checksum hatasÄ±\n");
         return -1;
     }
     
-    printf("ICMP paketi alındı: ");
+    printf("ICMP paketi alÄ±ndÄ±: ");
     icmp_print_packet(packet, size);
     
     switch (packet->type) {
         case ICMP_TYPE_ECHO_REQUEST: {
-            // Echo Request'e Echo Reply gönder
+            // Echo Request'e Echo Reply gÃ¶nder
             icmp_echo_t* echo = (icmp_echo_t*)packet;
             uint16_t identifier = ntohs(echo->identifier);
             uint16_t sequence = ntohs(echo->sequence_number);
@@ -162,7 +164,7 @@ int icmp_process_packet(icmp_header_t* packet, uint32_t size, uint8_t* source_ip
             break;
         }
         case ICMP_TYPE_ECHO_REPLY: {
-            // Echo Reply alındı
+            // Echo Reply alÄ±ndÄ±
             ping_received++;
             icmp_echo_t* echo = (icmp_echo_t*)packet;
             uint16_t identifier = ntohs(echo->identifier);
@@ -170,14 +172,14 @@ int icmp_process_packet(icmp_header_t* packet, uint32_t size, uint8_t* source_ip
             
             char src_str[16];
             ip_to_string(source_ip, src_str);
-            printf("Ping reply alındı: %s [ID: %d, Seq: %d]\n", src_str, identifier, sequence);
+            printf("Ping reply alÄ±ndÄ±: %s [ID: %d, Seq: %d]\n", src_str, identifier, sequence);
             break;
         }
         case ICMP_TYPE_DEST_UNREACHABLE:
-            printf("Hedef ulaşılamaz: Kod %d\n", packet->code);
+            printf("Hedef ulaÅŸÄ±lamaz: Kod %d\n", packet->code);
             break;
         case ICMP_TYPE_TIME_EXCEEDED:
-            printf("Zaman aşımı\n");
+            printf("Zaman aÅŸÄ±mÄ±\n");
             break;
         default:
             printf("Bilinmeyen ICMP tipi: %d\n", packet->type);
@@ -192,7 +194,7 @@ int ping(uint8_t* dest_ip, uint32_t count) {
         return -1;
     }
     
-    printf("PING başlatılıyor: ");
+    printf("PING baÅŸlatÄ±lÄ±yor: ");
     char dst_str[16];
     ip_to_string(dest_ip, dst_str);
     printf("%s (%d paket)\n", dst_str, count);
@@ -203,27 +205,27 @@ int ping(uint8_t* dest_ip, uint32_t count) {
     for (uint32_t i = 0; i < count; i++) {
         icmp_send_echo(dest_ip, 0x1234, ping_sequence++);
         
-        // Gerçek bir implementasyonda burada reply beklenir
-        // Şimdilik simüle edelim
-        // Gerçek uygulamada timer ve interrupt gerekir
+        // GerÃ§ek bir implementasyonda burada reply beklenir
+        // Åimdilik simÃ¼le edelim
+        // GerÃ§ek uygulamada timer ve interrupt gerekir
         
-        // Basit bekleme (simülasyon için)
+        // Basit bekleme (simÃ¼lasyon iÃ§in)
         for (volatile int j = 0; j < 1000000; j++);
     }
     
-    printf("Ping istatistikleri: %d gönderildi, %d alındı\n", ping_sent, ping_received);
+    printf("Ping istatistikleri: %d gÃ¶nderildi, %d alÄ±ndÄ±\n", ping_sent, ping_received);
     
     return 0;
 }
 
 void ping_start(uint8_t* dest_ip) {
-    printf("Sürekli ping başlatılıyor: ");
+    printf("SÃ¼rekli ping baÅŸlatÄ±lÄ±yor: ");
     char dst_str[16];
     ip_to_string(dest_ip, dst_str);
     printf("%s\n", dst_str);
     
-    // Sürekli ping için thread başlatılabilir
-    // Şimdilik tek seferlik ping yap
+    // SÃ¼rekli ping iÃ§in thread baÅŸlatÄ±labilir
+    // Åimdilik tek seferlik ping yap
     ping(dest_ip, 4);
 }
 

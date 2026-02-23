@@ -1,10 +1,10 @@
-#include "idt.h"
+﻿#include "idt.h"
 #include "io.h"
 
 struct idt_entry idt[IDT_ENTRIES];
 struct idt_ptr idtp;
 
-// assembly_handlers.asm dosyasından gelecek
+// assembly_handlers.asm dosyasÄ±ndan gelecek
 extern void isr0();
 extern void irq0();
 extern void irq1();
@@ -21,31 +21,31 @@ void set_idt_gate(int n, uint32_t handler) {
 }
 
 // PIC (Programmable Interrupt Controller) Yeniden Haritalama
-// BIOS varsayılan olarak IRQ'ları 0x08-0x0F arasına atar, 
-// ama bu Protected Mode'da CPU istisnaları ile çakışır.
-// Bu yüzden IRQ'ları 0x20 (32) adresinden sonrasına taşıyoruz.
+// BIOS varsayÄ±lan olarak IRQ'larÄ± 0x08-0x0F arasÄ±na atar, 
+// ama bu Protected Mode'da CPU istisnalarÄ± ile Ã§akÄ±ÅŸÄ±r.
+// Bu yÃ¼zden IRQ'larÄ± 0x20 (32) adresinden sonrasÄ±na taÅŸÄ±yoruz.
 void remap_pic() {
-    outb(0x20, 0x11); // Master PIC başlat
-    outb(0xA0, 0x11); // Slave PIC başlat
+    outb(0x20, 0x11); // Master PIC baÅŸlat
+    outb(0xA0, 0x11); // Slave PIC baÅŸlat
     
     outb(0x21, 0x20); // Master IRQ offset -> 32 (0x20)
     outb(0xA1, 0x28); // Slave IRQ offset -> 40 (0x28)
     
-    outb(0x21, 0x04); // Slave PIC'in bağlı olduğu master hattı
-    outb(0xA1, 0x02); // Slave kimlik numarası
+    outb(0x21, 0x04); // Slave PIC'in baÄŸlÄ± olduÄŸu master hattÄ±
+    outb(0xA1, 0x02); // Slave kimlik numarasÄ±
     
     outb(0x21, 0x01); // 8086 modu
     outb(0xA1, 0x01);
     
-    outb(0x21, 0x0);  // Tüm kesmeleri aç
+    outb(0x21, 0x0);  // TÃ¼m kesmeleri aÃ§
     
-    // Slave PIC'te IRQ12 (Mouse) dışındakileri maskelemek isteyebiliriz ama şimdilik açalım
+    // Slave PIC'te IRQ12 (Mouse) dÄ±ÅŸÄ±ndakileri maskelemek isteyebiliriz ama ÅŸimdilik aÃ§alÄ±m
     outb(0xA1, 0x0);
     
-    // Varsayılan Maskeleme
-    // Master PIC: IRQ0 (Timer), IRQ1 (Klavye), IRQ2 (Slave) Açık -> 1111 1000 = 0xF8
+    // VarsayÄ±lan Maskeleme
+    // Master PIC: IRQ0 (Timer), IRQ1 (Klavye), IRQ2 (Slave) AÃ§Ä±k -> 1111 1000 = 0xF8
     outb(0x21, 0xF8); 
-    // Slave PIC: IRQ12 (Fare) Açık -> 1110 1111 = 0xEF
+    // Slave PIC: IRQ12 (Fare) AÃ§Ä±k -> 1110 1111 = 0xEF
     outb(0xA1, 0xEF);
 }
 
@@ -53,15 +53,15 @@ void init_idt() {
     idtp.limit = (sizeof(struct idt_entry) * IDT_ENTRIES) - 1;
     idtp.base = (uint32_t)&idt;
 
-    // Tüm tabloyu sıfırla
+    // TÃ¼m tabloyu sÄ±fÄ±rla
     for (int i = 0; i < IDT_ENTRIES; i++) {
         set_idt_gate(i, 0);
     }
 
-    // Örnek: Divide by Zero istisnası (0)
+    // Ã–rnek: Divide by Zero istisnasÄ± (0)
     set_idt_gate(0, (uint32_t)isr0);
     
-    // IRQ'ları yeniden haritala
+    // IRQ'larÄ± yeniden haritala
     remap_pic();
 
     // IRQ 0: Timer
@@ -73,13 +73,13 @@ void init_idt() {
     // IRQ 12: Fare (Mouse)
     set_idt_gate(44, (uint32_t)irq12);
 
-    // Syscall (Ring 3 erişimine açık: 0xEE)
+    // Syscall (Ring 3 eriÅŸimine aÃ§Ä±k: 0xEE)
     idt[0x80].base_low = (uint32_t)isr128 & 0xFFFF;
     idt[0x80].selector = 0x08;
     idt[0x80].always0 = 0;
     idt[0x80].flags = 0xEE; // Present, Ring 3, Interrupt Gate
     idt[0x80].base_high = ((uint32_t)isr128 >> 16) & 0xFFFF;
 
-    // IDT'yi yükle
+    // IDT'yi yÃ¼kle
     __asm__ volatile("lidt %0" : : "m"(idtp));
 }

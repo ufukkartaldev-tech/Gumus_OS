@@ -1,18 +1,19 @@
-#ifndef KERNEL_H
+﻿#ifndef KERNEL_H
 #define KERNEL_H
 
 #include <stdint.h>
-#include "../cpu/idt.h"
+#include "idt.h"
 
 void panic(const char* message, registers_t* r);
 void putchar(char c);
+char kbd_get();
 void print(const char* str);
 void print_color(const char* str, uint8_t color);
 void clear_screen();
 void update_status_bar();
 void draw_logo();
 void draw_window(int x, int y, int w, int h, const char* title, uint8_t color);
-void hlt();
+
 void timer_handler();
 uint32_t get_timer_ticks();
 void msleep(uint32_t ms);

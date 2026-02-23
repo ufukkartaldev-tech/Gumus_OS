@@ -1,7 +1,7 @@
-#include "usb_mass_storage.h"
-#include "../../../core/memory.h"
-#include "../../../core/string.h"
-#include "../../../core/stdio.h"
+﻿#include "usb_mass_storage.h"
+#include "memory.h"
+#include "string.h"
+#include "stdio.h"
 
 // Global mass storage driver
 static usb_mass_storage_driver_t mass_storage_driver;
@@ -12,7 +12,7 @@ static uint32_t next_tag = 1;
 
 // Initialize USB Mass Storage driver
 int usb_mass_storage_init() {
-    printf("USB Mass Storage: Sürücü başlatılıyor\n");
+    printf("USB Mass Storage: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±lÄ±yor\n");
     
     mass_storage_driver.devices = NULL;
     mass_storage_driver.device_count = 0;
@@ -23,7 +23,7 @@ int usb_mass_storage_init() {
     mass_storage_driver.base.vendor_id = 0;
     mass_storage_driver.base.device_id = 0;
     
-    printf("USB Mass Storage: Sürücü başlatıldı\n");
+    printf("USB Mass Storage: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -56,7 +56,7 @@ int usb_mass_storage_send_cbw(usb_mass_storage_device_t* device, uint32_t tag,
     );
     
     if (result != 0) {
-        printf("USB Mass Storage: CBW gönderme başarısız\n");
+        printf("USB Mass Storage: CBW gÃ¶nderme baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -76,18 +76,18 @@ int usb_mass_storage_get_csw(usb_mass_storage_device_t* device, uint32_t tag, us
     );
     
     if (result != 0) {
-        printf("USB Mass Storage: CSW alma başarısız\n");
+        printf("USB Mass Storage: CSW alma baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
     // Verify CSW signature and tag
     if (csw->signature != CSW_SIGNATURE) {
-        printf("USB Mass Storage: Geçersiz CSW imzası: 0x%08X\n", csw->signature);
+        printf("USB Mass Storage: GeÃ§ersiz CSW imzasÄ±: 0x%08X\n", csw->signature);
         return -1;
     }
     
     if (csw->tag != tag) {
-        printf("USB Mass Storage: CSW tag eşleşmiyor: beklenen=0x%08X, alınan=0x%08X\n", 
+        printf("USB Mass Storage: CSW tag eÅŸleÅŸmiyor: beklenen=0x%08X, alÄ±nan=0x%08X\n", 
                tag, csw->tag);
         return -1;
     }
@@ -115,11 +115,11 @@ int usb_mass_storage_reset(usb_mass_storage_device_t* device) {
     );
     
     if (result != 0) {
-        printf("USB Mass Storage: Reset başarısız\n");
+        printf("USB Mass Storage: Reset baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
-    printf("USB Mass Storage: Aygıt resetlendi\n");
+    printf("USB Mass Storage: AygÄ±t resetlendi\n");
     return 0;
 }
 
@@ -143,7 +143,7 @@ int usb_mass_storage_get_max_lun(usb_mass_storage_device_t* device, uint8_t* max
     );
     
     if (result != 0) {
-        printf("USB Mass Storage: Max LUN alma başarısız, varsayılan 0 kullanılıyor\n");
+        printf("USB Mass Storage: Max LUN alma baÅŸarÄ±sÄ±z, varsayÄ±lan 0 kullanÄ±lÄ±yor\n");
         *max_lun = 0;
         return 0; // Not a fatal error
     }
@@ -169,7 +169,7 @@ int usb_mass_storage_test_unit_ready(usb_mass_storage_device_t* device) {
     }
     
     if (csw.status != CSW_STATUS_PASSED) {
-        printf("USB Mass Storage: Test Unit Ready başarısız, status: %d\n", csw.status);
+        printf("USB Mass Storage: Test Unit Ready baÅŸarÄ±sÄ±z, status: %d\n", csw.status);
         return -1;
     }
     
@@ -199,7 +199,7 @@ int usb_mass_storage_inquiry(usb_mass_storage_device_t* device, scsi_inquiry_t* 
     );
     
     if (result != 0) {
-        printf("USB Mass Storage: Inquiry data alma başarısız\n");
+        printf("USB Mass Storage: Inquiry data alma baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -209,7 +209,7 @@ int usb_mass_storage_inquiry(usb_mass_storage_device_t* device, scsi_inquiry_t* 
     }
     
     if (csw.status != CSW_STATUS_PASSED) {
-        printf("USB Mass Storage: Inquiry başarısız, status: %d\n", csw.status);
+        printf("USB Mass Storage: Inquiry baÅŸarÄ±sÄ±z, status: %d\n", csw.status);
         return -1;
     }
     
@@ -239,7 +239,7 @@ int usb_mass_storage_read_capacity(usb_mass_storage_device_t* device, scsi_read_
     );
     
     if (result != 0) {
-        printf("USB Mass Storage: Capacity data alma başarısız\n");
+        printf("USB Mass Storage: Capacity data alma baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -249,7 +249,7 @@ int usb_mass_storage_read_capacity(usb_mass_storage_device_t* device, scsi_read_
     }
     
     if (csw.status != CSW_STATUS_PASSED) {
-        printf("USB Mass Storage: Read Capacity başarısız, status: %d\n", csw.status);
+        printf("USB Mass Storage: Read Capacity baÅŸarÄ±sÄ±z, status: %d\n", csw.status);
         return -1;
     }
     
@@ -284,7 +284,7 @@ int usb_mass_storage_read(usb_mass_storage_device_t* device, uint32_t lba,
     );
     
     if (result != 0) {
-        printf("USB Mass Storage: Read data alma başarısız\n");
+        printf("USB Mass Storage: Read data alma baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -294,7 +294,7 @@ int usb_mass_storage_read(usb_mass_storage_device_t* device, uint32_t lba,
     }
     
     if (csw.status != CSW_STATUS_PASSED) {
-        printf("USB Mass Storage: Read başarısız, status: %d\n", csw.status);
+        printf("USB Mass Storage: Read baÅŸarÄ±sÄ±z, status: %d\n", csw.status);
         return -1;
     }
     
@@ -329,7 +329,7 @@ int usb_mass_storage_write(usb_mass_storage_device_t* device, uint32_t lba,
     );
     
     if (result != 0) {
-        printf("USB Mass Storage: Write data gönderme başarısız\n");
+        printf("USB Mass Storage: Write data gÃ¶nderme baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -339,7 +339,7 @@ int usb_mass_storage_write(usb_mass_storage_device_t* device, uint32_t lba,
     }
     
     if (csw.status != CSW_STATUS_PASSED) {
-        printf("USB Mass Storage: Write başarısız, status: %d\n", csw.status);
+        printf("USB Mass Storage: Write baÅŸarÄ±sÄ±z, status: %d\n", csw.status);
         return -1;
     }
     
@@ -357,13 +357,13 @@ int usb_mass_storage_probe(usb_device_t* usb_device) {
         return -1;
     }
     
-    printf("USB Mass Storage: Aygıt tespit edildi: VID:PID=%04X:%04X\n",
+    printf("USB Mass Storage: AygÄ±t tespit edildi: VID:PID=%04X:%04X\n",
            usb_device->device_desc.vendor_id, usb_device->device_desc.product_id);
     
     // Create mass storage device structure
     usb_mass_storage_device_t* device = malloc(sizeof(usb_mass_storage_device_t));
     if (!device) {
-        printf("USB Mass Storage: Bellek tahsis hatası\n");
+        printf("USB Mass Storage: Bellek tahsis hatasÄ±\n");
         return -1;
     }
     
@@ -387,21 +387,21 @@ int usb_mass_storage_probe(usb_device_t* usb_device) {
     
     // Test unit ready
     if (usb_mass_storage_test_unit_ready(device) != 0) {
-        printf("USB Mass Storage: Aygıt hazır değil\n");
+        printf("USB Mass Storage: AygÄ±t hazÄ±r deÄŸil\n");
         free(device);
         return -1;
     }
     
     // Get inquiry data
     if (usb_mass_storage_inquiry(device, &device->inquiry) != 0) {
-        printf("USB Mass Storage: Inquiry başarısız\n");
+        printf("USB Mass Storage: Inquiry baÅŸarÄ±sÄ±z\n");
         free(device);
         return -1;
     }
     
     // Get capacity
     if (usb_mass_storage_read_capacity(device, &device->capacity) != 0) {
-        printf("USB Mass Storage: Read Capacity başarısız\n");
+        printf("USB Mass Storage: Read Capacity baÅŸarÄ±sÄ±z\n");
         free(device);
         return -1;
     }
@@ -417,7 +417,7 @@ int usb_mass_storage_probe(usb_device_t* usb_device) {
     mass_storage_devices = device;
     mass_storage_driver.device_count++;
     
-    printf("USB Mass Storage: Aygıt eklendi: %s %s\n", 
+    printf("USB Mass Storage: AygÄ±t eklendi: %s %s\n", 
            device->inquiry.vendor_id, device->inquiry.product_id);
     printf("  Boyut: %d blok, %d bayt/blok (%.2f MB)\n", 
            device->num_blocks, device->block_size,
@@ -436,7 +436,7 @@ int usb_mass_storage_remove(usb_device_t* usb_device) {
             *current = (*current)->next;
             mass_storage_driver.device_count--;
             
-            printf("USB Mass Storage: Aygıt kaldırıldı: %s %s\n",
+            printf("USB Mass Storage: AygÄ±t kaldÄ±rÄ±ldÄ±: %s %s\n",
                    to_remove->inquiry.vendor_id, to_remove->inquiry.product_id);
             
             free(to_remove);
@@ -450,7 +450,7 @@ int usb_mass_storage_remove(usb_device_t* usb_device) {
 
 // List all mass storage devices
 void usb_mass_storage_list_devices() {
-    printf("\n=== USB Mass Storage Aygıtları ===\n");
+    printf("\n=== USB Mass Storage AygÄ±tlarÄ± ===\n");
     
     usb_mass_storage_device_t* current = mass_storage_devices;
     int count = 1;
@@ -461,14 +461,14 @@ void usb_mass_storage_list_devices() {
         printf("   Boyut: %d blok, %d bayt/blok (%.2f MB)\n", 
                current->num_blocks, current->block_size,
                (float)(current->num_blocks * current->block_size) / (1024 * 1024));
-        printf("   LUN Sayısı: %d, Hazır: %s\n", 
-               current->lun_count, current->ready ? "Evet" : "Hayır");
+        printf("   LUN SayÄ±sÄ±: %d, HazÄ±r: %s\n", 
+               current->lun_count, current->ready ? "Evet" : "HayÄ±r");
         
         current = current->next;
     }
     
     if (count == 1) {
-        printf("Hiçbir USB Mass Storage aygıtı bağlı değil\n");
+        printf("HiÃ§bir USB Mass Storage aygÄ±tÄ± baÄŸlÄ± deÄŸil\n");
     }
     
     printf("===============================\n");

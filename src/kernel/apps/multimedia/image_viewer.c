@@ -1,17 +1,17 @@
-#include "image_viewer.h"
+﻿#include "image_viewer.h"
 #include "window.h"
 #include "kernel.h"
 #include "vga_gfx.h"
 #include "memory.h"
 #include "fs.h"
-#include "paint.h" // Sadece CANVAS_W/H için gerekirse, ama burada manuel define edebiliriz.
+#include "paint.h" // Sadece CANVAS_W/H iÃ§in gerekirse, ama burada manuel define edebiliriz.
 
 #define IMG_W 120
 #define IMG_H 80
 
 typedef struct {
-    uint8_t* file_buffer; // Dosyanın tamamı (Free etmek için)
-    uint8_t* image_data;  // Pixel verisinin başlangıcı
+    uint8_t* file_buffer; // DosyanÄ±n tamamÄ± (Free etmek iÃ§in)
+    uint8_t* image_data;  // Pixel verisinin baÅŸlangÄ±cÄ±
     int width;
     int height;
     char filename[13];
@@ -24,7 +24,7 @@ void image_viewer_draw(window_t* win) {
     int px = win->x * 8;
     int py = win->y * 8;
     
-    // Görüntüleme Alanı
+    // GÃ¶rÃ¼ntÃ¼leme AlanÄ±
     int view_x = px + 5;
     int view_y = py + 15;
     
@@ -32,8 +32,8 @@ void image_viewer_draw(window_t* win) {
     int h = viewer->height;
     
     // Arkaplan
-    vga_draw_rect(view_x - 1, view_y - 1, w + 2, h + 2, 0); // Siyah Çerçeve
-    // vga_draw_rect(view_x, view_y, w, h, 15); // Beyaz Arkaplan (Gerek yok, üzerine çiziyoruz)
+    vga_draw_rect(view_x - 1, view_y - 1, w + 2, h + 2, 0); // Siyah Ã‡erÃ§eve
+    // vga_draw_rect(view_x, view_y, w, h, 15); // Beyaz Arkaplan (Gerek yok, Ã¼zerine Ã§iziyoruz)
     
     if (viewer->image_data) {
         for(int y=0; y<h; y++) {
@@ -45,7 +45,7 @@ void image_viewer_draw(window_t* win) {
         vga_draw_text(view_x + 10, view_y + 35, "Resim Yuklenemedi", 4);
     }
     
-    // Dosya Adı (Alt Bar)
+    // Dosya AdÄ± (Alt Bar)
     vga_draw_text(px + 10, py + h + 20, viewer->filename, 0);
 }
 
@@ -61,7 +61,7 @@ void init_image_viewer(const char* filename) {
     image_viewer_t* viewer = (image_viewer_t*)kmalloc(sizeof(image_viewer_t));
     if (!viewer) return;
     
-    // Dosya Adını Kopyala
+    // Dosya AdÄ±nÄ± Kopyala
     int i;
     for(i=0; i<12 && filename[i]; i++) viewer->filename[i] = filename[i];
     viewer->filename[i] = '\0';
@@ -72,12 +72,12 @@ void init_image_viewer(const char* filename) {
     viewer->file_buffer = buffer;
     
     if (buffer) {
-        // GUM Header Kontrolü
+        // GUM Header KontrolÃ¼
         if (buffer[0] == 'G' && buffer[1] == 'U' && buffer[2] == 'M') {
-            // GUM Formatı
+            // GUM FormatÄ±
             viewer->width = buffer[4] | (buffer[5] << 8);
             viewer->height = buffer[6] | (buffer[7] << 8);
-            viewer->image_data = buffer + 8; // Header'ı atla
+            viewer->image_data = buffer + 8; // Header'Ä± atla
         } else {
             // Raw Format (Eski)
             viewer->width = 120;
@@ -90,12 +90,12 @@ void init_image_viewer(const char* filename) {
         viewer->height = 50;
     }
 
-    // Pencere Boyutu dinamik olmalı
+    // Pencere Boyutu dinamik olmalÄ±
     int win_w = (viewer->width / 8) + 4;
     if (win_w < 15) win_w = 15;
     int win_h = (viewer->height / 8) + 6;
     
-    // Pencere Oluştur
+    // Pencere OluÅŸtur
     int win_id = create_window("Resim Gost.", 5, 5, win_w, win_h, (7 << 4) | 0);
     
     set_window_callbacks(win_id, image_viewer_draw, 0); // Click handler yok

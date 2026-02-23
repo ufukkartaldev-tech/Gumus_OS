@@ -1,8 +1,8 @@
-#include "driver.h"
-#include "../core/string.h"
-#include "../core/memory.h"
+﻿#include "driver.h"
+#include "string.h"
+#include "memory.h"
 
-// NULL Sürücüsü (Hepsini yer, hiçbir şey vermez)
+// NULL SÃ¼rÃ¼cÃ¼sÃ¼ (Hepsini yer, hiÃ§bir ÅŸey vermez)
 static int null_driver_write(void* buffer, uint32_t size, uint32_t offset) {
     return size;
 }
@@ -22,7 +22,7 @@ static driver_t null_driver = {
     .shutdown = 0
 };
 
-// ZERO Sürücüsü (Her şeyi sıfır döndürür)
+// ZERO SÃ¼rÃ¼cÃ¼sÃ¼ (Her ÅŸeyi sÄ±fÄ±r dÃ¶ndÃ¼rÃ¼r)
 static int zero_driver_write(void* buffer, uint32_t size, uint32_t offset) {
     return size;
 }

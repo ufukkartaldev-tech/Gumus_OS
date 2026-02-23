@@ -1,10 +1,11 @@
-#ifndef USB_HOST_H
+﻿#ifndef USB_HOST_H
 #define USB_HOST_H
 
-#include "../core/types.h"
+#include "types.h"
 #include "driver.h"
+#include "hardware_detect.h"
 
-// USB Standartları
+// USB StandartlarÄ±
 #define USB_SPEC_1_1    0x0110
 #define USB_SPEC_2_0    0x0200
 #define USB_SPEC_3_0    0x0300
@@ -31,7 +32,7 @@ typedef enum {
     USB_DIRECTION_IN = 1
 } usb_direction_t;
 
-// USB Aygıt Tipi
+// USB AygÄ±t Tipi
 typedef enum {
     USB_DEVICE_TYPE_UNKNOWN = 0x00,
     USB_DEVICE_TYPE_AUDIO = 0x01,
@@ -109,7 +110,7 @@ typedef struct {
     uint8_t num_configurations;
 } usb_device_descriptor_t;
 
-// USB Aygıt Yapısı
+// USB AygÄ±t YapÄ±sÄ±
 typedef struct usb_device {
     uint32_t id;
     uint8_t address;
@@ -123,7 +124,7 @@ typedef struct usb_device {
     usb_interface_descriptor_t interface_desc;
     usb_endpoint_descriptor_t endpoint_desc;
     
-    // Host controller bağlantısı
+    // Host controller baÄŸlantÄ±sÄ±
     void* host_controller;
     struct usb_device* next;
 } usb_device_t;
@@ -133,7 +134,7 @@ typedef struct usb_host_controller {
     driver_t base;
     uint32_t type; // OHCI, EHCI, XHCI
     
-    // Controller fonksiyonları
+    // Controller fonksiyonlarÄ±
     int (*init)(struct usb_host_controller* controller);
     int (*reset)(struct usb_host_controller* controller);
     int (*enumerate_device)(struct usb_host_controller* controller, uint8_t port);
@@ -147,7 +148,7 @@ typedef struct usb_host_controller {
                           uint8_t device_addr, uint8_t endpoint,
                           uint8_t* data, uint32_t length);
     
-    // Controller özellikleri
+    // Controller Ã¶zellikleri
     uint32_t num_ports;
     uint32_t supported_speeds;
     void* mmio_base;
@@ -170,7 +171,7 @@ typedef struct {
     uint16_t length;
 } usb_setup_packet_t;
 
-// USB Standart İstekleri
+// USB Standart Ä°stekleri
 #define USB_REQ_GET_STATUS        0x00
 #define USB_REQ_CLEAR_FEATURE     0x01
 #define USB_REQ_SET_FEATURE      0x03
@@ -205,7 +206,7 @@ int usb_host_interrupt_transfer(usb_host_controller_t* controller, uint8_t devic
 void usb_host_list_devices();
 void usb_host_list_controllers();
 
-// Sürücü oluşturma fonksiyonları
+// SÃ¼rÃ¼cÃ¼ oluÅŸturma fonksiyonlarÄ±
 driver_t* create_ohci_driver(pci_device_t* device);
 driver_t* create_ehci_driver(pci_device_t* device);
 driver_t* create_xhci_driver(pci_device_t* device);

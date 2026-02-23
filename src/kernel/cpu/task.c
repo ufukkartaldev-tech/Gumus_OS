@@ -1,30 +1,31 @@
-#include "task.h"
+﻿#include "task.h"
 #include "memory.h"
 #include "kernel.h"
 #include "gdt.h"
+#include "string.h"
 
-// Görev Listesi (Linked List)
+// GÃ¶rev Listesi (Linked List)
 task_t* task_head = 0;
 task_t* current_task = 0;
 static uint32_t next_pid = 1;
 
-// İşlemci Register Yapısı (Stack üzerinde saklanacak)
+// Ä°ÅŸlemci Register YapÄ±sÄ± (Stack Ã¼zerinde saklanacak)
 // pusha -> edi, esi, ebp, esp, ebx, edx, ecx, eax
 // iret -> eip, cs, eflags
 struct task_stack {
     uint32_t edi, esi, ebp, esp_dummy, ebx, edx, ecx, eax; // pusha
-    uint32_t eip, cs, eflags; // iret tarafından kullanılır
+    uint32_t eip, cs, eflags; // iret tarafÄ±ndan kullanÄ±lÄ±r
 };
 
 void init_multitasking() {
-    // Kernel'ın kendisi de bir görevdir (PID 0)
+    // Kernel'Ä±n kendisi de bir gÃ¶revdir (PID 0)
     task_t* kernel_task = (task_t*)kmalloc(sizeof(task_t));
     kernel_task->id = 0;
-    kernel_task->status = 1; // Çalışıyor
+    kernel_task->status = 1; // Ã‡alÄ±ÅŸÄ±yor
     kernel_task->sleep_ticks = 0;
     kernel_task->page_directory = (void*)kernel_directory;
     kernel_task->kernel_stack = 0; // Kernel zaten kernel modunda
-    kernel_task->next = kernel_task; // Kendine dönüyor (Dairesel Liste Başlangıcı)
+    kernel_task->next = kernel_task; // Kendine dÃ¶nÃ¼yor (Dairesel Liste BaÅŸlangÄ±cÄ±)
     
     task_head = kernel_task;
     current_task = kernel_task;
@@ -75,23 +76,23 @@ void create_user_process(void (*entry_point)()) {
     new_task->status = 0;
     new_task->sleep_ticks = 0;
     
-    // Her sürecin kendi sayfa dizini
+    // Her sÃ¼recin kendi sayfa dizini
     new_task->page_directory = create_process_directory();
     
-    // Kernel Stack (User modundan kesme gelince buraya dönülür)
+    // Kernel Stack (User modundan kesme gelince buraya dÃ¶nÃ¼lÃ¼r)
     uint32_t* kstack = (uint32_t*)kmalloc(4096);
     new_task->kernel_stack = (uint32_t)kstack + 4096;
 
-    // User Stack (Kullanıcı modu yığını)
-    // Gerçek bir OS'te bu sayfa dizininde user-space'e maplenir (örn: 0xBFFFF000)
-    // Şimdilik basitleştirmek için PMM'den bir sayfa alıp mapleyelim.
+    // User Stack (KullanÄ±cÄ± modu yÄ±ÄŸÄ±nÄ±)
+    // GerÃ§ek bir OS'te bu sayfa dizininde user-space'e maplenir (Ã¶rn: 0xBFFFF000)
+    // Åimdilik basitleÅŸtirmek iÃ§in PMM'den bir sayfa alÄ±p mapleyelim.
     void* user_stack_phys = pmm_alloc_frame();
-    uint32_t user_stack_virt = 0x80000000; // 2GB sınırı
+    uint32_t user_stack_virt = 0x80000000; // 2GB sÄ±nÄ±rÄ±
     map_page_in_dir(new_task->page_directory, user_stack_phys, (void*)user_stack_virt, 0x7); // User, RW, Present
 
     uint32_t* top = (uint32_t*)(new_task->kernel_stack);
 
-    // IRET stack'i (User Mode'a geçiş için)
+    // IRET stack'i (User Mode'a geÃ§iÅŸ iÃ§in)
     top--; *top = 0x23; // SS (User Data + RPL 3)
     top--; *top = user_stack_virt + 4096; // ESP (User stack top)
     top--; *top = 0x202; // EFLAGS
@@ -122,8 +123,8 @@ void create_elf_task(uint32_t entry_point, void* page_directory, uint32_t mem_br
     uint32_t* kstack = (uint32_t*)kmalloc(4096);
     new_task->kernel_stack = (uint32_t)kstack + 4096;
 
-    // User Stack (Kullanıcı Yığını)
-    // 0xBFFFF000 adresine (Kernel sınırının hemen altına) mapliyoruz
+    // User Stack (KullanÄ±cÄ± YÄ±ÄŸÄ±nÄ±)
+    // 0xBFFFF000 adresine (Kernel sÄ±nÄ±rÄ±nÄ±n hemen altÄ±na) mapliyoruz
     void* user_stack_phys = pmm_alloc_frame();
     uint32_t user_stack_virt = 0xBFFFF000; 
     map_page_in_dir(new_task->page_directory, user_stack_phys, (void*)user_stack_virt, 0x7);
@@ -154,9 +155,9 @@ void task_exit(int code) {
         current_task->status = TASK_DEAD;
         current_task->exit_code = code;
         
-        // Bu noktadan sonra scheduler bir sonraki tick'te bu görevi temizleyecek.
-        // Hemen görev değişimi yapmak için timer kesmesini tetiklemek yerine 
-        // syscall handler'ın görev değiştirmesine güveneceğiz.
+        // Bu noktadan sonra scheduler bir sonraki tick'te bu gÃ¶revi temizleyecek.
+        // Hemen gÃ¶rev deÄŸiÅŸimi yapmak iÃ§in timer kesmesini tetiklemek yerine 
+        // syscall handler'Ä±n gÃ¶rev deÄŸiÅŸtirmesine gÃ¼veneceÄŸiz.
         print_color("\n[GumusOS] Islem sonlandi. (PID: ", YELLOW);
         char buf[16];
         itoa(current_task->id, buf); print_color(buf, YELLOW);
@@ -167,57 +168,57 @@ void task_exit(int code) {
 }
 
 int task_kill(uint32_t pid) {
-    if (pid == 0) return -1; // Kernel'ı öldürme
+    if (pid == 0) return -1; // Kernel'Ä± Ã¶ldÃ¼rme
     
     task_t* temp = task_head;
     do {
         if (temp->id == pid) {
             temp->status = TASK_DEAD;
-            temp->exit_code = -1; // Kapatıldı
+            temp->exit_code = -1; // KapatÄ±ldÄ±
             return 0;
         }
         temp = temp->next;
     } while (temp != task_head);
     
-    return -1; // Bulunamadı
+    return -1; // BulunamadÄ±
 }
 
 uint32_t schedule(uint32_t esp) {
     if (!current_task) return esp;
 
-    // Şu anki görevin stack'ini sakla
+    // Åu anki gÃ¶revin stack'ini sakla
     current_task->esp = esp;
 
-    // 1. Durum: Eğer Mevcut Görev Öldüyse Onu Listeden Çıkar (Cleanup)
-    // Not: PID 0 (Kernel) asla ölmez, bu yüzden dairesel liste asla boş kalmaz.
+    // 1. Durum: EÄŸer Mevcut GÃ¶rev Ã–ldÃ¼yse Onu Listeden Ã‡Ä±kar (Cleanup)
+    // Not: PID 0 (Kernel) asla Ã¶lmez, bu yÃ¼zden dairesel liste asla boÅŸ kalmaz.
     task_t* prev = task_head;
     while (prev->next != current_task) prev = prev->next;
 
     if (current_task->status == TASK_DEAD && current_task->id != 0) {
         task_t* to_delete = current_task;
         prev->next = current_task->next;
-        current_task = current_task->next; // Bir sonrakine geç
+        current_task = current_task->next; // Bir sonrakine geÃ§
         
-        // Belleği kısmen temizle (İleride daha kapsamlı yapılacak)
+        // BelleÄŸi kÄ±smen temizle (Ä°leride daha kapsamlÄ± yapÄ±lacak)
         // kfree(to_delete->page_directory); 
         // kfree(page_of_kernel_stack);
         kfree(to_delete);
     } else {
-        // Normal geçiş: Bir sonraki göreve atla
+        // Normal geÃ§iÅŸ: Bir sonraki gÃ¶reve atla
         current_task = current_task->next;
     }
 
-    // 2. Durum: Eğer yeni seçilen görev de hazır değilse, hazır olanı bulana kadar dön
+    // 2. Durum: EÄŸer yeni seÃ§ilen gÃ¶rev de hazÄ±r deÄŸilse, hazÄ±r olanÄ± bulana kadar dÃ¶n
     while (current_task->status == TASK_DEAD || current_task->status == TASK_SLEEP) {
         current_task = current_task->next;
     }
 
-    // Sayfa dizinini değiştir (Bellek İzolasyonu)
+    // Sayfa dizinini deÄŸiÅŸtir (Bellek Ä°zolasyonu)
     if (current_task->page_directory) {
         switch_page_directory((page_directory_t*)current_task->page_directory);
     }
 
-    // TSS Kernel Stack'i güncelle (Ring 3 -> Ring 0 geçişi için)
+    // TSS Kernel Stack'i gÃ¼ncelle (Ring 3 -> Ring 0 geÃ§iÅŸi iÃ§in)
     if (current_task->kernel_stack) {
         tss_set_stack(0x10, current_task->kernel_stack);
     }

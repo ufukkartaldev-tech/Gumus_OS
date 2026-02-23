@@ -1,17 +1,18 @@
-#include "driver.h"
+﻿#include "driver.h"
 #include "string.h"
 #include "hardware_detect.h"
-#include "../core/memory.h"
+#include "memory.h"
+#include "printf.h"
 
-// Global sürücü yöneticisi
+// Global sÃ¼rÃ¼cÃ¼ yÃ¶neticisi
 static driver_manager_t driver_mgr;
 
-// Yardımcı fonksiyonlar
+// YardÄ±mcÄ± fonksiyonlar
 static driver_node_t* create_driver_node(driver_t* driver) {
     driver_node_t* node = malloc(sizeof(driver_node_t));
     if (!node) {
-        printf("KRİTİK HATA: Bellek yetersiz - driver_node oluşturulamadı!\n");
-        printf("Sistem panik moduna geçiyor...\n");
+        printf("KRÄ°TÄ°K HATA: Bellek yetersiz - driver_node oluÅŸturulamadÄ±!\n");
+        printf("Sistem panik moduna geÃ§iyor...\n");
         // TODO: Implement kernel panic
         while(1) { asm volatile("hlt"); } // Kernel panic
     }
@@ -69,9 +70,9 @@ static int find_in_list(driver_node_t* list, driver_t* driver) {
 }
 
 void driver_manager_cleanup() {
-    printf("Sürücü yöneticisi temizleniyor...\n");
+    printf("SÃ¼rÃ¼cÃ¼ yÃ¶neticisi temizleniyor...\n");
     
-    // Önce tüm aktif sürücüleri kapat
+    // Ã–nce tÃ¼m aktif sÃ¼rÃ¼cÃ¼leri kapat
     driver_node_t* current = driver_mgr.active_list;
     while (current) {
         if (current->driver && current->driver->shutdown) {
@@ -84,11 +85,11 @@ void driver_manager_cleanup() {
     free_driver_list(&driver_mgr.active_list);
     driver_mgr.active_count = 0;
     
-    // Kayıtlı listeyi temizle
+    // KayÄ±tlÄ± listeyi temizle
     free_driver_list(&driver_mgr.driver_list);
     driver_mgr.driver_count = 0;
     
-    printf("Sürücü yöneticisi temizlendi\n");
+    printf("SÃ¼rÃ¼cÃ¼ yÃ¶neticisi temizlendi\n");
 }
 
 void driver_manager_init() {
@@ -98,12 +99,12 @@ void driver_manager_init() {
     driver_mgr.active_count = 0;
     driver_mgr.next_unique_id = 1;
     
-    printf("Sürücü yöneticisi başlatıldı\n");
+    printf("SÃ¼rÃ¼cÃ¼ yÃ¶neticisi baÅŸlatÄ±ldÄ±\n");
 }
 
 void driver_register(driver_t* driver) {
     if (!driver) {
-        printf("HATA: Boş sürücü kaydedilemez\n");
+        printf("HATA: BoÅŸ sÃ¼rÃ¼cÃ¼ kaydedilemez\n");
         return;
     }
     
@@ -114,37 +115,37 @@ void driver_register(driver_t* driver) {
     add_driver_to_list(&driver_mgr.driver_list, driver);
     driver_mgr.driver_count++;
     
-    printf("Sürücü kaydedildi: %s (ID: %d, %04X:%04X)\n", 
+    printf("SÃ¼rÃ¼cÃ¼ kaydedildi: %s (ID: %d, %04X:%04X)\n", 
            driver->name, driver->unique_id, driver->vendor_id, driver->device_id);
 }
 
 int driver_activate(const char* name) {
     if (!name || !*name) {
-        printf("driver_activate: Geçersiz isim\n");
+        printf("driver_activate: GeÃ§ersiz isim\n");
         return -1;
     }
     
     driver_t* driver = driver_get(name);
     if (!driver) {
-        printf("driver_activate: Sürücü bulunamadı: %s\n", name);
+        printf("driver_activate: SÃ¼rÃ¼cÃ¼ bulunamadÄ±: %s\n", name);
         return -1;
     }
     
     // Zaten aktif mi kontrol et
     if (find_in_list(driver_mgr.active_list, driver)) {
-        printf("driver_activate: Sürücü zaten aktif: %s\n", name);
+        printf("driver_activate: SÃ¼rÃ¼cÃ¼ zaten aktif: %s\n", name);
         return 0;
     }
     
-    // Sürücüyü başlat
+    // SÃ¼rÃ¼cÃ¼yÃ¼ baÅŸlat
     if (driver->init && driver->init() == 0) {
         // Aktif listeye ekle
         add_driver_to_list(&driver_mgr.active_list, driver);
         driver_mgr.active_count++;
-        printf("Sürücü aktifleştirildi: %s\n", name);
+        printf("SÃ¼rÃ¼cÃ¼ aktifleÅŸtirildi: %s\n", name);
         return 0;
     } else {
-        printf("driver_activate: Sürücü başlatılamadı: %s\n", name);
+        printf("driver_activate: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±lamadÄ±: %s\n", name);
         return -1;
     }
 }
@@ -152,95 +153,95 @@ int driver_activate(const char* name) {
 int driver_activate_by_id(uint32_t unique_id) {
     driver_t* driver = driver_get_by_unique_id(unique_id);
     if (!driver) {
-        printf("driver_activate_by_id: Sürücü bulunamadı: ID %d\n", unique_id);
+        printf("driver_activate_by_id: SÃ¼rÃ¼cÃ¼ bulunamadÄ±: ID %d\n", unique_id);
         return -1;
     }
     
     // Zaten aktif mi kontrol et
     if (find_in_list(driver_mgr.active_list, driver)) {
-        printf("driver_activate_by_id: Sürücü zaten aktif: ID %d\n", unique_id);
+        printf("driver_activate_by_id: SÃ¼rÃ¼cÃ¼ zaten aktif: ID %d\n", unique_id);
         return 0;
     }
     
-    // Sürücüyü başlat
+    // SÃ¼rÃ¼cÃ¼yÃ¼ baÅŸlat
     if (driver->init && driver->init() == 0) {
         // Aktif listeye ekle
         add_driver_to_list(&driver_mgr.active_list, driver);
         driver_mgr.active_count++;
-        printf("Sürücü aktifleştirildi: %s (ID: %d)\n", driver->name, unique_id);
+        printf("SÃ¼rÃ¼cÃ¼ aktifleÅŸtirildi: %s (ID: %d)\n", driver->name, unique_id);
         return 0;
     } else {
-        printf("driver_activate_by_id: Sürücü başlatılamadı: ID %d\n", unique_id);
+        printf("driver_activate_by_id: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±lamadÄ±: ID %d\n", unique_id);
         return -1;
     }
 }
 
 int driver_deactivate(const char* name) {
     if (!name || !*name) {
-        printf("driver_deactivate: Geçersiz isim\n");
+        printf("driver_deactivate: GeÃ§ersiz isim\n");
         return -1;
     }
     
     driver_t* driver = driver_get(name);
     if (!driver) {
-        printf("driver_deactivate: Sürücü bulunamadı: %s\n", name);
+        printf("driver_deactivate: SÃ¼rÃ¼cÃ¼ bulunamadÄ±: %s\n", name);
         return -1;
     }
     
     // Aktif listede mi kontrol et
     if (!find_in_list(driver_mgr.active_list, driver)) {
-        printf("driver_deactivate: Sürücü aktif değildi: %s\n", name);
+        printf("driver_deactivate: SÃ¼rÃ¼cÃ¼ aktif deÄŸildi: %s\n", name);
         return -1;
     }
     
-    // Sürücüyü kapat
+    // SÃ¼rÃ¼cÃ¼yÃ¼ kapat
     if (driver->shutdown) {
         driver->shutdown();
     }
     
-    // Aktif listeden çıkar
+    // Aktif listeden Ã§Ä±kar
     if (remove_driver_from_list(&driver_mgr.active_list, driver) == 0) {
         driver_mgr.active_count--;
-        printf("Sürücü devre dışı bırakıldı: %s\n", name);
+        printf("SÃ¼rÃ¼cÃ¼ devre dÄ±ÅŸÄ± bÄ±rakÄ±ldÄ±: %s\n", name);
         return 0;
     }
     
-    printf("driver_deactivate: Sürücü aktif listeden kaldırılamadı: %s\n", name);
+    printf("driver_deactivate: SÃ¼rÃ¼cÃ¼ aktif listeden kaldÄ±rÄ±lamadÄ±: %s\n", name);
     return -1;
 }
 
 int driver_deactivate_by_id(uint32_t unique_id) {
     driver_t* driver = driver_get_by_unique_id(unique_id);
     if (!driver) {
-        printf("driver_deactivate_by_id: Sürücü bulunamadı: ID %d\n", unique_id);
+        printf("driver_deactivate_by_id: SÃ¼rÃ¼cÃ¼ bulunamadÄ±: ID %d\n", unique_id);
         return -1;
     }
     
     // Aktif listede mi kontrol et
     if (!find_in_list(driver_mgr.active_list, driver)) {
-        printf("driver_deactivate_by_id: Sürücü aktif değildi: ID %d\n", unique_id);
+        printf("driver_deactivate_by_id: SÃ¼rÃ¼cÃ¼ aktif deÄŸildi: ID %d\n", unique_id);
         return -1;
     }
     
-    // Sürücüyü kapat
+    // SÃ¼rÃ¼cÃ¼yÃ¼ kapat
     if (driver->shutdown) {
         driver->shutdown();
     }
     
-    // Aktif listeden çıkar
+    // Aktif listeden Ã§Ä±kar
     if (remove_driver_from_list(&driver_mgr.active_list, driver) == 0) {
         driver_mgr.active_count--;
-        printf("Sürücü devre dışı bırakıldı: ID %d\n", unique_id);
+        printf("SÃ¼rÃ¼cÃ¼ devre dÄ±ÅŸÄ± bÄ±rakÄ±ldÄ±: ID %d\n", unique_id);
         return 0;
     }
     
-    printf("driver_deactivate_by_id: Sürücü aktif listeden kaldırılamadı: ID %d\n", unique_id);
+    printf("driver_deactivate_by_id: SÃ¼rÃ¼cÃ¼ aktif listeden kaldÄ±rÄ±lamadÄ±: ID %d\n", unique_id);
     return -1;
 }
 
 driver_t* driver_get(const char* name) {
     if (!name || !*name) {
-        printf("driver_get: Geçersiz isim\n");
+        printf("driver_get: GeÃ§ersiz isim\n");
         return 0;
     }
     
@@ -302,7 +303,7 @@ driver_t* driver_get_by_type(driver_type_t type) {
 }
 
 void driver_list_all() {
-    printf("\n=== Kayıtlı Sürüciler ===\n");
+    printf("\n=== KayÄ±tlÄ± SÃ¼rÃ¼ciler ===\n");
     driver_node_t* current = driver_mgr.driver_list;
     int count = 1;
     while (current) {
@@ -317,7 +318,7 @@ void driver_list_all() {
 }
 
 void driver_list_active() {
-    printf("\n=== Aktif Sürüciler ===\n");
+    printf("\n=== Aktif SÃ¼rÃ¼ciler ===\n");
     driver_node_t* current = driver_mgr.active_list;
     int count = 1;
     while (current) {
@@ -333,29 +334,29 @@ void driver_list_active() {
 
 int driver_unregister(const char* name) {
     if (!name || !*name) {
-        printf("driver_unregister: Geçersiz isim\n");
+        printf("driver_unregister: GeÃ§ersiz isim\n");
         return -1;
     }
     
     driver_t* driver = driver_get(name);
     if (!driver) {
-        printf("driver_unregister: Sürücü bulunamadı: %s\n", name);
+        printf("driver_unregister: SÃ¼rÃ¼cÃ¼ bulunamadÄ±: %s\n", name);
         return -1;
     }
     
-    // Önce devre dışı bırak (aktif listeden çıkar)
+    // Ã–nce devre dÄ±ÅŸÄ± bÄ±rak (aktif listeden Ã§Ä±kar)
     if (find_in_list(driver_mgr.active_list, driver)) {
         driver_deactivate(name);
     }
     
-    // Kayıttan sil
+    // KayÄ±ttan sil
     if (remove_driver_from_list(&driver_mgr.driver_list, driver) == 0) {
         driver_mgr.driver_count--;
-        printf("Sürücü kayıttan silindi: %s\n", name);
+        printf("SÃ¼rÃ¼cÃ¼ kayÄ±ttan silindi: %s\n", name);
         return 0;
     }
     
-    printf("driver_unregister: Sürücü kayıttan kaldırılamadı: %s\n", name);
+    printf("driver_unregister: SÃ¼rÃ¼cÃ¼ kayÄ±ttan kaldÄ±rÄ±lamadÄ±: %s\n", name);
     return -1;
 }
 
@@ -363,7 +364,7 @@ int driver_auto_load_all() {
     hardware_info_t* hw_info = hardware_get_info();
     int loaded_count = 0;
     
-    printf("Otomatik sürücü yüklemesi başlatılıyor...\n");
+    printf("Otomatik sÃ¼rÃ¼cÃ¼ yÃ¼klemesi baÅŸlatÄ±lÄ±yor...\n");
     
     for(int i=0; i<hw_info->pci_device_count; i++) {
         if (hardware_load_driver_for_device(&hw_info->pci_devices[i]) == 0) {
@@ -371,6 +372,6 @@ int driver_auto_load_all() {
         }
     }
     
-    printf("Toplam %d sürücü yüklendi.\n", loaded_count);
+    printf("Toplam %d sÃ¼rÃ¼cÃ¼ yÃ¼klendi.\n", loaded_count);
     return loaded_count;
 }

@@ -1,4 +1,4 @@
-// GümüşOS - Port I/O Yardımcıları
+﻿// GÃ¼mÃ¼ÅŸOS - Port I/O YardÄ±mcÄ±larÄ±
 #ifndef IO_H
 #define IO_H
 
@@ -28,12 +28,24 @@ static inline void outw(uint16_t port, uint16_t data) {
     __asm__ volatile("outw %0, %1" : : "a"(data), "Nd"(port));
 }
 
-// Kısa bir bekleme (I/O gecikmesi için)
+// Bir porttan 4 byte (long) veri oku
+static inline uint32_t inl(uint16_t port) {
+    uint32_t result;
+    __asm__ volatile("inl %1, %0" : "=a"(result) : "Nd"(port));
+    return result;
+}
+
+// Bir porta 4 byte (long) veri yaz
+static inline void outl(uint16_t port, uint32_t data) {
+    __asm__ volatile("outl %0, %1" : : "a"(data), "Nd"(port));
+}
+
+// KÄ±sa bir bekleme (I/O gecikmesi iÃ§in)
 static inline void io_wait(void) {
     outb(0x80, 0);
 }
 
-// İşlemciyi bir sonraki kesmeye kadar durdur (Nefes aldır)
+// Ä°ÅŸlemciyi bir sonraki kesmeye kadar durdur (Nefes aldÄ±r)
 static inline void hlt(void) {
     __asm__ volatile("hlt");
 }

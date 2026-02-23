@@ -1,7 +1,4 @@
-#ifndef START_MENU_H
-#define START_MENU_H
-
-#ifndef START_MENU_H
+﻿#ifndef START_MENU_H
 #define START_MENU_H
 
 void show_start_menu();

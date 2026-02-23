@@ -41,7 +41,7 @@ irq12:
 isr128:
     cli
     push byte 0
-    push byte 0x80
+    push 0x80
     pusha           ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
     
     mov ax, ds      ; Mevcut DS'i sakla

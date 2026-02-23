@@ -1,4 +1,4 @@
-#ifndef AHCI_H
+﻿#ifndef AHCI_H
 #define AHCI_H
 
 #include <stdint.h>
@@ -30,7 +30,7 @@
 #define HBA_PxCMD_FR       0x4000
 #define HBA_PxCMD_CR       0x8000
 
-// FIS Türleri
+// FIS TÃ¼rleri
 #define FIS_TYPE_REG_H2D   0x27
 #define FIS_TYPE_REG_D2H   0x34
 #define FIS_TYPE_DMA_ACT   0x39
@@ -40,12 +40,12 @@
 #define FIS_TYPE_PIO_SETUP 0x5F
 #define FIS_TYPE_DEV_BITS  0xA1
 
-// ATA Komutları
+// ATA KomutlarÄ±
 #define ATA_CMD_READ_DMA_EX     0x25
 #define ATA_CMD_WRITE_DMA_EX    0x35
 #define ATA_CMD_IDENTIFY_DEVICE 0xEC
 
-// AHCI Yapıları
+// AHCI YapÄ±larÄ±
 typedef struct {
     uint32_t clb;     // Command List Base Address
     uint32_t clbu;    // Command List Base Address Upper 32 bits
@@ -136,7 +136,7 @@ typedef struct {
     uint32_t i;        // Interrupt on Completion
 } hba_prdt_t;
 
-// AHCI Sürücü Yapısı
+// AHCI SÃ¼rÃ¼cÃ¼ YapÄ±sÄ±
 typedef struct {
     driver_t base;
     hba_mem_t* hba;
@@ -148,17 +148,17 @@ typedef struct {
     int initialized;
 } ahci_driver_t;
 
-// AHCI Fonksiyonları
+// AHCI FonksiyonlarÄ±
 int ahci_init();
-int ahci_read(ahci_driver_t* driver, void* buffer, uint32_t lba, uint32_t count);
-int ahci_write(ahci_driver_t* driver, void* buffer, uint32_t lba, uint32_t count);
+int ahci_read(ahci_driver_t* driver, void* buffer, uint64_t lba, uint32_t count);
+int ahci_write(ahci_driver_t* driver, void* buffer, uint64_t lba, uint32_t count);
 int ahci_identify(ahci_driver_t* driver);
 int ahci_port_type(hba_port_t* port);
 void ahci_port_rebase(hba_port_t* port, int port_num);
 int ahci_find_command_slot(hba_port_t* port);
 int ahci_issue_command(hba_port_t* port, int slot, hba_fis_reg_h2d_t* fis, hba_prdt_t* prdt, int prdt_count);
 
-// Sürücü Oluşturma Fonksiyonu
+// SÃ¼rÃ¼cÃ¼ OluÅŸturma Fonksiyonu
 driver_t* create_ahci_driver(pci_device_t* device);
 
 #endif

@@ -1,9 +1,9 @@
-#ifndef ICONS_H
+﻿#ifndef ICONS_H
 #define ICONS_H
 
 #include <stdint.h>
 
-// 12x12 Dosya İkonu (Beyaz Kağıt)
+// 12x12 Dosya Ä°konu (Beyaz KaÄŸÄ±t)
 static const uint8_t icon_file_12x12[144] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 15, 15, 15, 15, 15, 15, 0, 0, 0, 0, 0,
@@ -19,7 +19,7 @@ static const uint8_t icon_file_12x12[144] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-// 12x12 Klasör İkonu (Sarı)
+// 12x12 KlasÃ¶r Ä°konu (SarÄ±)
 static const uint8_t icon_folder_12x12[144] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 14, 14, 14, 14, 0, 0, 0, 0, 0, 0,
@@ -35,7 +35,7 @@ static const uint8_t icon_folder_12x12[144] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-// 12x12 Bilgisayar İkonu (Monitör)
+// 12x12 Bilgisayar Ä°konu (MonitÃ¶r)
 static const uint8_t icon_pc_12x12[144] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0,
@@ -51,7 +51,7 @@ static const uint8_t icon_pc_12x12[144] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-// 12x12 Çöp Kutusu İkonu
+// 12x12 Ã‡Ã¶p Kutusu Ä°konu
 static const uint8_t icon_trash_12x12[144] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 8, 8, 8, 8, 8, 0, 0, 0, 0,

@@ -1,4 +1,4 @@
-#ifndef ELF_H
+﻿#ifndef ELF_H
 #define ELF_H
 
 #include <stdint.h>

@@ -1,4 +1,4 @@
-#ifndef PAINT_H
+﻿#ifndef PAINT_H
 #define PAINT_H
 
 void init_paint();

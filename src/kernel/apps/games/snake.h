@@ -1,4 +1,4 @@
-#ifndef SNAKE_H
+﻿#ifndef SNAKE_H
 #define SNAKE_H
 
 void init_snake_game();

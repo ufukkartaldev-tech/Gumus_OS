@@ -1,8 +1,8 @@
-#ifndef USB_HID_CLASS_H
+﻿#ifndef USB_HID_CLASS_H
 #define USB_HID_CLASS_H
 
 #include "usb_host.h"
-#include "../core/types.h"
+#include "types.h"
 
 // USB HID Class Constants
 #define USB_HID_CLASS              0x03
@@ -297,6 +297,6 @@ int usb_hid_remove_device(usb_hid_device_t* device);
 void usb_hid_list_devices();
 
 // Driver interface functions
-driver_t* create_usb_hid_driver();
+driver_t* create_usb_hid_driver(pci_device_t* device);
 
 #endif

@@ -1,9 +1,9 @@
-#include "memory.h"
+﻿#include "memory.h"
 #include "kernel.h"
-#include "string.h" // memset için
+#include "string.h" // memset iÃ§in
 
 // --- PMM (Physical Memory Manager) ---
-// Basit Bitmap Yöntemi (32MB RAM varsayalım şimdilik)
+// Basit Bitmap YÃ¶ntemi (32MB RAM varsayalÄ±m ÅŸimdilik)
 #define MEM_SIZE_MAX 0x2000000 // 32MB
 #define FRAMES_COUNT (MEM_SIZE_MAX / PAGE_SIZE)
 
@@ -54,10 +54,10 @@ void switch_page_directory(page_directory_t* dir) {
     current_directory = dir;
     
     // tablesPhysical dizisinin fiziksel adresini bul
-    // Identity map alanındaysak (Kernel) direkt kendisi.
-    // Heap'teyse get_phys_addr kullanmalıyız.
+    // Identity map alanÄ±ndaysak (Kernel) direkt kendisi.
+    // Heap'teyse get_phys_addr kullanmalÄ±yÄ±z.
     uint32_t phys = (uint32_t)get_phys_addr(&dir->tablesPhysical);
-    if (!phys) phys = (uint32_t)&dir->tablesPhysical; // Henüz paging yoksa
+    if (!phys) phys = (uint32_t)&dir->tablesPhysical; // HenÃ¼z paging yoksa
     
     asm volatile("mov %0, %%cr3":: "r"(phys));
     
@@ -71,16 +71,16 @@ void map_page_in_dir(page_directory_t* dir, void* phys, void* virt, uint32_t fla
     uint32_t pd_idx = (uint32_t)virt >> 22;
     uint32_t pt_idx = ((uint32_t)virt >> 12) & 0x03FF;
     
-    // Page Table var mı?
+    // Page Table var mÄ±?
     if (!(dir->tablesPhysical[pd_idx] & 1)) {
-        // Yoksa oluştur (Fiziksel bellekten bir sayfa al)
+        // Yoksa oluÅŸtur (Fiziksel bellekten bir sayfa al)
         void* new_table_phys = pmm_alloc_frame();
         
-        // Paging aktifse ve current_directory kernel_directory değilse, 
-        // new_table_phys adresine doğrudan erişemeyebiliriz!
-        // Ancak biz kernel'ı identity map yaptığımız için (0-16MB) 
-        // ve PMM 1MB-32MB arasında çalıştığı için çoğu zaman erişebiliriz.
-        // Ama garantilemek için identity mapping alanında kalmalıyız.
+        // Paging aktifse ve current_directory kernel_directory deÄŸilse, 
+        // new_table_phys adresine doÄŸrudan eriÅŸemeyebiliriz!
+        // Ancak biz kernel'Ä± identity map yaptÄ±ÄŸÄ±mÄ±z iÃ§in (0-16MB) 
+        // ve PMM 1MB-32MB arasÄ±nda Ã§alÄ±ÅŸtÄ±ÄŸÄ± iÃ§in Ã§oÄŸu zaman eriÅŸebiliriz.
+        // Ama garantilemek iÃ§in identity mapping alanÄ±nda kalmalÄ±yÄ±z.
         
         dir->tablesPhysical[pd_idx] = (uint32_t)new_table_phys | 0x7; // Present, RW, User
         dir->tables[pd_idx] = (page_table_t*)new_table_phys; // Virtual = Physical (Identity)
@@ -122,28 +122,28 @@ page_directory_t* create_process_directory() {
 }
 
 void init_paging() {
-    // 1. PMM Başlat (Tüm belleği boş işaretle)
+    // 1. PMM BaÅŸlat (TÃ¼m belleÄŸi boÅŸ iÅŸaretle)
     memset(frames, 0, sizeof(frames));
     
-    // 2. Kernel Directory Oluştur (Statik veya PMM'den)
-    // PMM'den alalım. Şu an paging kapalı, fiziksel adres = sanal adres.
+    // 2. Kernel Directory OluÅŸtur (Statik veya PMM'den)
+    // PMM'den alalÄ±m. Åu an paging kapalÄ±, fiziksel adres = sanal adres.
     kernel_directory = (page_directory_t*)pmm_alloc_frame();
     memset(kernel_directory, 0, sizeof(page_directory_t));
     
-    // 3. Identity Map (İlk 4MB) - Kernel ve VGA Buffer buraya sığar
-    // Daha güvenli olması için ilk 8MB veya 16MB mapleyelim.
+    // 3. Identity Map (Ä°lk 4MB) - Kernel ve VGA Buffer buraya sÄ±ÄŸar
+    // Daha gÃ¼venli olmasÄ± iÃ§in ilk 8MB veya 16MB mapleyelim.
     // 0x00000000 - 0x01000000 (16MB) -> Identity
     
     for (uint32_t i = 0; i < 0x1000000; i += PAGE_SIZE) {
         map_page((void*)i, (void*)i, 3); // Kernel RW
-        // Bu bitmap'te de işaretlenmeli!
+        // Bu bitmap'te de iÅŸaretlenmeli!
         pmm_set_frame(i);
     }
     
-    // 4. Heap için ayrılan alanı (KERNEL_HEAP_START) da mapleyelim mi?
-    // Hayır, on-demand (malloc çağrıldığında) maplenecek.
+    // 4. Heap iÃ§in ayrÄ±lan alanÄ± (KERNEL_HEAP_START) da mapleyelim mi?
+    // HayÄ±r, on-demand (malloc Ã§aÄŸrÄ±ldÄ±ÄŸÄ±nda) maplenecek.
     
-    // 5. Paging Aktifleştir
+    // 5. Paging AktifleÅŸtir
     switch_page_directory(kernel_directory);
     
     print("\n[VMM] Paging Aktif. (Identity Map 0-16MB)\n");
@@ -166,7 +166,7 @@ void* get_phys_addr(void* virt) {
 }
 
 // --- Kernel Heap (Kmalloc) ---
-// Paging sonrası Sanal Adres uzayını yöneten basit bir allocator
+// Paging sonrasÄ± Sanal Adres uzayÄ±nÄ± yÃ¶neten basit bir allocator
 
 #define HEAP_START_VIRT 0xC0000000
 static uint32_t heap_curr_break = HEAP_START_VIRT;
@@ -202,12 +202,12 @@ void* kmalloc(size_t size) {
 
 void kfree(void* ptr) {
     // Bump pointer'da free zordur.
-    // Şimdilik boş işlem.
+    // Åimdilik boÅŸ iÅŸlem.
     (void)ptr;
 }
 
 // --- SHM (Shared Memory) ---
-#include "../../cpu/task.h"
+#include "task.h"
 
 typedef struct {
     uint32_t key;
@@ -219,16 +219,16 @@ typedef struct {
 static shm_region_t shm_table[32];
 
 int shm_get(uint32_t key, uint32_t size) {
-    if (size > PAGE_SIZE) return -1; // Şimdilik tek sayfa
+    if (size > PAGE_SIZE) return -1; // Åimdilik tek sayfa
     
-    // Var olanı bul
+    // Var olanÄ± bul
     for (int i = 0; i < 32; i++) {
         if (shm_table[i].in_use && shm_table[i].key == key) {
             return i;
         }
     }
     
-    // Yeni oluştur
+    // Yeni oluÅŸtur
     for (int i = 0; i < 32; i++) {
         if (!shm_table[i].in_use) {
             shm_table[i].key = key;
@@ -236,7 +236,7 @@ int shm_get(uint32_t key, uint32_t size) {
             shm_table[i].size = size;
             shm_table[i].in_use = 1;
             
-            // Sıfırla
+            // SÄ±fÄ±rla
             switch_page_directory(kernel_directory);
             memset(shm_table[i].physical_frame, 0, PAGE_SIZE);
             if (current_task && current_task->page_directory) 
@@ -261,6 +261,6 @@ void* shm_at(int shm_id) {
 }
 
 void init_memory(uint32_t mem_size) {
-    (void)mem_size; // Otomatik algıla veya sabit kullan
+    (void)mem_size; // Otomatik algÄ±la veya sabit kullan
     init_paging();
 }

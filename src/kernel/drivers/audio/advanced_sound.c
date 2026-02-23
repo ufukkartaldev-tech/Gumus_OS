@@ -1,21 +1,23 @@
-#include "advanced_sound.h"
-#include "../core/io.h"
-#include "../core/memory.h"
-#include "../core/string.h"
+﻿#include "advanced_sound.h"
+#include "io.h"
+#include "memory.h"
+#include "string.h"
 #include "fs.h"
 #include "ata.h"
+#include "printf.h"
+#include "math.h"
 
-// Global değişkenler
+// Global deÄŸiÅŸkenler
 static audio_mixer_t audio_mixer;
 static int audio_initialized = 0;
 static int next_channel_id = 0;
 
-// PC Speaker port'ları
+// PC Speaker port'larÄ±
 #define PIT_CHANNEL2 0x42
 #define PIT_COMMAND 0x43
 #define SPEAKER_PORT 0x61
 
-// Timer frekansı
+// Timer frekansÄ±
 #define TIMER_FREQUENCY 1193180
 
 void advanced_sound_init() {
@@ -23,12 +25,12 @@ void advanced_sound_init() {
     
     memset(&audio_mixer, 0, sizeof(audio_mixer));
     
-    // Varsayılan ayarlar
+    // VarsayÄ±lan ayarlar
     audio_mixer.master_volume = 50;
     audio_mixer.left_volume = 50;
     audio_mixer.right_volume = 50;
     
-    // Tüm kanalları pasif yap
+    // TÃ¼m kanallarÄ± pasif yap
     for (int i = 0; i < AUDIO_MAX_CHANNELS; i++) {
         audio_mixer.channels[i].active = 0;
         audio_mixer.channels[i].volume = 100;
@@ -36,28 +38,28 @@ void advanced_sound_init() {
     }
     
     audio_initialized = 1;
-    printf("Gelişmiş Ses Sistemi başlatıldı\n");
+    printf("GeliÅŸmiÅŸ Ses Sistemi baÅŸlatÄ±ldÄ±\n");
 }
 
 void advanced_sound_shutdown() {
     if (!audio_initialized) return;
     
-    // Tüm kanalları durdur
+    // TÃ¼m kanallarÄ± durdur
     for (int i = 0; i < AUDIO_MAX_CHANNELS; i++) {
         audio_stop_channel(i);
     }
     
-    // PC Speaker'ı kapat
+    // PC Speaker'Ä± kapat
     nosound();
     
     audio_initialized = 0;
-    printf("Ses sistemi kapatıldı\n");
+    printf("Ses sistemi kapatÄ±ldÄ±\n");
 }
 
 int audio_create_channel() {
     if (!audio_initialized) return -1;
     
-    // Boş kanal bul
+    // BoÅŸ kanal bul
     for (int i = 0; i < AUDIO_MAX_CHANNELS; i++) {
         if (!audio_mixer.channels[i].active) {
             audio_mixer.channels[i].active = 1;
@@ -74,7 +76,7 @@ int audio_create_channel() {
         }
     }
     
-    return -1; // Boş kanal yok
+    return -1; // BoÅŸ kanal yok
 }
 
 void audio_destroy_channel(int channel) {
@@ -95,12 +97,12 @@ int audio_play_buffer(int channel, uint8_t* buffer, uint32_t size, audio_format_
     
     audio_channel_t* ch = &audio_mixer.channels[channel];
     
-    // Eski buffer'ı temizle
+    // Eski buffer'Ä± temizle
     if (ch->buffer) {
         kfree(ch->buffer);
     }
     
-    // Yeni buffer'ı ayır
+    // Yeni buffer'Ä± ayÄ±r
     ch->buffer = (uint8_t*)kmalloc(size);
     if (!ch->buffer) return -1;
     
@@ -110,7 +112,7 @@ int audio_play_buffer(int channel, uint8_t* buffer, uint32_t size, audio_format_
     ch->format = format;
     ch->active = 1;
     
-    printf("Ses buffer'ı kanal %d'de çalınıyor (%d bytes)\n", channel, size);
+    printf("Ses buffer'Ä± kanal %d'de Ã§alÄ±nÄ±yor (%d bytes)\n", channel, size);
     return 0;
 }
 
@@ -122,7 +124,7 @@ void audio_stop_channel(int channel) {
     ch->position = 0;
     
     if (channel == 0) {
-        // Ana kanalı PC Speaker'da durdur
+        // Ana kanalÄ± PC Speaker'da durdur
         nosound();
     }
 }
@@ -170,27 +172,27 @@ void audio_set_loop(int channel, uint8_t loop) {
 int audio_load_wav(const char* filename, uint8_t** buffer, uint32_t* size, wav_header_t* header) {
     if (!audio_initialized || !filename || !buffer || !size || !header) return -1;
     
-    // Dosyayı oku
+    // DosyayÄ± oku
     uint8_t* file_data = fs_read(filename);
     if (!file_data) {
-        printf("WAV dosyası okunamadı: %s\n", filename);
+        printf("WAV dosyasÄ± okunamadÄ±: %s\n", filename);
         return -1;
     }
     
-    // WAV başlığını kontrol et
+    // WAV baÅŸlÄ±ÄŸÄ±nÄ± kontrol et
     wav_header_t* wav_hdr = (wav_header_t*)file_data;
     
     if (strncmp(wav_hdr->riff, "RIFF", 4) != 0 || 
         strncmp(wav_hdr->wave, "WAVE", 4) != 0) {
-        printf("Geçersiz WAV formatı: %s\n", filename);
+        printf("GeÃ§ersiz WAV formatÄ±: %s\n", filename);
         kfree(file_data);
         return -1;
     }
     
-    // Header'ı kopyala
+    // Header'Ä± kopyala
     memcpy(header, wav_hdr, sizeof(wav_header_t));
     
-    // Ses verisini ayır
+    // Ses verisini ayÄ±r
     uint32_t data_size = header->data_size;
     *buffer = (uint8_t*)kmalloc(data_size);
     if (!*buffer) {
@@ -204,7 +206,7 @@ int audio_load_wav(const char* filename, uint8_t** buffer, uint32_t* size, wav_h
     
     kfree(file_data);
     
-    printf("WAV dosyası yüklendi: %s (%d Hz, %d kanal, %d-bit, %d bytes)\n", 
+    printf("WAV dosyasÄ± yÃ¼klendi: %s (%d Hz, %d kanal, %d-bit, %d bytes)\n", 
            filename, header->sample_rate, header->channels, 
            header->bits_per_sample, data_size);
     
@@ -217,11 +219,11 @@ int audio_save_wav(const char* filename, uint8_t* buffer, uint32_t size, wav_hea
     // Dosya boyutunu hesapla
     uint32_t file_size = sizeof(wav_header_t) + size;
     
-    // Header'ı güncelle
+    // Header'Ä± gÃ¼ncelle
     header->file_size = file_size - 8;
     header->data_size = size;
     
-    // Tam dosyayı oluştur
+    // Tam dosyayÄ± oluÅŸtur
     uint8_t* file_data = (uint8_t*)kmalloc(file_size);
     if (!file_data) return -1;
     
@@ -234,28 +236,28 @@ int audio_save_wav(const char* filename, uint8_t* buffer, uint32_t size, wav_hea
     
     kfree(file_data);
     
-    printf("WAV dosyası kaydedildi: %s (%d bytes)\n", filename, size);
+    printf("WAV dosyasÄ± kaydedildi: %s (%d bytes)\n", filename, size);
     return 0;
 }
 
 void audio_play_midi_note(midi_note_t* note) {
     if (!audio_initialized || !note) return;
     
-    // MIDI nota frekansına çevir
+    // MIDI nota frekansÄ±na Ã§evir
     uint32_t frequency = 440; // A4 = 440Hz
     
     if (note->note >= 0 && note->note <= 127) {
-        // Basit nota-frekans dönüşümü
+        // Basit nota-frekans dÃ¶nÃ¼ÅŸÃ¼mÃ¼
         frequency = 440 * pow(2, (note->note - 69) / 12.0);
     }
     
-    // Kanalda çal
+    // Kanalda Ã§al
     int channel = audio_create_channel();
     if (channel >= 0) {
-        // Basit ses buffer'ı oluştur
+        // Basit ses buffer'Ä± oluÅŸtur
         uint8_t* tone_buffer = (uint8_t*)kmalloc(1000);
         
-        // Basit sinüs dalgası oluştur (sadeleşmiş)
+        // Basit sinÃ¼s dalgasÄ± oluÅŸtur (sadeleÅŸmiÅŸ)
         for (int i = 0; i < 1000; i++) {
             float angle = 2.0 * 3.14159 * i * frequency / AUDIO_SAMPLE_RATE;
             tone_buffer[i] = 128 + 127 * sin(angle) * (note->velocity / 127.0);
@@ -264,10 +266,10 @@ void audio_play_midi_note(midi_note_t* note) {
         audio_play_buffer(channel, tone_buffer, 1000, AUDIO_FORMAT_PCM8);
         audio_set_volume(channel, note->velocity * 100 / 127);
         
-        // Belirtilen süre sonra durdur
-        // Gerçek bir sistemde timer ile yapılmalı
+        // Belirtilen sÃ¼re sonra durdur
+        // GerÃ§ek bir sistemde timer ile yapÄ±lmalÄ±
         if (note->duration > 0) {
-            // Şimdilik sadece başlatıyoruz
+            // Åimdilik sadece baÅŸlatÄ±yoruz
         }
         
         kfree(tone_buffer);
@@ -277,8 +279,8 @@ void audio_play_midi_note(midi_note_t* note) {
 void audio_stop_midi_note(uint8_t note, uint8_t channel) {
     if (!audio_initialized) return;
     
-    // Belirtilen kanaldaki notayı durdur
-    // Gerçek bir sistemde polyphony yönetimi gerekir
+    // Belirtilen kanaldaki notayÄ± durdur
+    // GerÃ§ek bir sistemde polyphony yÃ¶netimi gerekir
     printf("MIDI nota durduruldu: %d (kanal %d)\n", note, channel);
 }
 
@@ -294,7 +296,7 @@ void audio_add_effect(audio_effect_params_t* effect) {
 void audio_remove_effect(int index) {
     if (!audio_initialized || index < 0 || index >= audio_mixer.effect_count) return;
     
-    // Efekti sil ve diğerlerini kaydır
+    // Efekti sil ve diÄŸerlerini kaydÄ±r
     for (int i = index; i < audio_mixer.effect_count - 1; i++) {
         memcpy(&audio_mixer.effects[i], &audio_mixer.effects[i + 1], sizeof(audio_effect_params_t));
     }
@@ -311,16 +313,16 @@ void audio_clear_effects() {
 void audio_mix_samples() {
     if (!audio_initialized) return;
     
-    // Mix buffer'ını temizle
+    // Mix buffer'Ä±nÄ± temizle
     memset(audio_mixer.mix_buffer, 0, sizeof(audio_mixer.mix_buffer));
     
-    // Aktif kanalları karıştır
+    // Aktif kanallarÄ± karÄ±ÅŸtÄ±r
     for (int ch = 0; ch < AUDIO_MAX_CHANNELS; ch++) {
         audio_channel_t* channel = &audio_mixer.channels[ch];
         
         if (!channel->active || !channel->buffer) continue;
         
-        // Kanal sesini mix buffer'ına ekle
+        // Kanal sesini mix buffer'Ä±na ekle
         for (int i = 0; i < AUDIO_BUFFER_SIZE; i++) {
             if (channel->position >= channel->buffer_size) {
                 if (channel->loop) {
@@ -334,7 +336,7 @@ void audio_mix_samples() {
             if (channel->active) {
                 int16_t sample = 0;
                 
-                // Formata göre sample'ı oku
+                // Formata gÃ¶re sample'Ä± oku
                 if (channel->format == AUDIO_FORMAT_PCM8) {
                     sample = ((int16_t)channel->buffer[channel->position] - 128) * 256;
                 } else if (channel->format == AUDIO_FORMAT_PCM16) {
@@ -368,7 +370,7 @@ void audio_mix_samples() {
 void audio_apply_effects() {
     if (!audio_initialized || audio_mixer.effect_count == 0) return;
     
-    // Mix buffer'ı output buffer'ına kopyala
+    // Mix buffer'Ä± output buffer'Ä±na kopyala
     memcpy(audio_mixer.output_buffer, audio_mixer.mix_buffer, sizeof(audio_mixer.output_buffer));
     
     // Efektleri uygula
@@ -409,14 +411,14 @@ void audio_apply_effects() {
 void audio_update() {
     if (!audio_initialized) return;
     
-    // Ses karıştırma
+    // Ses karÄ±ÅŸtÄ±rma
     audio_mix_samples();
     
-    // PC Speaker'a gönder (basitleştirilmiş)
+    // PC Speaker'a gÃ¶nder (basitleÅŸtirilmiÅŸ)
     if (audio_mixer.channels[0].active && audio_mixer.channels[0].buffer) {
-        // İlk sample'ı al ve frekansa çevir
+        // Ä°lk sample'Ä± al ve frekansa Ã§evir
         uint8_t sample = audio_mixer.output_buffer[0] >> 8; // 16-bit'ten 8-bite
-        uint32_t frequency = 200 + (sample * 2); // Basit frekans dönüşümü
+        uint32_t frequency = 200 + (sample * 2); // Basit frekans dÃ¶nÃ¼ÅŸÃ¼mÃ¼
         
         play_sound(frequency);
     } else {
@@ -424,14 +426,14 @@ void audio_update() {
     }
 }
 
-int audio_get_duration(int channel) {
+uint32_t audio_get_duration(int channel) {
     if (!audio_initialized || channel < 0 || channel >= AUDIO_MAX_CHANNELS) return 0;
     
     audio_channel_t* ch = &audio_mixer.channels[channel];
     
     if (!ch->active || !ch->buffer) return 0;
     
-    // Süreyi hesapla (saniye)
+    // SÃ¼reyi hesapla (saniye)
     return (ch->buffer_size * 1000) / ch->sample_rate;
 }
 
@@ -454,14 +456,14 @@ float audio_get_cpu_usage() {
     return (active_channels * 100.0) / AUDIO_MAX_CHANNELS;
 }
 
-// Gerçek zamanlı ses güncelleme (timer interrupt'ında çağrılır)
+// GerÃ§ek zamanlÄ± ses gÃ¼ncelleme (timer interrupt'Ä±nda Ã§aÄŸrÄ±lÄ±r)
 void audio_timer_handler() {
     if (!audio_initialized) return;
     
     audio_update();
 }
 
-// Ses kayıt sistemi (basit implementasyon)
+// Ses kayÄ±t sistemi (basit implementasyon)
 static uint8_t* recording_buffer = NULL;
 static uint32_t recording_size = 0;
 static int is_recording = 0;
@@ -477,20 +479,20 @@ void audio_start_recording() {
     recording_size = 0;
     is_recording = 1;
     
-    printf("Ses kaydı başlatıldı\n");
+    printf("Ses kaydÄ± baÅŸlatÄ±ldÄ±\n");
 }
 
 void audio_stop_recording() {
     if (!audio_initialized || !is_recording) return;
     
     is_recording = 0;
-    printf("Ses kaydı durduruldu (%d bytes)\n", recording_size);
+    printf("Ses kaydÄ± durduruldu (%d bytes)\n", recording_size);
 }
 
 void audio_save_recording(const char* filename) {
     if (!audio_initialized || !recording_buffer || recording_size == 0) return;
     
-    // WAV başlığı oluştur
+    // WAV baÅŸlÄ±ÄŸÄ± oluÅŸtur
     wav_header_t header;
     memcpy(header.riff, "RIFF", 4);
     memcpy(header.wave, "WAVE", 4);

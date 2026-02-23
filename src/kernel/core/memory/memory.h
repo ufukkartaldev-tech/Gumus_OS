@@ -1,4 +1,4 @@
-#ifndef MEMORY_H
+﻿#ifndef MEMORY_H
 #define MEMORY_H
 
 #include <stdint.h>
@@ -6,12 +6,12 @@
 
 #define PAGE_SIZE 4096
 
-// Bellek Haritası
+// Bellek HaritasÄ±
 #define KERNEL_START_PADDR  0x00100000 // 1MB
 #define KERNEL_HEAP_START   0xC0000000 // 3GB Sanal Adres (Higher Half)
 #define MEMORY_BITMAP_START 0x00200000 // 2MB Fiziksel
 
-// Paging Yapıları
+// Paging YapÄ±larÄ±
 typedef struct {
     uint32_t present : 1;
     uint32_t rw : 1;
@@ -31,8 +31,8 @@ typedef struct {
 } page_table_t;
 
 typedef struct {
-    page_table_t* tables[1024]; // Sanal işaretçiler
-    uint32_t tablesPhysical[1024]; // CR3 için fiziksel adresler
+    page_table_t* tables[1024]; // Sanal iÅŸaretÃ§iler
+    uint32_t tablesPhysical[1024]; // CR3 iÃ§in fiziksel adresler
 } page_directory_t;
 
 // Public Functions
@@ -40,6 +40,9 @@ void init_memory(uint32_t mem_size);
 void* kmalloc(size_t size);
 void* kmalloc_aligned(size_t size, uint32_t align);
 void kfree(void* ptr);
+
+#define malloc kmalloc
+#define free kfree
 
 // PMM Functions
 void* pmm_alloc_frame();

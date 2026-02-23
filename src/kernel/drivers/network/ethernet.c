@@ -1,13 +1,19 @@
-#include "ethernet.h"
-#include "../../core/io.h"
-#include "../../core/string.h"
-#include "../../core/memory.h"
+﻿#include "ethernet.h"
+#include "io.h"
+#include "string.h"
+#include "memory.h"
+#include "printf.h"
 
-// Global Değişkenler
-static mac_addr_t our_mac = {{0x52, 0x54, 0x00, 0x12, 0x34, 0x56}}; // Varsayılan MAC
+// Network byte order functions
+static uint16_t htons(uint16_t hostshort) {
+    return ((hostshort >> 8) & 0xFF) | ((hostshort & 0xFF) << 8);
+}
+
+// Global DeÄŸiÅŸkenler
+static mac_addr_t our_mac = {{0x52, 0x54, 0x00, 0x12, 0x34, 0x56}}; // VarsayÄ±lan MAC
 static int ethernet_initialized = 0;
 
-// MAC Adresi Utility Fonksiyonları
+// MAC Adresi Utility FonksiyonlarÄ±
 int ethernet_mac_equal(mac_addr_t* a, mac_addr_t* b) {
     for (int i = 0; i < ETHERNET_ADDR_LEN; i++) {
         if (a->addr[i] != b->addr[i]) {
@@ -43,17 +49,17 @@ void ethernet_print_mac(mac_addr_t* mac) {
     }
 }
 
-// Ethernet Sürücü Fonksiyonları
+// Ethernet SÃ¼rÃ¼cÃ¼ FonksiyonlarÄ±
 int ethernet_init() {
     if (ethernet_initialized) {
-        return 0; // Zaten başlatılmış
+        return 0; // Zaten baÅŸlatÄ±lmÄ±ÅŸ
     }
     
-    // Network kartı burada başlatılacak
-    // Şimdilik varsayılan MAC adresini kullan
+    // Network kartÄ± burada baÅŸlatÄ±lacak
+    // Åimdilik varsayÄ±lan MAC adresini kullan
     
     ethernet_initialized = 1;
-    printf("Ethernet sürücüsü başlatıldı. MAC: ");
+    printf("Ethernet sÃ¼rÃ¼cÃ¼sÃ¼ baÅŸlatÄ±ldÄ±. MAC: ");
     ethernet_print_mac(&our_mac);
     printf("\n");
     
@@ -65,10 +71,10 @@ int ethernet_send_frame(mac_addr_t* dest, uint16_t type, void* data, uint32_t si
         return -1;
     }
     
-    // Frame oluştur
+    // Frame oluÅŸtur
     ethernet_frame_t frame;
     
-    // Header'ı doldur
+    // Header'Ä± doldur
     ethernet_copy_mac(&frame.header.dest, dest);
     ethernet_copy_mac(&frame.header.src, &our_mac);
     frame.header.type = htons(type);
@@ -76,10 +82,10 @@ int ethernet_send_frame(mac_addr_t* dest, uint16_t type, void* data, uint32_t si
     // Payload'u kopyala
     memcpy(frame.payload, data, size);
     
-    // Network kartına gönder
-    // Bu kısım network kartı sürücüsüne bağlı
-    // Şimdilik debug bilgisi yaz
-    printf("Frame gönderiliyor: ");
+    // Network kartÄ±na gÃ¶nder
+    // Bu kÄ±sÄ±m network kartÄ± sÃ¼rÃ¼cÃ¼sÃ¼ne baÄŸlÄ±
+    // Åimdilik debug bilgisi yaz
+    printf("Frame gÃ¶nderiliyor: ");
     ethernet_print_mac(dest);
     printf(" -> ");
     ethernet_print_mac(&our_mac);
@@ -93,11 +99,11 @@ int ethernet_receive_frame(ethernet_frame_t* frame) {
         return -1;
     }
     
-    // Network kartından frame al
-    // Bu kısım network kartı sürücüsüne bağlı
-    // Şimdilik simüle edelim
+    // Network kartÄ±ndan frame al
+    // Bu kÄ±sÄ±m network kartÄ± sÃ¼rÃ¼cÃ¼sÃ¼ne baÄŸlÄ±
+    // Åimdilik simÃ¼le edelim
     
-    return 0; // Henüz frame yok
+    return 0; // HenÃ¼z frame yok
 }
 
 void ethernet_set_mac(mac_addr_t* mac) {
@@ -108,7 +114,7 @@ mac_addr_t ethernet_get_mac() {
     return our_mac;
 }
 
-// Sürücü Interface Fonksiyonları
+// SÃ¼rÃ¼cÃ¼ Interface FonksiyonlarÄ±
 static int ethernet_driver_init(void) {
     return ethernet_init();
 }
@@ -141,7 +147,7 @@ static int ethernet_driver_shutdown(void) {
     return 0;
 }
 
-// Ethernet Sürücü Yapısı
+// Ethernet SÃ¼rÃ¼cÃ¼ YapÄ±sÄ±
 driver_t ethernet_driver = {
     .name = "ethernet",
     .type = DRIVER_TYPE_NET,

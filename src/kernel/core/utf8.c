@@ -1,4 +1,4 @@
-#include "utf8.h"
+﻿#include "utf8.h"
 
 // UTF-8 State Machine (Bjoern Hoehrmann's implementation style)
 static const uint8_t utf8d[] = {
@@ -29,20 +29,20 @@ uint32_t decode_utf8(utf8_decoder_t* decoder, uint8_t byte) {
 uint8_t unicode_to_cp437(uint32_t codepoint) {
     if (codepoint < 128) return (uint8_t)codepoint;
 
-    // Türkçe Karakter Eşlemeleri
+    // TÃ¼rkÃ§e Karakter EÅŸlemeleri
     switch (codepoint) {
-        case 0x00C7: return 0x80; // Ç
-        case 0x00E7: return 0x87; // ç
-        case 0x011E: return 0xA7; // Ğ (Yeni font)
-        case 0x011F: return 0xA6; // ğ (Yeni font)
-        case 0x0130: return 0xAB; // İ (Yeni font)
-        case 0x0131: return 0xAA; // ı (Yeni font)
-        case 0x00D6: return 0x99; // Ö
-        case 0x00F6: return 0x94; // ö
-        case 0x015E: return 0xA9; // Ş (Yeni font)
-        case 0x015F: return 0xA8; // ş (Yeni font)
-        case 0x00DC: return 0x9A; // Ü
-        case 0x00FC: return 0x81; // ü
+        case 0x00C7: return 0x80; // Ã‡
+        case 0x00E7: return 0x87; // Ã§
+        case 0x011E: return 0xA7; // Ä (Yeni font)
+        case 0x011F: return 0xA6; // ÄŸ (Yeni font)
+        case 0x0130: return 0xAB; // Ä° (Yeni font)
+        case 0x0131: return 0xAA; // Ä± (Yeni font)
+        case 0x00D6: return 0x99; // Ã–
+        case 0x00F6: return 0x94; // Ã¶
+        case 0x015E: return 0xA9; // Å (Yeni font)
+        case 0x015F: return 0xA8; // ÅŸ (Yeni font)
+        case 0x00DC: return 0x9A; // Ãœ
+        case 0x00FC: return 0x81; // Ã¼
         default: return '?';      // Bilinmeyen karakter
     }
 }

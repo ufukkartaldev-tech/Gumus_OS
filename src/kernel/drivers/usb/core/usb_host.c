@@ -1,9 +1,14 @@
-#include "usb_host.h"
-#include "../core/memory.h"
-#include "../core/string.h"
-#include "../core/io.h"
-#include "hardware_detect.h"
+﻿#include "usb_host.h"
+#include "io.h"
+#include "string.h"
+#include "memory.h"
 #include "printf.h"
+#include "stdio.h"
+
+// External stub driver functions
+extern driver_t* create_ohci_driver(pci_device_t* device);
+extern driver_t* create_ehci_driver(pci_device_t* device);
+extern driver_t* create_xhci_driver(pci_device_t* device);
 
 // Global USB Host Manager
 static usb_host_controller_t* usb_controllers = NULL;
@@ -11,17 +16,17 @@ static usb_device_t* usb_devices = NULL;
 static uint32_t next_device_id = 1;
 static uint32_t next_controller_id = 1;
 
-// USB Host Controller fonksiyonları
+// USB Host Controller fonksiyonlarÄ±
 void usb_host_init() {
-    printf("USB Host Controller sistemi başlatılıyor...\n");
+    printf("USB Host Controller sistemi baÅŸlatÄ±lÄ±yor...\n");
     
-    // PCI üzerinden USB Host Controller'ları tara
+    // PCI Ã¼zerinden USB Host Controller'larÄ± tara
     hardware_info_t* hw_info = hardware_get_info();
     
     for (int i = 0; i < hw_info->pci_device_count; i++) {
         pci_device_t* device = &hw_info->pci_devices[i];
         
-        // USB Host Controller sınıf kodlarını kontrol et
+        // USB Host Controller sÄ±nÄ±f kodlarÄ±nÄ± kontrol et
         if (device->class_code == 0x0C && device->subclass == 0x03) {
             driver_t* driver = NULL;
             
@@ -62,12 +67,12 @@ void usb_host_init() {
         }
     }
     
-    printf("USB Host Controller sistemi başlatıldı\n");
+    printf("USB Host Controller sistemi baÅŸlatÄ±ldÄ±\n");
 }
 
 int usb_host_register_controller(usb_host_controller_t* controller) {
     if (!controller) {
-        printf("usb_host_register_controller: Boş controller\n");
+        printf("usb_host_register_controller: BoÅŸ controller\n");
         return -1;
     }
     
@@ -75,12 +80,12 @@ int usb_host_register_controller(usb_host_controller_t* controller) {
     controller->next = usb_controllers;
     usb_controllers = controller;
     
-    // Controller'ı başlat
+    // Controller'Ä± baÅŸlat
     if (controller->init && controller->init(controller) == 0) {
         printf("USB Host Controller kaydedildi: %s (ID: %d)\n", 
                controller->base.name, controller->base.unique_id);
         
-        // Portları tara ve aygıtları enumerate et
+        // PortlarÄ± tara ve aygÄ±tlarÄ± enumerate et
         for (uint32_t port = 0; port < controller->num_ports; port++) {
             usb_host_enumerate_device(controller, port);
         }
@@ -88,7 +93,7 @@ int usb_host_register_controller(usb_host_controller_t* controller) {
         return 0;
     }
     
-    printf("USB Host Controller başlatılamadı: %s\n", controller->base.name);
+    printf("USB Host Controller baÅŸlatÄ±lamadÄ±: %s\n", controller->base.name);
     return -1;
 }
 
@@ -97,17 +102,17 @@ int usb_host_unregister_controller(usb_host_controller_t* controller) {
         return -1;
     }
     
-    // Controller'ı kapat
+    // Controller'Ä± kapat
     if (controller->base.shutdown) {
         controller->base.shutdown();
     }
     
-    // Listeden çıkar
+    // Listeden Ã§Ä±kar
     usb_host_controller_t** current = &usb_controllers;
     while (*current) {
         if (*current == controller) {
             *current = controller->next;
-            printf("USB Host Controller kaldırıldı: %s\n", controller->base.name);
+            printf("USB Host Controller kaldÄ±rÄ±ldÄ±: %s\n", controller->base.name);
             return 0;
         }
         current = &(*current)->next;
@@ -121,11 +126,11 @@ int usb_host_enumerate_device(usb_host_controller_t* controller, uint8_t port) {
         return -1;
     }
     
-    // Controller'ın enumerate fonksiyonunu çağır
+    // Controller'Ä±n enumerate fonksiyonunu Ã§aÄŸÄ±r
     if (controller->enumerate_device) {
         int result = controller->enumerate_device(controller, port);
         if (result == 0) {
-            printf("USB aygıtı enumerate edildi: Controller %s, Port %d\n", 
+            printf("USB aygÄ±tÄ± enumerate edildi: Controller %s, Port %d\n", 
                    controller->base.name, port);
         }
         return result;
@@ -178,12 +183,12 @@ int usb_host_interrupt_transfer(usb_host_controller_t* controller, uint8_t devic
 }
 
 void usb_host_list_devices() {
-    printf("\n=== USB Aygıtları ===\n");
+    printf("\n=== USB AygÄ±tlarÄ± ===\n");
     usb_device_t* current = usb_devices;
     int count = 1;
     
     while (current) {
-        printf("%d. Aygıt ID: %d, Adres: %d, Port: %d, Speed: %d\n", 
+        printf("%d. AygÄ±t ID: %d, Adres: %d, Port: %d, Speed: %d\n", 
                count++, current->id, current->address, current->port, current->speed);
         printf("   Vendor: %04X, Product: %04X, Class: %02X\n",
                current->device_desc.vendor_id, current->device_desc.product_id,
@@ -194,7 +199,7 @@ void usb_host_list_devices() {
 }
 
 void usb_host_list_controllers() {
-    printf("\n=== USB Host Controller'ları ===\n");
+    printf("\n=== USB Host Controller'larÄ± ===\n");
     usb_host_controller_t* current = usb_controllers;
     int count = 1;
     
@@ -207,7 +212,7 @@ void usb_host_list_controllers() {
     printf("=============================\n");
 }
 
-// USB aygıt ekleme fonksiyonu
+// USB aygÄ±t ekleme fonksiyonu
 int usb_host_add_device(usb_device_t* device) {
     if (!device) {
         return -1;
@@ -220,13 +225,13 @@ int usb_host_add_device(usb_device_t* device) {
     device->next = usb_devices;
     usb_devices = device;
     
-    printf("USB aygıtı eklendi: ID %d, Address %d\n", 
+    printf("USB aygÄ±tÄ± eklendi: ID %d, Address %d\n", 
            device->id, device->address);
     
     return 0;
 }
 
-// USB aygıt kaldırma fonksiyonu
+// USB aygÄ±t kaldÄ±rma fonksiyonu
 int usb_host_remove_device(uint32_t device_id) {
     usb_device_t** current = &usb_devices;
     
@@ -234,7 +239,7 @@ int usb_host_remove_device(uint32_t device_id) {
         if ((*current)->id == device_id) {
             usb_device_t* to_remove = *current;
             *current = (*current)->next;
-            printf("USB aygıtı kaldırıldı: ID %d\n", device_id);
+            printf("USB aygÄ±tÄ± kaldÄ±rÄ±ldÄ±: ID %d\n", device_id);
             free(to_remove);
             return 0;
         }

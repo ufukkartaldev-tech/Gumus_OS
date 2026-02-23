@@ -1,7 +1,9 @@
-#include "udp.h"
-#include "../../core/io.h"
-#include "../../core/string.h"
-#include "../../core/memory.h"
+﻿#include "udp.h"
+#include "io.h"
+#include "string.h"
+#include "memory.h"
+#include "printf.h"
+#include "ip.h"
 
 int udp_init() {
     printf("UDP protokolu baslatildi.\n");
@@ -75,12 +77,12 @@ int udp_process_packet(ip_packet_t* ip_packet, uint32_t size) {
 
     printf("UDP: Paket alindi %d -> %d [Boyut: %d]\n", src_port, dst_port, length);
 
-    // Veri kısmını işle (basit bir echo veya port kontrolü yapılabilir)
+    // Veri kÄ±smÄ±nÄ± iÅŸle (basit bir echo veya port kontrolÃ¼ yapÄ±labilir)
     void* data = ip_packet->data + sizeof(udp_header_t);
     uint32_t data_len = length - sizeof(udp_header_t);
 
     // Gelen veriyi (data) ekrana basabiliriz veya bir callback sistemine iletebiliriz
-    // Şimdilik sadece boyutu yazdıralım.
+    // Åimdilik sadece boyutu yazdÄ±ralÄ±m.
     
     return 0;
 }

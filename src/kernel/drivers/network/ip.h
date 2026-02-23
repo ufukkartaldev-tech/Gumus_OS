@@ -1,8 +1,14 @@
-#ifndef IP_H
+﻿#ifndef IP_H
 #define IP_H
 
 #include <stdint.h>
 #include <stddef.h>
+
+#define htons(n) ((((uint16_t)(n) & 0xFF00) >> 8) | (((uint16_t)(n) & 0x00FF) << 8))
+#define ntohs(n) htons(n)
+#define htonl(n) ((((uint32_t)(n) & 0x000000FF) << 24) | (((uint32_t)(n) & 0x0000FF00) << 8) | (((uint32_t)(n) & 0x00FF0000) >> 8) | (((uint32_t)(n) & 0xFF000000) >> 24))
+#define ntohl(n) htonl(n)
+
 #include "ethernet.h"
 #include "arp.h"
 
@@ -35,7 +41,7 @@ typedef struct {
     uint8_t data[IP_MAX_PACKET_SIZE - sizeof(ip_header_t)];
 } __attribute__((packed)) ip_packet_t;
 
-// IP Fonksiyonları
+// IP FonksiyonlarÄ±
 int ip_init();
 int ip_send_packet(uint8_t* dest_ip, uint8_t protocol, void* data, uint32_t size);
 int ip_receive_packet(ip_packet_t* packet);
@@ -45,11 +51,20 @@ void ip_set_source_ip(uint8_t* ip);
 uint8_t* ip_get_source_ip();
 void ip_print_packet(ip_packet_t* packet);
 
-// IP Fragmentasyon Fonksiyonları
+// IP Fragmentasyon FonksiyonlarÄ±
 int ip_fragment_packet(uint8_t* dest_ip, uint8_t protocol, void* data, uint32_t size);
 int ip_reassemble_packet(ip_packet_t* fragment, uint32_t size);
 
 // IP Routing
 int ip_route_packet(uint8_t* dest_ip, mac_addr_t* next_hop_mac);
+
+// Pseudo-header for checksum (Shared by TCP/UDP)
+typedef struct {
+    uint8_t source_ip[4];
+    uint8_t dest_ip[4];
+    uint8_t zero;
+    uint8_t protocol;
+    uint16_t udp_length;
+} __attribute__((packed)) udp_pseudo_header_t;
 
 #endif

@@ -1,4 +1,4 @@
-#include "gdt.h"
+﻿#include "gdt.h"
 #include "string.h"
 
 // GDT Entries: Null, KCode, KData, UCode, UData, TSS
@@ -7,7 +7,7 @@ gdt_entry_t gdt_entries[6];
 gdt_ptr_t   gdt_ptr;
 tss_entry_t tss_entry;
 
-// Assembly'de tanımlı GDT yükleme fonksiyonu
+// Assembly'de tanÄ±mlÄ± GDT yÃ¼kleme fonksiyonu
 extern void gdt_flush(uint32_t);
 extern void tss_flush(); // LTR komutu
 
@@ -56,14 +56,14 @@ void init_gdt() {
     gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User Data segment (0x20) - Ring 3
     
     // TSS Segment (0x28)
-    // Şimdilik stack 0, context switch sırasında güncellenecek
+    // Åimdilik stack 0, context switch sÄ±rasÄ±nda gÃ¼ncellenecek
     write_tss(5, 0x10, 0); 
 
     gdt_flush((uint32_t)&gdt_ptr);
     tss_flush(); // 0x28 | 3 ? No, TSS selector is just index 5 -> 0x28
 }
 
-// Context Switch sırasında Kernel Stack'i güncellemek için
+// Context Switch sÄ±rasÄ±nda Kernel Stack'i gÃ¼ncellemek iÃ§in
 void tss_set_stack(uint32_t kernel_ss, uint32_t kernel_esp) {
     tss_entry.ss0 = kernel_ss;
     tss_entry.esp0 = kernel_esp;

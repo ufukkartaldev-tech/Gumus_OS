@@ -1,4 +1,4 @@
-#ifndef ATA_H
+﻿#ifndef ATA_H
 #define ATA_H
 
 #include <stdint.h>

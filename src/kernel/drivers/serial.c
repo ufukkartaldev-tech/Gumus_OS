@@ -1,6 +1,6 @@
-#include "serial.h"
-#include "../core/io.h"
-#include "../core/string.h"
+﻿#include "serial.h"
+#include "io.h"
+#include "string.h"
 
 int serial_init() {
     outb(COM1_PORT + 1, 0x00);    // Disable all interrupts

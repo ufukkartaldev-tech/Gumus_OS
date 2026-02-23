@@ -1,4 +1,4 @@
-#include "shell.h"
+﻿#include "shell.h"
 #include "kernel.h"
 #include "memory.h"
 #include "string.h"
@@ -9,26 +9,28 @@
 #include "sound.h"
 #include "window.h"
 #include "snake.h"
-#include "../drivers/network/ethernet.h"
-#include "../drivers/network/arp.h"
-#include "../drivers/network/ip.h"
-#include "../drivers/network/icmp.h"
+#include "ethernet.h"
+#include "arp.h"
+#include "ip.h"
+#include "icmp.h"
+#include "file_manager_gui.h"
+#include "hardware_detect.h"
 #include "file_manager_gui.h"
 #include "system_monitor.h"
-#include "../drivers/advanced_sound.h"
+#include "advanced_sound.h"
 #include "audio_mixer.h"
 #include "elf.h"
 
 static char command_buffer[MAX_COMMAND_LEN];
 static int buffer_index = 0;
 
-// Komut Geçmişi (History)
+// Komut GeÃ§miÅŸi (History)
 #define MAX_HISTORY 10
 static char history[MAX_HISTORY][MAX_COMMAND_LEN];
 static int history_count = 0;
-static int history_index = -1; // Şu an bakılan geçmiş indeksi
+static int history_index = -1; // Åu an bakÄ±lan geÃ§miÅŸ indeksi
 
-// Harici değişkenler (memory.c'den)
+// Harici deÄŸiÅŸkenler (memory.c'den)
 extern uint32_t used_blocks;
 extern uint32_t max_blocks;
 
@@ -40,7 +42,7 @@ static note_t plevne_marsi[] = {
     {NOTE_B4, 8}, {0, 2}, // Di-yor (Uzun)
     {NOTE_C5, 4}, {0, 1}, {NOTE_B4, 4}, {0, 1}, {NOTE_A4, 4}, {0, 1}, // Et-ra-fi-mi
     {NOTE_G4, 4}, {0, 1}, {NOTE_F4, 4}, {0, 1}, {NOTE_E4, 16}, // Yik-mam (Cok Uzun)
-    {0, 0} // Bitiş
+    {0, 0} // BitiÅŸ
 };
 
 void shell_init() {
@@ -51,13 +53,13 @@ void shell_init() {
 
 void shell_parse_command(char* cmd) {
     if (strlen(cmd) > 0) {
-        // Geçmişe ekle (aynı komut değilse)
+        // GeÃ§miÅŸe ekle (aynÄ± komut deÄŸilse)
         if (history_count == 0 || strcmp(history[(history_count-1) % MAX_HISTORY], cmd) != 0) {
             strcpy(history[history_count % MAX_HISTORY], cmd);
             history_count++;
         }
     }
-    history_index = -1; // İndeksi sıfırla
+    history_index = -1; // Ä°ndeksi sÄ±fÄ±rla
 
     if (strcmp(cmd, "yardim") == 0 || strcmp(cmd, "help") == 0) {
         print_color("\nGumusOS Komutlari:\n", YELLOW);
@@ -78,13 +80,13 @@ void shell_parse_command(char* cmd) {
         print("  ping [IP]   - ICMP ping gonderir\n");
         print("  arp [IP]    - ARP tablosunu sorgular\n");
         print_color("\nGrafiksel Arayuz:\n", LIGHT_CYAN);
-        print("  dosyalar    - Grafiksel dosya yöneticisini acar\n");
-        print("  monitor     - Sistem monitörünü acar\n");
+        print("  dosyalar    - Grafiksel dosya yÃ¶neticisini acar\n");
+        print("  monitor     - Sistem monitÃ¶rÃ¼nÃ¼ acar\n");
         print_color("\nSes Sistemi:\n", LIGHT_CYAN);
-        print("  ses_cal     - Ses mixer arayüzünü acar\n");
-        print("  ses_kaydet  - Ses kaydını baslatir/durdurur\n");
-        print("  wav_cal [dosya] - WAV dosyası calar\n");
-        print_color("\nGumusDil (soyle) Örnekleri:\n", LIGHT_GREEN);
+        print("  ses_cal     - Ses mixer arayÃ¼zÃ¼nÃ¼ acar\n");
+        print("  ses_kaydet  - Ses kaydÄ±nÄ± baslatir/durdurur\n");
+        print("  wav_cal [dosya] - WAV dosyasÄ± calar\n");
+        print_color("\nGumusDil (soyle) Ã–rnekleri:\n", LIGHT_GREEN);
         print("  yaz \"Selam\"        - Ekrana yazar\n");
         print("  kutu(50,50,5,5,10) - Dikdortgen cizer\n");
         print("  temizle(0)         - Ekrani siyah yapar\n");
@@ -169,7 +171,7 @@ void shell_parse_command(char* cmd) {
         print("  p1 iade edildi.\n");
         print_color("Bellek testi tamamlandi.\n", LIGHT_GREEN);
     } else if (strcmp(cmd, "kyber") == 0) {
-        print_color("\n[Kyber] Kuantum direncli anahtar kapsülleme baslatiliyor...\n", LIGHT_CYAN);
+        print_color("\n[Kyber] Kuantum direncli anahtar kapsÃ¼lleme baslatiliyor...\n", LIGHT_CYAN);
         print("[Kyber] Anahtar Uretimi: [ OK ]\n");
         print("[Kyber] Sifreleme:       [ OK ]\n");
         print("[Kyber] Cozme:           [ OK ]\n");
@@ -177,7 +179,7 @@ void shell_parse_command(char* cmd) {
         gumus_execute(cmd);
     } else if (strcmp(cmd, "cal") == 0) {
         print_color("\n[Gumus Player] Plevne Marsi caliniyor...\n", LIGHT_CYAN);
-        play_melody(plevne_marsi, 21); // Dizi uzunluğunu elle veriyoruz (şimdilik)
+        play_melody(plevne_marsi, 21); // Dizi uzunluÄŸunu elle veriyoruz (ÅŸimdilik)
         print("Muzik calarken komut yazmaya devam edebilirsiniz!\n");
     } else if (strcmp(cmd, "dur") == 0) {
         stop_melody();
@@ -240,7 +242,7 @@ void shell_parse_command(char* cmd) {
         uint8_t target_ip[4];
         string_to_ip(ip_str, target_ip);
         
-        print_color("\nARP sorgulanıyor: ", LIGHT_CYAN);
+        print_color("\nARP sorgulanÄ±yor: ", LIGHT_CYAN);
         print(ip_str);
         print("\n");
         
@@ -253,21 +255,21 @@ void shell_parse_command(char* cmd) {
             print_color("ARP cozumlemesi basarisiz.\n", LIGHT_RED);
         }
     } else if (strcmp(cmd, "dosyalar") == 0) {
-        print_color("\nGrafiksel Dosya Yöneticisi aciliyor...\n", LIGHT_CYAN);
+        print_color("\nGrafiksel Dosya YÃ¶neticisi aciliyor...\n", LIGHT_CYAN);
         launch_file_manager_gui();
     } else if (strcmp(cmd, "monitor") == 0) {
-        print_color("\nSistem Monitörü aciliyor...\n", LIGHT_CYAN);
+        print_color("\nSistem MonitÃ¶rÃ¼ aciliyor...\n", LIGHT_CYAN);
         launch_system_monitor();
     } else if (strcmp(cmd, "ses_cal") == 0) {
-        print_color("\nSes Mixer arayüzü aciliyor...\n", LIGHT_CYAN);
+        print_color("\nSes Mixer arayÃ¼zÃ¼ aciliyor...\n", LIGHT_CYAN);
         launch_audio_mixer();
     } else if (strncmp(cmd, "ses_kaydet", 10) == 0) {
         if (audio_is_recording()) {
             audio_stop_recording();
-            print_color("\nSes kaydı durduruldu.\n", LIGHT_GREEN);
+            print_color("\nSes kaydÄ± durduruldu.\n", LIGHT_GREEN);
         } else {
             audio_start_recording();
-            print_color("\nSes kaydı baslatildi.\n", LIGHT_GREEN);
+            print_color("\nSes kaydÄ± baslatildi.\n", LIGHT_GREEN);
         }
     } else if (strncmp(cmd, "wav_cal ", 8) == 0) {
         char* filename = cmd + 8;
@@ -275,7 +277,7 @@ void shell_parse_command(char* cmd) {
         print(filename);
         print("\n");
         
-        // WAV dosyasını yükle ve çal
+        // WAV dosyasÄ±nÄ± yÃ¼kle ve Ã§al
         uint8_t* buffer;
         uint32_t size;
         wav_header_t header;
@@ -310,24 +312,24 @@ void shell_input(char c) {
             putchar('\b');
         }
     } else if ((uint8_t)c == 0x80 || (uint8_t)c == 0x81) {
-        // Geçmiş (History) Gezintisi
+        // GeÃ§miÅŸ (History) Gezintisi
         if (history_count == 0) return;
 
         if ((uint8_t)c == 0x80) { // YUKARI
             if (history_index == -1) history_index = history_count - 1;
             else if (history_index > 0 && history_index > history_count - MAX_HISTORY) history_index--;
-        } else { // AŞAĞI
+        } else { // AÅAÄI
             if (history_index != -1 && history_index < history_count - 1) history_index++;
             else { history_index = -1; }
         }
 
-        // Mevcut satırı temizle
+        // Mevcut satÄ±rÄ± temizle
         while (buffer_index > 0) {
             putchar('\b');
             buffer_index--;
         }
 
-        // Yeni komutu yükle
+        // Yeni komutu yÃ¼kle
         if (history_index != -1) {
             strcpy(command_buffer, history[history_index % MAX_HISTORY]);
             buffer_index = strlen(command_buffer);

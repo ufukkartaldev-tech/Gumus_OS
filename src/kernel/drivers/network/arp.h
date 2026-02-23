@@ -1,4 +1,4 @@
-#ifndef ARP_H
+﻿#ifndef ARP_H
 #define ARP_H
 
 #include <stdint.h>
@@ -34,7 +34,7 @@ typedef struct arp_cache_entry {
     struct arp_cache_entry* next;
 } arp_cache_entry_t;
 
-// ARP Fonksiyonları
+// ARP FonksiyonlarÄ±
 int arp_init();
 int arp_send_request(uint8_t* target_ip);
 int arp_send_reply(uint8_t* target_ip, mac_addr_t* target_mac);
@@ -45,7 +45,7 @@ int arp_cache_lookup(uint8_t* ip_addr, mac_addr_t* mac_addr);
 void arp_cache_cleanup();
 void arp_print_packet(arp_packet_t* packet);
 
-// IP Adresi Utility Fonksiyonları
+// IP Adresi Utility FonksiyonlarÄ±
 void ip_to_string(uint8_t* ip, char* str);
 void string_to_ip(char* str, uint8_t* ip);
 int ip_equal(uint8_t* a, uint8_t* b);

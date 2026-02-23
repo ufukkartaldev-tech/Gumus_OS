@@ -1,16 +1,16 @@
-#ifndef ADVANCED_SOUND_H
+﻿#ifndef ADVANCED_SOUND_H
 #define ADVANCED_SOUND_H
 
 #include <stdint.h>
 #include "sound.h"
 
-// Gelişmiş Ses Sistemi Sabitleri
+// GeliÅŸmiÅŸ Ses Sistemi Sabitleri
 #define AUDIO_MAX_CHANNELS 8
 #define AUDIO_SAMPLE_RATE 44100
 #define AUDIO_BUFFER_SIZE 4096
 #define AUDIO_MAX_VOLUME 100
 
-// Ses Formatları
+// Ses FormatlarÄ±
 typedef enum {
     AUDIO_FORMAT_PCM8,
     AUDIO_FORMAT_PCM16,
@@ -18,7 +18,7 @@ typedef enum {
     AUDIO_FORMAT_WAV
 } audio_format_t;
 
-// Ses Kanalı
+// Ses KanalÄ±
 typedef struct {
     int active;
     uint8_t* buffer;
@@ -48,7 +48,7 @@ typedef struct {
     uint32_t feedback;
 } audio_effect_params_t;
 
-// Ses Karıştırıcı (Mixer)
+// Ses KarÄ±ÅŸtÄ±rÄ±cÄ± (Mixer)
 typedef struct {
     audio_channel_t channels[AUDIO_MAX_CHANNELS];
     uint8_t master_volume;
@@ -64,7 +64,7 @@ typedef struct {
     int16_t output_buffer[AUDIO_BUFFER_SIZE];
 } audio_mixer_t;
 
-// WAV Dosya Başlığı
+// WAV Dosya BaÅŸlÄ±ÄŸÄ±
 typedef struct {
     char riff[4];
     uint32_t file_size;
@@ -81,7 +81,7 @@ typedef struct {
     uint32_t data_size;
 } __attribute__((packed)) wav_header_t;
 
-// MIDI Nota Yapısı
+// MIDI Nota YapÄ±sÄ±
 typedef struct {
     uint8_t note;
     uint8_t velocity;
@@ -89,11 +89,11 @@ typedef struct {
     uint8_t channel;
 } midi_note_t;
 
-// Gelişmiş Ses Fonksiyonları
+// GeliÅŸmiÅŸ Ses FonksiyonlarÄ±
 void advanced_sound_init();
 void advanced_sound_shutdown();
 
-// Kanal Yönetimi
+// Kanal YÃ¶netimi
 int audio_create_channel();
 void audio_destroy_channel(int channel);
 int audio_play_buffer(int channel, uint8_t* buffer, uint32_t size, audio_format_t format);
@@ -107,38 +107,39 @@ void audio_set_volume(int channel, uint8_t volume);
 void audio_set_pan(int channel, uint8_t pan);
 void audio_set_master_volume(uint8_t volume);
 void audio_set_loop(int channel, uint8_t loop);
+int audio_get_active_channels();
 
 // Efektler
 void audio_add_effect(audio_effect_params_t* effect);
 void audio_remove_effect(int index);
 void audio_clear_effects();
 
-// WAV Formatı
+// WAV FormatÄ±
 int audio_load_wav(const char* filename, uint8_t** buffer, uint32_t* size, wav_header_t* header);
 int audio_save_wav(const char* filename, uint8_t* buffer, uint32_t size, wav_header_t* header);
 
-// MIDI Formatı
+// MIDI FormatÄ±
 void audio_play_midi_note(midi_note_t* note);
 void audio_stop_midi_note(uint8_t note, uint8_t channel);
 void audio_load_midi_file(const char* filename);
 
-// Ses Kayıt
+// Ses KayÄ±t
 void audio_start_recording();
 void audio_stop_recording();
 void audio_save_recording(const char* filename);
 int audio_is_recording();
 
-// Gerçek Zamanlı İşleme
+// GerÃ§ek ZamanlÄ± Ä°ÅŸleme
 void audio_update();
 void audio_mix_samples();
 void audio_apply_effects();
 
-// Utility Fonksiyonları
+// Utility FonksiyonlarÄ±
 uint32_t audio_get_duration(int channel);
 int audio_is_playing(int channel);
 float audio_get_cpu_usage();
 
-// Ses Arayüzü Fonksiyonları
+// Ses ArayÃ¼zÃ¼ FonksiyonlarÄ±
 void audio_show_visualizer();
 void audio_show_equalizer();
 void audio_show_mixer();

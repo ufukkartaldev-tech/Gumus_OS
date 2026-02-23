@@ -1,8 +1,8 @@
-#include "audio_driver.h"
-#include "../core/memory.h"
-#include "../core/io.h"
-#include "../core/string.h"
-#include "../core/printf.h"
+﻿#include "audio_driver.h"
+#include "memory.h"
+#include "io.h"
+#include "string.h"
+#include "printf.h"
 
 static ac97_driver_t ac97_driver;
 static hda_driver_t hda_driver;
@@ -12,7 +12,7 @@ static int hda_initialized = 0;
 // Audio Driver Functions
 static int audio_driver_init(void* driver) {
     audio_driver_t* audio_driver = (audio_driver_t*)driver;
-    printf("Audio sürücüsü başlatılıyor...\n");
+    printf("Audio sÃ¼rÃ¼cÃ¼sÃ¼ baÅŸlatÄ±lÄ±yor...\n");
     return audio_init(audio_driver);
 }
 
@@ -38,7 +38,7 @@ static int audio_driver_ioctl(uint32_t command, void* arg) {
         case 0x3001: // Set format
             return audio_set_format(driver, (audio_format_t*)arg);
         case 0x3002: // Set volume
-            return audio_set_volume(driver, *(uint16_t*)arg);
+            return audio_driver_set_volume(driver, *(uint16_t*)arg);
         case 0x3003: // Set mute
             return audio_set_mute(driver, *(uint8_t*)arg);
         case 0x3004: // Start playback
@@ -55,14 +55,14 @@ static int audio_driver_ioctl(uint32_t command, void* arg) {
 
 static int audio_driver_shutdown(void* driver) {
     audio_driver_t* audio_driver = (audio_driver_t*)driver;
-    printf("Audio sürücüsü kapatılıyor...\n");
+    printf("Audio sÃ¼rÃ¼cÃ¼sÃ¼ kapatÄ±lÄ±yor...\n");
     audio_driver->initialized = 0;
     return 0;
 }
 
 // AC'97 Driver Functions
 static int ac97_driver_init(void) {
-    printf("AC'97 sürücüsü başlatılıyor...\n");
+    printf("AC'97 sÃ¼rÃ¼cÃ¼sÃ¼ baÅŸlatÄ±lÄ±yor...\n");
     return ac97_init(&ac97_driver.base);
 }
 
@@ -82,14 +82,14 @@ static int ac97_driver_ioctl(uint32_t command, void* arg) {
 }
 
 static int ac97_driver_shutdown(void) {
-    printf("AC'97 sürücüsü kapatılıyor...\n");
+    printf("AC'97 sÃ¼rÃ¼cÃ¼sÃ¼ kapatÄ±lÄ±yor...\n");
     ac97_initialized = 0;
     return 0;
 }
 
 // HDA Driver Functions
 static int hda_driver_init(void) {
-    printf("HDA sürücüsü başlatılıyor...\n");
+    printf("HDA sÃ¼rÃ¼cÃ¼sÃ¼ baÅŸlatÄ±lÄ±yor...\n");
     return hda_init(&hda_driver.base);
 }
 
@@ -109,7 +109,7 @@ static int hda_driver_ioctl(uint32_t command, void* arg) {
 }
 
 static int hda_driver_shutdown(void) {
-    printf("HDA sürücüsü kapatılıyor...\n");
+    printf("HDA sÃ¼rÃ¼cÃ¼sÃ¼ kapatÄ±lÄ±yor...\n");
     hda_initialized = 0;
     return 0;
 }
@@ -118,15 +118,15 @@ static int hda_driver_shutdown(void) {
 int audio_init(audio_driver_t* driver) {
     if (!driver) return -1;
     
-    printf("Audio aygıtı başlatılıyor...\n");
+    printf("Audio aygÄ±tÄ± baÅŸlatÄ±lÄ±yor...\n");
     
-    // Varsayılan format ayarla
+    // VarsayÄ±lan format ayarla
     driver->current_format.sample_rate = AUDIO_SAMPLE_RATE_44K;
     driver->current_format.bit_depth = AUDIO_FORMAT_16BIT;
     driver->current_format.channels = AUDIO_CHANNELS_STEREO;
     driver->current_format.format = AUDIO_FORMAT_16BIT;
     
-    // Mixer'ı başlat
+    // Mixer'Ä± baÅŸlat
     driver->mixer.master_volume = 0x8080; // 50% volume
     driver->mixer.pcm_volume = 0x8080;
     driver->mixer.line_in_volume = 0x8080;
@@ -134,11 +134,11 @@ int audio_init(audio_driver_t* driver) {
     driver->mixer.cd_volume = 0x8080;
     driver->mixer.mute = 0;
     
-    // Stream'leri başlat
+    // Stream'leri baÅŸlat
     memset(&driver->playback_stream, 0, sizeof(audio_stream_t));
     memset(&driver->capture_stream, 0, sizeof(audio_stream_t));
     
-    // Statistics'ı sıfırla
+    // Statistics'Ä± sÄ±fÄ±rla
     memset(&driver->stats, 0, sizeof(audio_stats_t));
     
     driver->initialized = 1;
@@ -150,12 +150,12 @@ int audio_set_format(audio_driver_t* driver, audio_format_t* format) {
         return -1;
     }
     
-    printf("Audio format ayarlanıyor: %d Hz, %d-bit, %d kanal\n", 
+    printf("Audio format ayarlanÄ±yor: %d Hz, %d-bit, %d kanal\n", 
            format->sample_rate, format->bit_depth, format->channels);
     
     driver->current_format = *format;
     
-    // Buffer'ları yeniden boyutlandır
+    // Buffer'larÄ± yeniden boyutlandÄ±r
     uint32_t buffer_size = audio_calculate_buffer_size(format, 100); // 100ms buffer
     driver->playback_stream.buffer.size = buffer_size;
     driver->capture_stream.buffer.size = buffer_size;
@@ -168,7 +168,7 @@ int audio_start_playback(audio_driver_t* driver) {
         return -1;
     }
     
-    printf("Audio playback başlatılıyor...\n");
+    printf("Audio playback baÅŸlatÄ±lÄ±yor...\n");
     driver->playback_stream.active = 1;
     driver->playback_stream.buffer.position = 0;
     driver->playback_stream.buffer.used = 0;
@@ -192,7 +192,7 @@ int audio_start_capture(audio_driver_t* driver) {
         return -1;
     }
     
-    printf("Audio capture başlatılıyor...\n");
+    printf("Audio capture baÅŸlatÄ±lÄ±yor...\n");
     driver->capture_stream.active = 1;
     driver->capture_stream.buffer.position = 0;
     driver->capture_stream.buffer.used = 0;
@@ -252,7 +252,7 @@ int audio_read_samples(audio_driver_t* driver, void* samples, uint32_t count) {
     memcpy(samples, buffer_ptr, bytes_needed);
     buffer->position += bytes_needed;
     
-    // Buffer'ı sıfırla
+    // Buffer'Ä± sÄ±fÄ±rla
     if (buffer->position >= buffer->used) {
         buffer->position = 0;
         buffer->used = 0;
@@ -264,13 +264,13 @@ int audio_read_samples(audio_driver_t* driver, void* samples, uint32_t count) {
     return count;
 }
 
-int audio_set_volume(audio_driver_t* driver, uint16_t volume) {
+int audio_driver_set_volume(audio_driver_t* driver, uint16_t volume) {
     if (!driver || !driver->initialized) {
         return -1;
     }
     
     driver->mixer.master_volume = volume;
-    printf("Audio volume ayarlandı: %d\n", volume);
+    printf("Audio volume ayarlandÄ±: %d\n", volume);
     
     return 0;
 }
@@ -281,7 +281,7 @@ int audio_set_mute(audio_driver_t* driver, uint8_t mute) {
     }
     
     driver->mixer.mute = mute;
-    printf("Audio mute: %s\n", mute ? "Evet" : "Hayır");
+    printf("Audio mute: %s\n", mute ? "Evet" : "HayÄ±r");
     
     return 0;
 }
@@ -292,7 +292,7 @@ int ac97_init(audio_driver_t* driver) {
     
     if (!ac97) return -1;
     
-    printf("AC'97 başlatılıyor...\n");
+    printf("AC'97 baÅŸlatÄ±lÄ±yor...\n");
     
     // Codec'i resetle
     ac97_write_codec(ac97, AC97_REG_RESET, 0xFFFF);
@@ -307,7 +307,7 @@ int ac97_init(audio_driver_t* driver) {
     }
     
     if (!ac97->codec_ready) {
-        printf("AC'97 codec hazır değil\n");
+        printf("AC'97 codec hazÄ±r deÄŸil\n");
         return -1;
     }
     
@@ -317,17 +317,17 @@ int ac97_init(audio_driver_t* driver) {
     
     printf("AC'97 Codec ID: %04X:%04X\n", vendor_id1, vendor_id2);
     
-    // Buffer'ları ayarla
+    // Buffer'larÄ± ayarla
     ac97->buffer_size = audio_calculate_buffer_size(&ac97->base.current_format, 100);
     ac97->playback_buffer = malloc(ac97->buffer_size);
     ac97->capture_buffer = malloc(ac97->buffer_size);
     
     if (!ac97->playback_buffer || !ac97->capture_buffer) {
-        printf("AC'97 buffer ayarlanamadı\n");
+        printf("AC'97 buffer ayarlanamadÄ±\n");
         return -1;
     }
     
-    // Varsayılan ses seviyelerini ayarla
+    // VarsayÄ±lan ses seviyelerini ayarla
     ac97_write_codec(ac97, AC97_REG_MASTER_VOL, 0x8080);
     ac97_write_codec(ac97, AC97_REG_PCM_OUT_VOL, 0x8080);
     
@@ -338,7 +338,7 @@ int ac97_init(audio_driver_t* driver) {
 uint16_t ac97_read_codec(ac97_driver_t* ac97, uint8_t reg) {
     if (!ac97 || !ac97->codec_ready) return 0xFFFF;
     
-    // Codec register'ını oku
+    // Codec register'Ä±nÄ± oku
     uint32_t address = ac97->codec_base + (reg * 2);
     return inw(address);
 }
@@ -346,7 +346,7 @@ uint16_t ac97_read_codec(ac97_driver_t* ac97, uint8_t reg) {
 void ac97_write_codec(ac97_driver_t* ac97, uint8_t reg, uint16_t value) {
     if (!ac97 || !ac97->codec_ready) return;
     
-    // Codec register'ına yaz
+    // Codec register'Ä±na yaz
     uint32_t address = ac97->codec_base + (reg * 2);
     outw(address, value);
 }
@@ -355,7 +355,7 @@ int ac97_write_samples(audio_driver_t* driver, void* samples, uint32_t count) {
     if (!ac97_initialized) return -1;
     
     // AC'97 hardware'a yaz
-    // Bu fonksiyon gerçek AC'97 controller ile implement edilmeli
+    // Bu fonksiyon gerÃ§ek AC'97 controller ile implement edilmeli
     return audio_write_samples(driver, samples, count);
 }
 
@@ -363,7 +363,7 @@ int ac97_read_samples(audio_driver_t* driver, void* samples, uint32_t count) {
     if (!ac97_initialized) return -1;
     
     // AC'97 hardware'dan oku
-    // Bu fonksiyon gerçek AC'97 controller ile implement edilmeli
+    // Bu fonksiyon gerÃ§ek AC'97 controller ile implement edilmeli
     return audio_read_samples(driver, samples, count);
 }
 
@@ -373,9 +373,9 @@ int hda_init(audio_driver_t* driver) {
     
     if (!hda) return -1;
     
-    printf("HDA başlatılıyor...\n");
+    printf("HDA baÅŸlatÄ±lÄ±yor...\n");
     
-    // Controller'ı resetle
+    // Controller'Ä± resetle
     uint32_t gctl = inl(hda->mmio_base + HDA_REG_GCTL);
     gctl &= ~0x01; // Clear CRST
     outl(hda->mmio_base + HDA_REG_GCTL, gctl);
@@ -387,7 +387,7 @@ int hda_init(audio_driver_t* driver) {
         }
     }
     
-    // Reset'i kaldır
+    // Reset'i kaldÄ±r
     gctl |= 0x01; // Set CRST
     outl(hda->mmio_base + HDA_REG_GCTL, gctl);
     
@@ -403,22 +403,22 @@ int hda_init(audio_driver_t* driver) {
     }
     
     if (hda->codec_count == 0) {
-        printf("HDA codec bulunamadı\n");
+        printf("HDA codec bulunamadÄ±\n");
         return -1;
     }
     
-    // CORB ve RIRB buffer'larını ayarla
+    // CORB ve RIRB buffer'larÄ±nÄ± ayarla
     hda->corb_size = 256;
     hda->rirb_size = 256;
     hda->corb_buffer = malloc(hda->corb_size * 4);
     hda->rirb_buffer = malloc(hda->rirb_size * 8);
     
     if (!hda->corb_buffer || !hda->rirb_buffer) {
-        printf("HDA buffer'ları ayarlanamadı\n");
+        printf("HDA buffer'larÄ± ayarlanamadÄ±\n");
         return -1;
     }
     
-    // CORB ve RIRB'yi yapılandır
+    // CORB ve RIRB'yi yapÄ±landÄ±r
     outl(hda->mmio_base + HDA_REG_CORBLBASE, (uint32_t)hda->corb_buffer);
     outl(hda->mmio_base + HDA_REG_CORBUBASE, 0);
     outl(hda->mmio_base + HDA_REG_RIRBLBASE, (uint32_t)hda->rirb_buffer);
@@ -437,7 +437,7 @@ int hda_write_samples(audio_driver_t* driver, void* samples, uint32_t count) {
     if (!hda_initialized) return -1;
     
     // HDA hardware'a yaz
-    // Bu fonksiyon gerçek HDA controller ile implement edilmeli
+    // Bu fonksiyon gerÃ§ek HDA controller ile implement edilmeli
     return audio_write_samples(driver, samples, count);
 }
 
@@ -445,7 +445,7 @@ int hda_read_samples(audio_driver_t* driver, void* samples, uint32_t count) {
     if (!hda_initialized) return -1;
     
     // HDA hardware'dan oku
-    // Bu fonksiyon gerçek HDA controller ile implement edilmeli
+    // Bu fonksiyon gerÃ§ek HDA controller ile implement edilmeli
     return audio_read_samples(driver, samples, count);
 }
 
@@ -474,7 +474,7 @@ uint32_t audio_bytes_to_samples(audio_format_t* format, uint32_t bytes) {
 
 driver_t* create_ac97_driver(pci_device_t* device) {
     if (ac97_initialized) {
-        printf("AC'97 zaten başlatılmış\n");
+        printf("AC'97 zaten baÅŸlatÄ±lmÄ±ÅŸ\n");
         return &ac97_driver.base.base;
     }
     
@@ -490,7 +490,7 @@ driver_t* create_ac97_driver(pci_device_t* device) {
     // Codec base adresini ayarla (genellikle I/O base + 0x80)
     ac97_driver.codec_base = ac97_driver.io_base + 0x80;
     
-    // Sürücü yapısını ayarla
+    // SÃ¼rÃ¼cÃ¼ yapÄ±sÄ±nÄ± ayarla
     strcpy(ac97_driver.base.base.name, "AC'97 Audio");
     ac97_driver.base.base.type = DRIVER_TYPE_CHAR;
     ac97_driver.base.base.class = DRIVER_CLASS_MULTIMEDIA;
@@ -502,7 +502,7 @@ driver_t* create_ac97_driver(pci_device_t* device) {
     ac97_driver.base.base.ioctl = ac97_driver_ioctl;
     ac97_driver.base.base.shutdown = ac97_driver_shutdown;
     
-    printf("AC'97 sürücüsü oluşturuldu, I/O base: 0x%04X (%04X:%04X)\n", 
+    printf("AC'97 sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuldu, I/O base: 0x%04X (%04X:%04X)\n", 
            ac97_driver.io_base,
            device ? device->vendor_id : 0xFFFF, 
            device ? device->device_id : 0xFFFF);
@@ -511,7 +511,7 @@ driver_t* create_ac97_driver(pci_device_t* device) {
 
 driver_t* create_hda_driver(pci_device_t* device) {
     if (hda_initialized) {
-        printf("HDA zaten başlatılmış\n");
+        printf("HDA zaten baÅŸlatÄ±lmÄ±ÅŸ\n");
         return &hda_driver.base.base;
     }
     
@@ -524,7 +524,7 @@ driver_t* create_hda_driver(pci_device_t* device) {
         return NULL;
     }
     
-    // Sürücü yapısını ayarla
+    // SÃ¼rÃ¼cÃ¼ yapÄ±sÄ±nÄ± ayarla
     strcpy(hda_driver.base.base.name, "Intel HDA Audio");
     hda_driver.base.base.type = DRIVER_TYPE_CHAR;
     hda_driver.base.base.class = DRIVER_CLASS_MULTIMEDIA;
@@ -536,7 +536,7 @@ driver_t* create_hda_driver(pci_device_t* device) {
     hda_driver.base.base.ioctl = hda_driver_ioctl;
     hda_driver.base.base.shutdown = hda_driver_shutdown;
     
-    printf("Intel HDA sürücüsü oluşturuldu, MMIO base: 0x%08X (%04X:%04X)\n", 
+    printf("Intel HDA sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuldu, MMIO base: 0x%08X (%04X:%04X)\n", 
            hda_driver.mmio_base,
            device ? device->vendor_id : 0x8086, 
            device ? device->device_id : 0x2668);

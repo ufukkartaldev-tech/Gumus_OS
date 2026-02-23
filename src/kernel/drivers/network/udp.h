@@ -1,4 +1,4 @@
-#ifndef UDP_H
+﻿#ifndef UDP_H
 #define UDP_H
 
 #include <stdint.h>
@@ -18,15 +18,6 @@ typedef struct {
     udp_header_t header;
     uint8_t data[];
 } __attribute__((packed)) udp_packet_t;
-
-// Pseudo-header for checksum 
-typedef struct {
-    uint8_t source_ip[4];
-    uint8_t dest_ip[4];
-    uint8_t zero;
-    uint8_t protocol;
-    uint16_t udp_length;
-} __attribute__((packed)) udp_pseudo_header_t;
 
 // UDP Functions
 int udp_init();

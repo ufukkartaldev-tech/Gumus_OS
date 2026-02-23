@@ -1,7 +1,7 @@
-#ifndef XHCI_H
+﻿#ifndef XHCI_H
 #define XHCI_H
 
-#include "../../core/usb_host.h"
+#include "usb_host.h"
 
 // XHCI Capability Registers
 #define XHCI_CAPLENGTH            0x00

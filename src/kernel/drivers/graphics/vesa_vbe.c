@@ -1,22 +1,26 @@
-#include "vesa_vbe.h"
-#include "../core/memory.h"
-#include "../core/io.h"
-#include "../core/string.h"
-#include "../core/printf.h"
+﻿#include "vesa_vbe.h"
+#include "io.h"
+#include "string.h"
+#include "memory.h"
+#include "printf.h"
+#include "vga_font.h"
+#include "font_8x8.h"
+#include "stdio.h"
+#include "stdlib.h"
 
 static vesa_driver_t vesa_driver;
 static int vesa_initialized = 0;
 
 // BIOS interrupt 0x10 wrapper
 static int vbe_bios_call(uint16_t ax, uint16_t bx, uint16_t cx, uint16_t dx, uint16_t es, uint16_t di) {
-    // Bu fonksiyon gerçek BIOS interrupt çağrısı implement etmeli
-    // Şimdilik simülasyon
+    // Bu fonksiyon gerÃ§ek BIOS interrupt Ã§aÄŸrÄ±sÄ± implement etmeli
+    // Åimdilik simÃ¼lasyon
     return 0x004F; // Success
 }
 
 // VESA Driver Functions
 static int vesa_driver_init(void) {
-    printf("VESA/VBE sürücüsü başlatılıyor...\n");
+    printf("VESA/VBE sÃ¼rÃ¼cÃ¼sÃ¼ baÅŸlatÄ±lÄ±yor...\n");
     return vesa_init();
 }
 
@@ -45,7 +49,7 @@ static int vesa_driver_write(void* buffer, uint32_t size, uint32_t offset) {
 }
 
 static int vesa_driver_ioctl(uint32_t command, void* arg) {
-    // IOCTL komutları için
+    // IOCTL komutlarÄ± iÃ§in
     switch (command) {
         case 0x1001: // Set mode
             return vesa_set_mode(*(uint16_t*)arg);
@@ -72,23 +76,23 @@ static int vesa_driver_ioctl(uint32_t command, void* arg) {
 }
 
 static int vesa_driver_shutdown(void) {
-    printf("VESA/VBE sürücüsü kapatılıyor...\n");
+    printf("VESA/VBE sÃ¼rÃ¼cÃ¼sÃ¼ kapatÄ±lÄ±yor...\n");
     vesa_initialized = 0;
     return 0;
 }
 
 int vesa_init() {
-    printf("VESA/VBE başlatılıyor...\n");
+    printf("VESA/VBE baÅŸlatÄ±lÄ±yor...\n");
     
     // Controller info'yu al
     if (vesa_get_controller_info(&vesa_driver.controller_info) != 0) {
-        printf("VESA controller info alınamadı\n");
+        printf("VESA controller info alÄ±namadÄ±\n");
         return -1;
     }
     
-    // VESA imzasını kontrol et
+    // VESA imzasÄ±nÄ± kontrol et
     if (vesa_driver.controller_info.signature != VBE_CONTROLLER_SIGNATURE) {
-        printf("VESA signature bulunamadı\n");
+        printf("VESA signature bulunamadÄ±\n");
         return -1;
     }
     
@@ -98,15 +102,15 @@ int vesa_init() {
     
     printf("Total Memory: %d KB\n", vesa_driver.controller_info.total_memory * 64);
     
-    // Varsayılan modu ayarla (1024x768x32)
+    // VarsayÄ±lan modu ayarla (1024x768x32)
     uint16_t best_mode = vesa_find_best_mode(1024, 768, 32);
     if (best_mode == 0xFFFF) {
-        printf("Uygun video modu bulunamadı\n");
+        printf("Uygun video modu bulunamadÄ±\n");
         return -1;
     }
     
     if (vesa_set_mode(best_mode) != 0) {
-        printf("Video modu ayarlanamadı\n");
+        printf("Video modu ayarlanamadÄ±\n");
         return -1;
     }
     
@@ -117,7 +121,7 @@ int vesa_init() {
 int vesa_get_controller_info(vbe_controller_info_t* info) {
     if (!info) return -1;
     
-    // BIOS çağrısı yap
+    // BIOS Ã§aÄŸrÄ±sÄ± yap
     uint16_t result = vbe_bios_call(VBE_GET_CONTROLLER_INFO, 0, 0, 0, 0, (uint16_t)info);
     
     if (result != 0x004F) {
@@ -130,7 +134,7 @@ int vesa_get_controller_info(vbe_controller_info_t* info) {
 int vesa_get_mode_info(uint16_t mode, vbe_mode_info_t* info) {
     if (!info) return -1;
     
-    // BIOS çağrısı yap
+    // BIOS Ã§aÄŸrÄ±sÄ± yap
     uint16_t result = vbe_bios_call(VBE_GET_MODE_INFO, mode, 0, 0, 0, (uint16_t)info);
     
     if (result != 0x004F) {
@@ -159,7 +163,7 @@ int vesa_set_mode(uint16_t mode) {
         vesa_driver.framebuffer = (uint8_t*)mode_info.framebuffer_ptr;
         vesa_driver.framebuffer_size = mode_info.bytes_per_scanline * mode_info.resolution_y;
         
-        // Framebuffer'ı map et (gerçek sistemde memory mapping gerekir)
+        // Framebuffer'Ä± map et (gerÃ§ek sistemde memory mapping gerekir)
         printf("Framebuffer: 0x%08X, Boyut: %d bytes\n", 
                mode_info.framebuffer_ptr, vesa_driver.framebuffer_size);
     }
@@ -167,7 +171,7 @@ int vesa_set_mode(uint16_t mode) {
     vesa_driver.current_mode = mode;
     vesa_driver.current_mode_info = mode_info;
     
-    printf("Video modu ayarlandı: %dx%dx%d\n", 
+    printf("Video modu ayarlandÄ±: %dx%dx%d\n", 
            mode_info.resolution_x, mode_info.resolution_y, 
            mode_info.red_mask_size + mode_info.green_mask_size + mode_info.blue_mask_size);
     
@@ -183,14 +187,14 @@ int vesa_get_current_mode(uint16_t* mode) {
         return -1;
     }
     
-    *mode = result; // AX register'ında mode değeri döner
+    *mode = result; // AX register'Ä±nda mode deÄŸeri dÃ¶ner
     return 0;
 }
 
 int vesa_set_palette(uint8_t start, uint8_t count, rgba_t* palette) {
     if (!palette) return -1;
     
-    // BIOS çağrısı yap
+    // BIOS Ã§aÄŸrÄ±sÄ± yap
     uint16_t result = vbe_bios_call(VBE_SET_PALETTE_DATA, start, count, 0, 0, (uint16_t)palette);
     
     if (result != 0x004F) {
@@ -205,12 +209,12 @@ int vesa_put_pixel(int x, int y, rgba_t color) {
     
     vbe_mode_info_t* mode = &vesa_driver.current_mode_info;
     
-    // Sınırları kontrol et
+    // SÄ±nÄ±rlarÄ± kontrol et
     if (x < 0 || x >= mode->resolution_x || y < 0 || y >= mode->resolution_y) {
         return -1;
     }
     
-    // Pixel formatına göre yaz
+    // Pixel formatÄ±na gÃ¶re yaz
     uint8_t* pixel = vesa_driver.framebuffer + (y * mode->bytes_per_scanline) + (x * (mode->red_mask_size + mode->green_mask_size + mode->blue_mask_size) / 8);
     
     if (mode->memory_model == VBE_MEMORY_MODEL_DIRECT_COLOR) {
@@ -232,12 +236,12 @@ int vesa_get_pixel(int x, int y, rgba_t* color) {
     
     vbe_mode_info_t* mode = &vesa_driver.current_mode_info;
     
-    // Sınırları kontrol et
+    // SÄ±nÄ±rlarÄ± kontrol et
     if (x < 0 || x >= mode->resolution_x || y < 0 || y >= mode->resolution_y) {
         return -1;
     }
     
-    // Pixel formatına göre oku
+    // Pixel formatÄ±na gÃ¶re oku
     uint8_t* pixel = vesa_driver.framebuffer + (y * mode->bytes_per_scanline) + (x * (mode->red_mask_size + mode->green_mask_size + mode->blue_mask_size) / 8);
     
     if (mode->memory_model == VBE_MEMORY_MODEL_DIRECT_COLOR) {
@@ -263,7 +267,7 @@ int vesa_fill_rect(int x, int y, int width, int height, rgba_t color) {
     
     vbe_mode_info_t* mode = &vesa_driver.current_mode_info;
     
-    // Sınırları kontrol et
+    // SÄ±nÄ±rlarÄ± kontrol et
     if (x < 0) { width += x; x = 0; }
     if (y < 0) { height += y; y = 0; }
     if (x + width > mode->resolution_x) width = mode->resolution_x - x;
@@ -271,7 +275,7 @@ int vesa_fill_rect(int x, int y, int width, int height, rgba_t color) {
     
     if (width <= 0 || height <= 0) return -1;
     
-    // Rectangle'ı doldur
+    // Rectangle'Ä± doldur
     for (int py = y; py < y + height; py++) {
         for (int px = x; px < x + width; px++) {
             vesa_put_pixel(px, py, color);
@@ -352,24 +356,24 @@ int vesa_copy_rect(int src_x, int src_y, int dst_x, int dst_y, int width, int he
     
     vbe_mode_info_t* mode = &vesa_driver.current_mode_info;
     
-    // Sınırları kontrol et
+    // SÄ±nÄ±rlarÄ± kontrol et
     if (src_x < 0 || src_y < 0 || dst_x < 0 || dst_y < 0) return -1;
     if (src_x + width > mode->resolution_x || src_y + height > mode->resolution_y) return -1;
     if (dst_x + width > mode->resolution_x || dst_y + height > mode->resolution_y) return -1;
     
-    // Copy direction'u belirle (overlap kontrolü)
+    // Copy direction'u belirle (overlap kontrolÃ¼)
     int src_offset = src_y * mode->bytes_per_scanline + src_x * 4;
     int dst_offset = dst_y * mode->bytes_per_scanline + dst_x * 4;
     
     if (src_offset < dst_offset) {
-        // Yukarıdan aşağıya kopyala
+        // YukarÄ±dan aÅŸaÄŸÄ±ya kopyala
         for (int y = height - 1; y >= 0; y--) {
             uint8_t* src_line = vesa_driver.framebuffer + ((src_y + y) * mode->bytes_per_scanline) + (src_x * 4);
             uint8_t* dst_line = vesa_driver.framebuffer + ((dst_y + y) * mode->bytes_per_scanline) + (dst_x * 4);
             memcpy(dst_line, src_line, width * 4);
         }
     } else {
-        // Aşağıdan yukarıya kopyala
+        // AÅŸaÄŸÄ±dan yukarÄ±ya kopyala
         for (int y = 0; y < height; y++) {
             uint8_t* src_line = vesa_driver.framebuffer + ((src_y + y) * mode->bytes_per_scanline) + (src_x * 4);
             uint8_t* dst_line = vesa_driver.framebuffer + ((dst_y + y) * mode->bytes_per_scanline) + (dst_x * 4);
@@ -386,14 +390,14 @@ int vesa_scroll_up(int lines) {
     vbe_mode_info_t* mode = &vesa_driver.current_mode_info;
     
     if (lines >= mode->resolution_y) {
-        // Ekranı tamamen temizle
+        // EkranÄ± tamamen temizle
         rgba_t black = {0, 0, 0, 255};
         vesa_fill_rect(0, 0, mode->resolution_x, mode->resolution_y, black);
     } else {
-        // Yukarı kaydır
+        // YukarÄ± kaydÄ±r
         vesa_copy_rect(0, lines, 0, 0, mode->resolution_x, mode->resolution_y - lines);
         
-        // Alt kısmı temizle
+        // Alt kÄ±smÄ± temizle
         rgba_t black = {0, 0, 0, 255};
         vesa_fill_rect(0, mode->resolution_y - lines, mode->resolution_x, lines, black);
     }
@@ -409,7 +413,7 @@ int vesa_clear_screen(rgba_t color) {
 }
 
 uint16_t vesa_find_best_mode(int width, int height, int bpp) {
-    printf("En iyi video modu aranıyor: %dx%dx%d\n", width, height, bpp);
+    printf("En iyi video modu aranÄ±yor: %dx%dx%d\n", width, height, bpp);
     
     // Mode listesini al
     uint16_t* mode_list = (uint16_t*)vesa_driver.controller_info.video_mode_ptr;
@@ -476,7 +480,7 @@ uint16_t vesa_find_best_mode(int width, int height, int bpp) {
 }
 
 int vesa_list_modes() {
-    printf("Desteklenen Video Modları:\n");
+    printf("Desteklenen Video ModlarÄ±:\n");
     
     uint16_t* mode_list = (uint16_t*)vesa_driver.controller_info.video_mode_ptr;
     
@@ -507,11 +511,11 @@ int vesa_list_modes() {
 
 driver_t* create_vesa_driver(pci_device_t* device) {
     if (vesa_initialized) {
-        printf("VESA/VBE zaten başlatılmış\n");
+        printf("VESA/VBE zaten baÅŸlatÄ±lmÄ±ÅŸ\n");
         return &vesa_driver.base;
     }
     
-    // Sürücü yapısını ayarla
+    // SÃ¼rÃ¼cÃ¼ yapÄ±sÄ±nÄ± ayarla
     strcpy(vesa_driver.base.name, "VESA/VBE Graphics");
     vesa_driver.base.type = DRIVER_TYPE_DISPLAY;
     vesa_driver.base.class = DRIVER_CLASS_DISPLAY;
@@ -523,7 +527,7 @@ driver_t* create_vesa_driver(pci_device_t* device) {
     vesa_driver.base.ioctl = vesa_driver_ioctl;
     vesa_driver.base.shutdown = vesa_driver_shutdown;
     
-    printf("VESA/VBE sürücüsü oluşturuldu (%04X:%04X)\n", 
+    printf("VESA/VBE sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuldu (%04X:%04X)\n", 
            device ? device->vendor_id : 0xFFFF, device ? device->device_id : 0xFFFF);
     return &vesa_driver.base;
 }

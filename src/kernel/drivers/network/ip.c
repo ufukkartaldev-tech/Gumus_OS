@@ -1,12 +1,15 @@
-#include "ip.h"
+﻿#include "ip.h"
 #include "udp.h"
 #include "tcp.h"
-#include "../../core/io.h"
-#include "../../core/string.h"
-#include "../../core/memory.h"
+#include "io.h"
+#include "string.h"
+#include "memory.h"
+#include "printf.h"
+#include "stdio.h"
+#include "stdlib.h"
 
-// Global Değişkenler
-static uint8_t source_ip[4] = {192, 168, 1, 100}; // Varsayılan IP
+// Global DeÄŸiÅŸkenler
+static uint8_t source_ip[4] = {192, 168, 1, 100}; // VarsayÄ±lan IP
 static int ip_initialized = 0;
 static uint16_t packet_id = 1;
 
@@ -57,30 +60,30 @@ int ip_init() {
     }
     
     ip_initialized = 1;
-    printf("IP protokolü başlatıldı. Kaynak IP: %d.%d.%d.%d\n", 
+    printf("IP protokolÃ¼ baÅŸlatÄ±ldÄ±. Kaynak IP: %d.%d.%d.%d\n", 
            source_ip[0], source_ip[1], source_ip[2], source_ip[3]);
     
     return 0;
 }
 
 int ip_route_packet(uint8_t* dest_ip, mac_addr_t* next_hop_mac) {
-    // Basit routing: aynı ağda ise doğrudan, değilse gateway
-    uint8_t gateway[4] = {192, 168, 1, 1}; // Varsayılan gateway
+    // Basit routing: aynÄ± aÄŸda ise doÄŸrudan, deÄŸilse gateway
+    uint8_t gateway[4] = {192, 168, 1, 1}; // VarsayÄ±lan gateway
     
-    // Aynı ağda mı kontrol et (192.168.1.x)
+    // AynÄ± aÄŸda mÄ± kontrol et (192.168.1.x)
     if (dest_ip[0] == source_ip[0] && dest_ip[1] == source_ip[1] && 
         dest_ip[2] == source_ip[2]) {
-        // Aynı ağda - doğrudan ARP çözümlemesi
+        // AynÄ± aÄŸda - doÄŸrudan ARP Ã§Ã¶zÃ¼mlemesi
         if (arp_resolve(dest_ip, next_hop_mac)) {
-            return 1; // Başarılı
+            return 1; // BaÅŸarÄ±lÄ±
         }
-        return 0; // ARP başarısız
+        return 0; // ARP baÅŸarÄ±sÄ±z
     } else {
-        // Farklı ağda - gateway üzerinden
+        // FarklÄ± aÄŸda - gateway Ã¼zerinden
         if (arp_resolve(gateway, next_hop_mac)) {
-            return 1; // Başarılı
+            return 1; // BaÅŸarÄ±lÄ±
         }
-        return 0; // ARP başarısız
+        return 0; // ARP baÅŸarÄ±sÄ±z
     }
 }
 
@@ -91,13 +94,13 @@ int ip_send_packet(uint8_t* dest_ip, uint8_t protocol, void* data, uint32_t size
     
     mac_addr_t next_hop_mac;
     if (!ip_route_packet(dest_ip, &next_hop_mac)) {
-        printf("IP: Route bulunamadı\n");
+        printf("IP: Route bulunamadÄ±\n");
         return -1;
     }
     
     ip_packet_t packet;
     
-    // IP Header'ı oluştur
+    // IP Header'Ä± oluÅŸtur
     packet.header.version_ihl = (IP_VERSION_4 << 4) | IP_HEADER_LENGTH;
     packet.header.dscp_ecn = 0;
     packet.header.total_length = htons(sizeof(ip_header_t) + size);
@@ -105,7 +108,7 @@ int ip_send_packet(uint8_t* dest_ip, uint8_t protocol, void* data, uint32_t size
     packet.header.flags_fragment = 0; // No fragmentation
     packet.header.ttl = IP_MAX_TTL;
     packet.header.protocol = protocol;
-    packet.header.header_checksum = 0; // Geçici olarak 0
+    packet.header.header_checksum = 0; // GeÃ§ici olarak 0
     
     // IP adreslerini kopyala
     for (int i = 0; i < 4; i++) {
@@ -119,12 +122,12 @@ int ip_send_packet(uint8_t* dest_ip, uint8_t protocol, void* data, uint32_t size
     // Veriyi kopyala
     memcpy(packet.data, data, size);
     
-    printf("IP paketi gönderiliyor: ");
+    printf("IP paketi gÃ¶nderiliyor: ");
     char dst_str[16];
     ip_to_string(dest_ip, dst_str);
     printf("%s [Size: %d]\n", dst_str, sizeof(ip_header_t) + size);
     
-    // Ethernet üzerinden gönder
+    // Ethernet Ã¼zerinden gÃ¶nder
     return ethernet_send_frame(&next_hop_mac, ETHERNET_TYPE_IPV4, 
                               &packet, sizeof(ip_header_t) + size);
 }
@@ -143,21 +146,21 @@ int ip_receive_packet(ip_packet_t* packet) {
     
     // Ethernet tipini kontrol et
     if (ntohs(frame.header.type) != ETHERNET_TYPE_IPV4) {
-        return -1; // IP paketi değil
+        return -1; // IP paketi deÄŸil
     }
     
     // IP paketini kopyala
     memcpy(packet, frame.payload, sizeof(ip_header_t));
     
-    // Header uzunluğunu kontrol et
+    // Header uzunluÄŸunu kontrol et
     uint8_t ihl = packet->header.version_ihl & 0x0F;
     if (ihl < 5) {
-        return -1; // Geçersiz header
+        return -1; // GeÃ§ersiz header
     }
     
     uint16_t total_length = ntohs(packet->header.total_length);
     if (total_length < sizeof(ip_header_t)) {
-        return -1; // Geçersiz uzunluk
+        return -1; // GeÃ§ersiz uzunluk
     }
     
     // Veriyi kopyala
@@ -172,40 +175,40 @@ int ip_process_packet(ip_packet_t* packet, uint32_t size) {
         return -1;
     }
     
-    // Version ve IHL kontrolü
+    // Version ve IHL kontrolÃ¼
     uint8_t version = (packet->header.version_ihl >> 4) & 0x0F;
     uint8_t ihl = packet->header.version_ihl & 0x0F;
     
     if (version != IP_VERSION_4 || ihl < 5) {
-        printf("IP: Geçersiz version veya IHL\n");
+        printf("IP: GeÃ§ersiz version veya IHL\n");
         return -1;
     }
     
-    // Checksum kontrolü
+    // Checksum kontrolÃ¼
     uint16_t received_checksum = packet->header.header_checksum;
     packet->header.header_checksum = 0;
     uint16_t calculated_checksum = ip_calculate_checksum(&packet->header, ihl * 4);
     
     if (received_checksum != calculated_checksum) {
-        printf("IP: Checksum hatası\n");
+        printf("IP: Checksum hatasÄ±\n");
         return -1;
     }
     
     // Hedef IP bizim mi?
     if (!ip_equal(packet->header.dest_ip, source_ip)) {
-        // Paket bize değil - forward et (routing)
+        // Paket bize deÄŸil - forward et (routing)
         printf("IP: Paket forward ediliyor\n");
         return 0;
     }
     
-    printf("IP paketi alındı: ");
+    printf("IP paketi alÄ±ndÄ±: ");
     ip_print_packet(packet);
     
-    // Protokole göre işle
+    // Protokole gÃ¶re iÅŸle
     switch (packet->header.protocol) {
         case IP_PROTOCOL_ICMP:
             printf("IP: ICMP paketi\n");
-            // ICMP işle
+            // ICMP iÅŸle
             break;
         case IP_PROTOCOL_TCP:
             printf("IP: TCP paketi\n");

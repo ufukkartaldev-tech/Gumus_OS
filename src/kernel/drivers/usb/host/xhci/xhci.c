@@ -1,11 +1,11 @@
-#include "xhci.h"
-#include "../../../core/memory.h"
-#include "../../../core/pci.h"
-#include "../../../core/interrupts.h"
-#include "../../../core/io.h"
-#include "../../core/usb_host.h"
-#include "../../../core/string.h"
-#include "../../../core/stdio.h"
+﻿#include "xhci.h"
+#include "memory.h"
+#include "hardware_detect.h"
+#include "interrupts.h"
+#include "io.h"
+#include "usb_host.h"
+#include "string.h"
+#include "printf.h"
 
 // Global XHCI controller list
 static xhci_controller_t* xhci_controllers = NULL;
@@ -45,7 +45,7 @@ int xhci_init_command_ring(xhci_controller_t* controller) {
     // Allocate command ring (must be 64-byte aligned)
     controller->cmd_ring.trbs = (xhci_trb_t*)malloc(256 * sizeof(xhci_trb_t) + 63);
     if (!controller->cmd_ring.trbs) {
-        printf("XHCI: Command ring bellek tahsisatı başarısız\n");
+        printf("XHCI: Command ring bellek tahsisatÄ± baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -67,7 +67,7 @@ int xhci_init_command_ring(xhci_controller_t* controller) {
     controller->op_regs[XHCI_CRCR / 4] = (uint32_t)(crcr & 0xFFFFFFFF);
     controller->op_regs[XHCI_CRCR / 4 + 1] = (uint32_t)(crcr >> 32);
     
-    printf("XHCI: Command ring ayarlandı\n");
+    printf("XHCI: Command ring ayarlandÄ±\n");
     return 0;
 }
 
@@ -75,7 +75,7 @@ int xhci_init_event_ring(xhci_controller_t* controller) {
     // Allocate event ring (must be 64-byte aligned)
     controller->event_ring.trbs = (xhci_trb_t*)malloc(256 * sizeof(xhci_trb_t) + 63);
     if (!controller->event_ring.trbs) {
-        printf("XHCI: Event ring bellek tahsisatı başarısız\n");
+        printf("XHCI: Event ring bellek tahsisatÄ± baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -93,7 +93,7 @@ int xhci_init_event_ring(xhci_controller_t* controller) {
     // Allocate event ring segment table
     xhci_event_ring_segment_t* erst = (xhci_event_ring_segment_t*)malloc(sizeof(xhci_event_ring_segment_t));
     if (!erst) {
-        printf("XHCI: ERST bellek tahsisatı başarısız\n");
+        printf("XHCI: ERST bellek tahsisatÄ± baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -108,13 +108,13 @@ int xhci_init_event_ring(xhci_controller_t* controller) {
     controller->rt_regs[XHCI_ERDP / 4] = (uint32_t)((uint64_t)controller->event_ring.trbs & 0xFFFFFFFF);
     controller->rt_regs[XHCI_ERDP / 4 + 1] = (uint32_t)((uint64_t)controller->event_ring.trbs >> 32);
     
-    printf("XHCI: Event ring ayarlandı\n");
+    printf("XHCI: Event ring ayarlandÄ±\n");
     return 0;
 }
 
 // XHCI controller reset
 static int xhci_controller_reset(xhci_controller_t* controller) {
-    printf("XHCI: Controller reset başlatılıyor\n");
+    printf("XHCI: Controller reset baÅŸlatÄ±lÄ±yor\n");
     
     // Reset the controller
     uint32_t cmd = xhci_read_op_reg(controller, XHCI_USBCMD);
@@ -131,11 +131,11 @@ static int xhci_controller_reset(xhci_controller_t* controller) {
     }
     
     if (timeout == 0) {
-        printf("XHCI: Reset tamamlanamadı\n");
+        printf("XHCI: Reset tamamlanamadÄ±\n");
         return -1;
     }
     
-    printf("XHCI: Controller reset tamamlandı\n");
+    printf("XHCI: Controller reset tamamlandÄ±\n");
     return 0;
 }
 
@@ -144,7 +144,7 @@ static int xhci_allocate_dcbaa(xhci_controller_t* controller) {
     // Allocate DCBAA (must be 64-byte aligned)
     controller->dcbaa = (xhci_device_context_t**)malloc(256 * sizeof(uint64_t) + 63);
     if (!controller->dcbaa) {
-        printf("XHCI: DCBAA bellek tahsisatı başarısız\n");
+        printf("XHCI: DCBAA bellek tahsisatÄ± baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -160,13 +160,13 @@ static int xhci_allocate_dcbaa(xhci_controller_t* controller) {
     controller->op_regs[XHCI_DCBAAP / 4] = (uint32_t)(dcbaap & 0xFFFFFFFF);
     controller->op_regs[XHCI_DCBAAP / 4 + 1] = (uint32_t)(dcbaap >> 32);
     
-    printf("XHCI: DCBAA ayarlandı\n");
+    printf("XHCI: DCBAA ayarlandÄ±\n");
     return 0;
 }
 
 // XHCI controller initialization
 static int xhci_controller_init(xhci_controller_t* controller) {
-    printf("XHCI: Controller başlatılıyor\n");
+    printf("XHCI: Controller baÅŸlatÄ±lÄ±yor\n");
     
     // Get controller parameters
     controller->hcs_params1 = xhci_read_cap_reg(controller, XHCI_HCSPARAMS1);
@@ -187,7 +187,7 @@ static int xhci_controller_init(xhci_controller_t* controller) {
     controller->trb_pool = (uint32_t)malloc(1000 * sizeof(xhci_trb_t) + 4095);
     
     if (!controller->context_pool || !controller->trb_pool) {
-        printf("XHCI: Bellek havuzları oluşturulamadı\n");
+        printf("XHCI: Bellek havuzlarÄ± oluÅŸturulamadÄ±\n");
         return -1;
     }
     
@@ -237,7 +237,7 @@ static int xhci_controller_init(xhci_controller_t* controller) {
     cmd |= XHCI_CMD_RUN;
     xhci_write_op_reg(controller, XHCI_USBCMD, cmd);
     
-    printf("XHCI: Controller başlatıldı\n");
+    printf("XHCI: Controller baÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -286,7 +286,7 @@ int xhci_enable_slot(xhci_controller_t* controller, uint8_t* slot_id) {
     
     // Wait for completion
     if (xhci_wait_for_command_completion(controller, 10000) != 0) {
-        printf("XHCI: Enable slot komutu başarısız\n");
+        printf("XHCI: Enable slot komutu baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -302,11 +302,11 @@ int xhci_enable_slot(xhci_controller_t* controller, uint8_t* slot_id) {
 static int xhci_enumerate_device_impl(usb_host_controller_t* base_controller, uint8_t port) {
     xhci_controller_t* controller = (xhci_controller_t*)base_controller;
     
-    printf("XHCI: Aygıt enumeration başlatılıyor (port %d)\n", port);
+    printf("XHCI: AygÄ±t enumeration baÅŸlatÄ±lÄ±yor (port %d)\n", port);
     
     // Check if port is valid
     if (port >= controller->num_ports) {
-        printf("XHCI: Geçersiz port: %d\n", port);
+        printf("XHCI: GeÃ§ersiz port: %d\n", port);
         return -1;
     }
     
@@ -314,7 +314,7 @@ static int xhci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     uint32_t port_status = xhci_read_op_reg(controller, XHCI_PORTSC + (port * 4));
     
     if (!(port_status & XHCI_PORT_CCS)) {
-        printf("XHCI: Port %d'de aygıt bağlı değil\n", port);
+        printf("XHCI: Port %d'de aygÄ±t baÄŸlÄ± deÄŸil\n", port);
         return -1;
     }
     
@@ -331,7 +331,7 @@ static int xhci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     } while (timeout && (port_status & XHCI_PORT_PR));
     
     if (timeout == 0) {
-        printf("XHCI: Port reset tamamlanamadı\n");
+        printf("XHCI: Port reset tamamlanamadÄ±\n");
         return -1;
     }
     
@@ -341,7 +341,7 @@ static int xhci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     // Check if device is enabled
     port_status = xhci_read_op_reg(controller, XHCI_PORTSC + (port * 4));
     if (!(port_status & XHCI_PORT_PED)) {
-        printf("XHCI: Aygıt enable edilemedi\n");
+        printf("XHCI: AygÄ±t enable edilemedi\n");
         return -1;
     }
     
@@ -355,12 +355,12 @@ static int xhci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
         case XHCI_PORT_SPEED_U4: speed_str = "Super"; break;
         case XHCI_PORT_SPEED_U5: speed_str = "Super Plus"; break;
     }
-    printf("XHCI: Aygıt hız: %s\n", speed_str);
+    printf("XHCI: AygÄ±t hÄ±z: %s\n", speed_str);
     
     // Enable slot
     uint8_t slot_id;
     if (xhci_enable_slot(controller, &slot_id) != 0) {
-        printf("XHCI: Slot enable başarısız\n");
+        printf("XHCI: Slot enable baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -371,7 +371,7 @@ static int xhci_enumerate_device_impl(usb_host_controller_t* base_controller, ui
     // - Configure endpoint
     // - Set configuration
     
-    printf("XHCI: Aygıt enumeration tamamlandı\n");
+    printf("XHCI: AygÄ±t enumeration tamamlandÄ±\n");
     return 0;
 }
 
@@ -421,7 +421,7 @@ static int xhci_interrupt_transfer_impl(usb_host_controller_t* base_controller,
 
 // XHCI interrupt handler
 void xhci_irq_handler() {
-    printf("XHCI: Interrupt alındı\n");
+    printf("XHCI: Interrupt alÄ±ndÄ±\n");
     
     xhci_controller_t* current = xhci_controllers;
     while (current) {
@@ -452,7 +452,7 @@ void xhci_irq_handler() {
 int xhci_init(usb_host_controller_t* controller) {
     xhci_controller_t* xhci_ctrl = (xhci_controller_t*)controller;
     
-    printf("XHCI: Sürücü başlatılıyor\n");
+    printf("XHCI: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±lÄ±yor\n");
     
     // Map MMIO registers
     pci_device_t* pci_dev = (pci_device_t*)controller->mmio_base;
@@ -473,7 +473,7 @@ int xhci_init(usb_host_controller_t* controller) {
     xhci_ctrl->db_regs = (volatile uint32_t*)(base_addr + db_offset);
     
     if (!xhci_ctrl->cap_regs || !xhci_ctrl->op_regs || !xhci_ctrl->rt_regs || !xhci_ctrl->db_regs) {
-        printf("XHCI: Register haritalaması başarısız\n");
+        printf("XHCI: Register haritalamasÄ± baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -506,7 +506,7 @@ driver_t* create_xhci_driver(pci_device_t* device) {
     controller->base.interrupt_transfer = xhci_interrupt_transfer_impl;
     
     controller->base.mmio_base = device;
-    controller->base.irq_line = device->irq;
+    controller->base.irq_line = device->interrupt_line;
     
     // Copy PCI info
     controller->base.vendor_id = device->vendor_id;
@@ -514,7 +514,7 @@ driver_t* create_xhci_driver(pci_device_t* device) {
     
     strcpy(controller->base.name, "XHCI USB Host Controller");
     controller->base.type = DRIVER_TYPE_INPUT;
-    controller->base.class = DRIVER_CLASS_SERIAL;
+    controller->base.class = PCI_CLASS_SERIAL;
     
     // Add to global list
     controller->base.next = (struct usb_host_controller*)xhci_controllers;

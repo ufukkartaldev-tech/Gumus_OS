@@ -1,4 +1,4 @@
-#ifndef VESA_VBE_H
+﻿#ifndef VESA_VBE_H
 #define VESA_VBE_H
 
 #include <stdint.h>
@@ -9,7 +9,7 @@
 #define VBE_CONTROLLER_SIGNATURE 0x41545356  // "VESA"
 #define VBE_MODE_SIGNATURE       0x4154534D  // "MESA"
 
-// VBE Fonksiyonları
+// VBE FonksiyonlarÄ±
 #define VBE_GET_CONTROLLER_INFO  0x4F00
 #define VBE_GET_MODE_INFO        0x4F01
 #define VBE_SET_MODE             0x4F02
@@ -146,7 +146,7 @@ typedef struct {
     uint8_t r, g, b, a;
 } rgba_t;
 
-// VESA Fonksiyonları
+// VESA FonksiyonlarÄ±
 int vesa_init();
 int vesa_get_controller_info(vbe_controller_info_t* info);
 int vesa_get_mode_info(uint16_t mode, vbe_mode_info_t* info);
@@ -163,12 +163,12 @@ int vesa_copy_rect(int src_x, int src_y, int dst_x, int dst_y, int width, int he
 int vesa_scroll_up(int lines);
 int vesa_clear_screen(rgba_t color);
 
-// Mode Seçim Fonksiyonları
+// Mode SeÃ§im FonksiyonlarÄ±
 uint16_t vesa_find_best_mode(int width, int height, int bpp);
 int vesa_list_modes();
 int vesa_get_mode_info_string(uint16_t mode, char* buffer);
 
-// Sürücü Oluşturma Fonksiyonu
+// SÃ¼rÃ¼cÃ¼ OluÅŸturma Fonksiyonu
 driver_t* create_vesa_driver(pci_device_t* device);
 
 #endif

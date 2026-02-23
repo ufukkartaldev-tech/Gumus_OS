@@ -1,1 +1,1 @@
-void start_menu_update(window_t* win);
+﻿void start_menu_update(window_t* win);

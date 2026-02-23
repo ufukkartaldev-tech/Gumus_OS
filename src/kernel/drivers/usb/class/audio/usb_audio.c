@@ -1,5 +1,5 @@
-#include "usb_audio.h"
-#include "../core/memory.h"
+﻿#include "usb_audio.h"
+#include "memory.h"
 #include "string.h"
 #include "stdio.h"
 
@@ -11,7 +11,7 @@ static usb_audio_device_t* audio_devices = NULL;
 
 // Initialize USB Audio driver
 int usb_audio_init() {
-    printf("USB Audio: Sürücü başlatılıyor\n");
+    printf("USB Audio: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±lÄ±yor\n");
     
     audio_driver.devices = NULL;
     audio_driver.device_count = 0;
@@ -22,7 +22,7 @@ int usb_audio_init() {
     audio_driver.base.vendor_id = 0;
     audio_driver.base.device_id = 0;
     
-    printf("USB Audio: Sürücü başlatıldı\n");
+    printf("USB Audio: SÃ¼rÃ¼cÃ¼ baÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -47,7 +47,7 @@ int usb_audio_get_control(usb_audio_device_t* device, uint8_t control_selector,
     );
     
     if (result != 0) {
-        printf("USB Audio: Control değeri alma başarısız\n");
+        printf("USB Audio: Control deÄŸeri alma baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -75,7 +75,7 @@ int usb_audio_set_control(usb_audio_device_t* device, uint8_t control_selector,
     );
     
     if (result != 0) {
-        printf("USB Audio: Control değeri ayarlama başarısız\n");
+        printf("USB Audio: Control deÄŸeri ayarlama baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
@@ -107,12 +107,12 @@ int usb_audio_set_sample_rate(usb_audio_device_t* device, uint16_t sample_rate) 
     );
     
     if (result != 0) {
-        printf("USB Audio: Sample rate ayarlama başarısız\n");
+        printf("USB Audio: Sample rate ayarlama baÅŸarÄ±sÄ±z\n");
         return -1;
     }
     
     device->sample_rate = sample_rate;
-    printf("USB Audio: Sample rate ayarlandı: %d Hz\n", sample_rate);
+    printf("USB Audio: Sample rate ayarlandÄ±: %d Hz\n", sample_rate);
     return 0;
 }
 
@@ -121,7 +121,7 @@ int usb_audio_set_channels(usb_audio_device_t* device, uint8_t channels) {
     // This would typically be done by selecting the appropriate alternate setting
     // For now, just store the value
     device->channels = channels;
-    printf("USB Audio: Kanal sayısı ayarlandı: %d\n", channels);
+    printf("USB Audio: Kanal sayÄ±sÄ± ayarlandÄ±: %d\n", channels);
     return 0;
 }
 
@@ -130,7 +130,7 @@ int usb_audio_set_volume(usb_audio_device_t* device, uint16_t channel, uint16_t 
     int result = usb_audio_set_control(device, AUDIO_CONTROL_VOLUME, channel, volume);
     if (result == 0) {
         device->volume_control = volume;
-        printf("USB Audio: Volume ayarlandı: Kanal %d, Değer %d\n", channel, volume);
+        printf("USB Audio: Volume ayarlandÄ±: Kanal %d, DeÄŸer %d\n", channel, volume);
     }
     return result;
 }
@@ -140,7 +140,7 @@ int usb_audio_set_mute(usb_audio_device_t* device, uint16_t channel, uint8_t mut
     int result = usb_audio_set_control(device, AUDIO_CONTROL_MUTE, channel, mute ? 1 : 0);
     if (result == 0) {
         device->mute_control = mute;
-        printf("USB Audio: Mute ayarlandı: Kanal %d, %s\n", channel, mute ? "Evet" : "Hayır");
+        printf("USB Audio: Mute ayarlandÄ±: Kanal %d, %s\n", channel, mute ? "Evet" : "HayÄ±r");
     }
     return result;
 }
@@ -151,7 +151,7 @@ int usb_audio_start_streaming(usb_audio_device_t* device) {
     // and starting the isochronous transfers
     
     device->streaming = 1;
-    printf("USB Audio: Streaming başlatıldı\n");
+    printf("USB Audio: Streaming baÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -173,7 +173,7 @@ int usb_audio_capture_start(usb_audio_device_t* device) {
     }
     
     device->capture_enabled = 1;
-    printf("USB Audio: Capture başlatıldı\n");
+    printf("USB Audio: Capture baÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -193,7 +193,7 @@ int usb_audio_playback_start(usb_audio_device_t* device) {
     }
     
     device->playback_enabled = 1;
-    printf("USB Audio: Playback başlatıldı\n");
+    printf("USB Audio: Playback baÅŸlatÄ±ldÄ±\n");
     return 0;
 }
 
@@ -207,7 +207,7 @@ int usb_audio_playback_stop(usb_audio_device_t* device) {
 // Read audio samples
 int usb_audio_read_samples(usb_audio_device_t* device, uint8_t* buffer, uint32_t length) {
     if (!device->capture_enabled) {
-        printf("USB Audio: Capture etkin değil\n");
+        printf("USB Audio: Capture etkin deÄŸil\n");
         return -1;
     }
     
@@ -220,7 +220,7 @@ int usb_audio_read_samples(usb_audio_device_t* device, uint8_t* buffer, uint32_t
 // Write audio samples
 int usb_audio_write_samples(usb_audio_device_t* device, const uint8_t* buffer, uint32_t length) {
     if (!device->playback_enabled) {
-        printf("USB Audio: Playback etkin değil\n");
+        printf("USB Audio: Playback etkin deÄŸil\n");
         return -1;
     }
     
@@ -241,13 +241,13 @@ int usb_audio_probe(usb_device_t* usb_device) {
         return -1;
     }
     
-    printf("USB Audio: Aygıt tespit edildi: VID:PID=%04X:%04X\n",
+    printf("USB Audio: AygÄ±t tespit edildi: VID:PID=%04X:%04X\n",
            usb_device->device_desc.vendor_id, usb_device->device_desc.product_id);
     
     // Create audio device structure
     usb_audio_device_t* device = malloc(sizeof(usb_audio_device_t));
     if (!device) {
-        printf("USB Audio: Bellek tahsis hatası\n");
+        printf("USB Audio: Bellek tahsis hatasÄ±\n");
         return -1;
     }
     
@@ -274,7 +274,7 @@ int usb_audio_probe(usb_device_t* usb_device) {
     device->output_buffer = malloc(device->buffer_size);
     
     if (!device->input_buffer || !device->output_buffer) {
-        printf("USB Audio: Buffer bellek tahsis hatası\n");
+        printf("USB Audio: Buffer bellek tahsis hatasÄ±\n");
         if (device->input_buffer) free(device->input_buffer);
         if (device->output_buffer) free(device->output_buffer);
         free(device);
@@ -300,7 +300,7 @@ int usb_audio_probe(usb_device_t* usb_device) {
     audio_devices = device;
     audio_driver.device_count++;
     
-    printf("USB Audio: Aygıt eklendi\n");
+    printf("USB Audio: AygÄ±t eklendi\n");
     printf("  Format: %d Hz, %d kanal, %d-bit\n", 
            device->sample_rate, device->channels, device->bit_depth);
     
@@ -317,7 +317,7 @@ int usb_audio_remove(usb_device_t* usb_device) {
             *current = (*current)->next;
             audio_driver.device_count--;
             
-            printf("USB Audio: Aygıt kaldırıldı\n");
+            printf("USB Audio: AygÄ±t kaldÄ±rÄ±ldÄ±\n");
             
             // Free buffers
             if (to_remove->input_buffer) {
@@ -338,7 +338,7 @@ int usb_audio_remove(usb_device_t* usb_device) {
 
 // List all audio devices
 void usb_audio_list_devices() {
-    printf("\n=== USB Audio Aygıtları ===\n");
+    printf("\n=== USB Audio AygÄ±tlarÄ± ===\n");
     
     usb_audio_device_t* current = audio_devices;
     int count = 1;
@@ -350,18 +350,18 @@ void usb_audio_list_devices() {
         printf("   Format: %d Hz, %d kanal, %d-bit\n", 
                current->sample_rate, current->channels, current->bit_depth);
         printf("   Streaming: %s, Capture: %s, Playback: %s\n",
-               current->streaming ? "Evet" : "Hayır",
-               current->capture_enabled ? "Evet" : "Hayır",
-               current->playback_enabled ? "Evet" : "Hayır");
+               current->streaming ? "Evet" : "HayÄ±r",
+               current->capture_enabled ? "Evet" : "HayÄ±r",
+               current->playback_enabled ? "Evet" : "HayÄ±r");
         printf("   Volume: %d, Mute: %s\n",
                current->volume_control,
-               current->mute_control ? "Evet" : "Hayır");
+               current->mute_control ? "Evet" : "HayÄ±r");
         
         current = current->next;
     }
     
     if (count == 1) {
-        printf("Hiçbir USB Audio aygıtı bağlı değil\n");
+        printf("HiÃ§bir USB Audio aygÄ±tÄ± baÄŸlÄ± deÄŸil\n");
     }
     
     printf("==========================\n");

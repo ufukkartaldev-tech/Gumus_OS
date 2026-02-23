@@ -1,7 +1,8 @@
-#include "tcp.h"
-#include "../../core/io.h"
-#include "../../core/string.h"
-#include "../../core/memory.h"
+﻿#include "tcp.h"
+#include "io.h"
+#include "string.h"
+#include "memory.h"
+#include "printf.h"
 
 int tcp_init() {
     printf("TCP protokolu baslatildi.\n");
@@ -9,7 +10,7 @@ int tcp_init() {
 }
 
 uint16_t tcp_calculate_checksum(tcp_header_t* header, uint8_t* src_ip, uint8_t* dst_ip, void* data, uint32_t size) {
-    // TCP de UDP gibi pseudo-header kullanır
+    // TCP de UDP gibi pseudo-header kullanÄ±r
     udp_pseudo_header_t pseudo; // udp_pseudo_header_t is generic enough for IP proto
     memcpy(pseudo.source_ip, src_ip, 4);
     memcpy(pseudo.dest_ip, dst_ip, 4);
@@ -84,10 +85,10 @@ int tcp_process_packet(ip_packet_t* ip_packet, uint32_t size) {
 
     printf("TCP: Paket alindi %d -> %d [Flags: 0x%X]\n", src_port, dst_port, flags);
 
-    // Basit bir SYN -> SYN-ACK yanıtı (simülasyon)
+    // Basit bir SYN -> SYN-ACK yanÄ±tÄ± (simÃ¼lasyon)
     if (flags & TCP_FLAG_SYN) {
         printf("TCP: SYN istegi alindi, SYN-ACK gonderiliyor...\n");
-        // Burada gerçek bir bağlantı yönetimi gerekir.
+        // Burada gerÃ§ek bir baÄŸlantÄ± yÃ¶netimi gerekir.
     }
 
     return 0;

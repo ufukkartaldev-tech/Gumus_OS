@@ -1,13 +1,19 @@
-#include "audio_mixer.h"
+﻿#include "audio_mixer.h"
 #include "window.h"
 #include "kernel.h"
 #include "vga_gfx.h"
 #include "string.h"
 #include "memory.h"
-#include "../drivers/advanced_sound.h"
-#include "../drivers/mouse.h"
+#include "advanced_sound.h"
+#include "mouse.h"
+#include "printf.h"
+#include "math.h"
 
-// Global değişkenler
+// External declarations
+extern audio_mixer_t audio_mixer;
+extern int audio_initialized;
+
+// Global deÄŸiÅŸkenler
 static audio_mixer_ui_t* mixer_ui = NULL;
 static int audio_mixer_initialized = 0;
 
@@ -23,24 +29,24 @@ void audio_mixer_init() {
     mixer_ui->show_visualizer = 1;
     mixer_ui->recording = 0;
     
-    // Varsayılan EQ ayarları
+    // VarsayÄ±lan EQ ayarlarÄ±
     for (int i = 0; i < EQ_BANDS; i++) {
         mixer_ui->eq_bands[i] = 50; // Orta seviye
     }
     
-    // Visualizer'ı temizle
+    // Visualizer'Ä± temizle
     memset(mixer_ui->visualizer_history, 0, sizeof(mixer_ui->visualizer_history));
     mixer_ui->visualizer_index = 0;
     
     audio_mixer_initialized = 1;
-    printf("Ses Mixer Arayüzü başlatıldı\n");
+    printf("Ses Mixer ArayÃ¼zÃ¼ baÅŸlatÄ±ldÄ±\n");
 }
 
 void audio_draw_volume_slider(int x, int y, int width, int height, uint8_t volume, int active) {
     // Arka plan
     vga_draw_rect(x, y, width, height, AUDIO_BG_COLOR);
     
-    // Çerçeve
+    // Ã‡erÃ§eve
     if (active) {
         vga_draw_rect(x, y, width, height, AUDIO_ACTIVE_COLOR);
     } else {
@@ -53,7 +59,7 @@ void audio_draw_volume_slider(int x, int y, int width, int height, uint8_t volum
     
     vga_draw_rect(x + 2, slider_y, width - 4, fill_height, AUDIO_SLIDER_COLOR);
     
-    // Yüzde text'i
+    // YÃ¼zde text'i
     char vol_text[8];
     sprintf(vol_text, "%d%%", volume);
     int text_x = x + (width - strlen(vol_text) * 8) / 2;
@@ -64,19 +70,19 @@ void audio_draw_pan_slider(int x, int y, int width, int height, uint8_t pan, int
     // Arka plan
     vga_draw_rect(x, y, width, height, AUDIO_BG_COLOR);
     
-    // Çerçeve
+    // Ã‡erÃ§eve
     if (active) {
         vga_draw_rect(x, y, width, height, AUDIO_ACTIVE_COLOR);
     } else {
         vga_draw_rect(x, y, width, height, AUDIO_BORDER_COLOR);
     }
     
-    // Pan slider'ı (merkezden sola/sağa)
+    // Pan slider'Ä± (merkezden sola/saÄŸa)
     int slider_x = x + 2 + (pan * (width - 4)) / 255;
     
     vga_draw_rect(slider_x - 1, y + 2, 2, height - 4, AUDIO_SLIDER_COLOR);
     
-    // Merkez çizgisi
+    // Merkez Ã§izgisi
     int center_x = x + width / 2;
     vga_draw_line(center_x, y, center_x, y + height, AUDIO_BORDER_COLOR);
     
@@ -89,16 +95,16 @@ void audio_draw_vu_meter(int x, int y, int width, int height, uint8_t level) {
     // Arka plan
     vga_draw_rect(x, y, width, height, AUDIO_BG_COLOR);
     
-    // Çerçeve
+    // Ã‡erÃ§eve
     vga_draw_rect(x, y, width, height, AUDIO_BORDER_COLOR);
     
     // VU meter dolgusu
     int fill_width = (level * (width - 2)) / 100;
     
-    // Renk seviyesine göre (yeşil -> sarı -> kırmızı)
+    // Renk seviyesine gÃ¶re (yeÅŸil -> sarÄ± -> kÄ±rmÄ±zÄ±)
     uint8_t color = AUDIO_METER_COLOR;
     if (level > 80) color = AUDIO_PEAK_COLOR;
-    else if (level > 60) color = 14; // Sarı
+    else if (level > 60) color = 14; // SarÄ±
     
     vga_draw_rect(x + 1, y + 1, fill_width, height - 2, color);
 }
@@ -106,7 +112,7 @@ void audio_draw_vu_meter(int x, int y, int width, int height, uint8_t level) {
 void audio_draw_channel_strip(window_t* win, int channel, int x, int y, int width, int height) {
     if (!mixer_ui) return;
     
-    // Kanal başlığı
+    // Kanal baÅŸlÄ±ÄŸÄ±
     char title[16];
     sprintf(title, "CH %d", channel + 1);
     
@@ -133,10 +139,10 @@ void audio_draw_channel_strip(window_t* win, int channel, int x, int y, int widt
     content_y += 15;
     
     // VU meter
-    uint8_t vu_level = audio_is_playing(channel) ? 70 : 0; // Simüle edilmiş seviye
+    uint8_t vu_level = audio_is_playing(channel) ? 70 : 0; // SimÃ¼le edilmiÅŸ seviye
     audio_draw_vu_meter(x + 2, content_y, width - 4, 4, vu_level);
     
-    // Mute/Loop butonları
+    // Mute/Loop butonlarÄ±
     int button_y = content_y + 8;
     vga_draw_text(x + 2, button_y, audio_mixer.channels[channel].loop ? "LOOP" : "----", 
                   audio_mixer.channels[channel].loop ? AUDIO_SLIDER_COLOR : AUDIO_TEXT_COLOR);
@@ -145,7 +151,7 @@ void audio_draw_channel_strip(window_t* win, int channel, int x, int y, int widt
 void audio_draw_equalizer(window_t* win, int x, int y, int width, int height) {
     if (!mixer_ui) return;
     
-    // Başlık
+    // BaÅŸlÄ±k
     vga_draw_text(x, y, "Equalizer", AUDIO_TEXT_COLOR);
     y += 15;
     
@@ -153,7 +159,7 @@ void audio_draw_equalizer(window_t* win, int x, int y, int width, int height) {
     vga_draw_rect(x, y, width, height, AUDIO_BG_COLOR);
     vga_draw_rect(x, y, width, height, AUDIO_BORDER_COLOR);
     
-    // EQ band'ları
+    // EQ band'larÄ±
     int band_width = (width - 4) / EQ_BANDS;
     
     for (int i = 0; i < EQ_BANDS; i++) {
@@ -166,7 +172,7 @@ void audio_draw_equalizer(window_t* win, int x, int y, int width, int height) {
         // Frekans etiketleri
         if (i % 2 == 0) {
             char freq[8];
-            sprintf(freq, "%d", 31 * (i + 1)); // Basit frekans hesabı
+            sprintf(freq, "%d", 31 * (i + 1)); // Basit frekans hesabÄ±
             vga_draw_text(band_x, y + height + 2, freq, AUDIO_TEXT_COLOR);
         }
     }
@@ -175,7 +181,7 @@ void audio_draw_equalizer(window_t* win, int x, int y, int width, int height) {
 void audio_draw_visualizer(window_t* win, int x, int y, int width, int height) {
     if (!mixer_ui) return;
     
-    // Başlık
+    // BaÅŸlÄ±k
     vga_draw_text(x, y, "Visualizer", AUDIO_TEXT_COLOR);
     y += 15;
     
@@ -183,7 +189,7 @@ void audio_draw_visualizer(window_t* win, int x, int y, int width, int height) {
     vga_draw_rect(x, y, width, height, AUDIO_BG_COLOR);
     vga_draw_rect(x, y, width, height, AUDIO_BORDER_COLOR);
     
-    // Visualizer bar'ları
+    // Visualizer bar'larÄ±
     int bar_width = (width - 2) / VISUALIZER_BARS;
     
     for (int i = 0; i < VISUALIZER_BARS; i++) {
@@ -191,17 +197,17 @@ void audio_draw_visualizer(window_t* win, int x, int y, int width, int height) {
         int bar_height = mixer_ui->visualizer_bars[i];
         int bar_y = y + height - 1 - bar_height;
         
-        // Renk seviyesine göre
+        // Renk seviyesine gÃ¶re
         uint8_t color = AUDIO_METER_COLOR;
         if (bar_height > height * 0.8) color = AUDIO_PEAK_COLOR;
-        else if (bar_height > height * 0.6) color = 14; // Sarı
+        else if (bar_height > height * 0.6) color = 14; // SarÄ±
         
         vga_draw_rect(bar_x, bar_y, bar_width - 1, bar_height, color);
     }
     
-    // Kayıt göstergesi
+    // KayÄ±t gÃ¶stergesi
     if (mixer_ui->recording) {
-        vga_draw_text(x + width - 60, y, "● REC", AUDIO_PEAK_COLOR);
+        vga_draw_text(x + width - 60, y, "â— REC", AUDIO_PEAK_COLOR);
     }
 }
 
@@ -216,7 +222,7 @@ void audio_mixer_draw_window(window_t* win) {
     // Ana arka plan
     vga_draw_rect(px + 1, py + 1, width - 2, height - 2, AUDIO_BG_COLOR);
     
-    // Bölüm ayırıcı çizgiler
+    // BÃ¶lÃ¼m ayÄ±rÄ±cÄ± Ã§izgiler
     int channel_area_width = (AUDIO_MAX_CHANNELS * CHANNEL_STRIP_WIDTH * 8) + 20;
     
     if (channel_area_width < width - 200) {
@@ -274,7 +280,7 @@ void audio_mixer_draw_window(window_t* win) {
 
 int audio_get_channel_at_position(int x, int y) {
     // Kanal pozisyonunu hesapla
-    int channel_x = 10; // Başlangıç X pozisyonu
+    int channel_x = 10; // BaÅŸlangÄ±Ã§ X pozisyonu
     
     for (int i = 0; i < AUDIO_MAX_CHANNELS; i++) {
         int channel_width = CHANNEL_STRIP_WIDTH * 8;
@@ -293,9 +299,9 @@ int audio_get_channel_at_position(int x, int y) {
 int audio_get_eq_band_at_position(int x, int y) {
     if (!mixer_ui->show_equalizer) return -1;
     
-    // EQ pozisyonunu hesapla (sağ taraf)
-    int eq_x = 70 * 8 - 180; // Sağ taraf X pozisyonu
-    int eq_y = 25; // EQ başlangıç Y pozisyonu
+    // EQ pozisyonunu hesapla (saÄŸ taraf)
+    int eq_x = 70 * 8 - 180; // SaÄŸ taraf X pozisyonu
+    int eq_y = 25; // EQ baÅŸlangÄ±Ã§ Y pozisyonu
     
     if (x >= eq_x && x < eq_x + 160 &&
         y >= eq_y + 15 && y < eq_y + 95) {
@@ -349,7 +355,7 @@ void audio_handle_eq_click(int band, int y) {
         
         mixer_ui->eq_bands[band] = new_level;
         
-        // Efekt olarak uygula (basitleştirilmiş)
+        // Efekt olarak uygula (basitleÅŸtirilmiÅŸ)
         audio_effect_params_t eq_effect = {
             .type = EFFECT_ECHO,
             .intensity = new_level / 100.0,
@@ -365,9 +371,9 @@ void audio_handle_eq_click(int band, int y) {
 void audio_update_visualizer() {
     if (!mixer_ui) return;
     
-    // Basit visualizer simülasyonu
+    // Basit visualizer simÃ¼lasyonu
     for (int i = 0; i < VISUALIZER_BARS; i++) {
-        // Rastgele dalga formu oluştur
+        // Rastgele dalga formu oluÅŸtur
         static uint32_t wave_phase = 0;
         wave_phase += 10;
         
@@ -388,25 +394,25 @@ void audio_update_visualizer() {
 void audio_mixer_handle_click(window_t* win, int x, int y) {
     if (!audio_mixer_initialized || !mixer_ui) return;
     
-    // Pencere koordinatlarını dönüştür
+    // Pencere koordinatlarÄ±nÄ± dÃ¶nÃ¼ÅŸtÃ¼r
     int px = x - win->x * 8;
     int py = y - win->y * 8;
     
-    // Kanal kontrolü
+    // Kanal kontrolÃ¼
     int channel = audio_get_channel_at_position(px, py);
     if (channel >= 0) {
         audio_handle_channel_click(channel, py);
         return;
     }
     
-    // EQ kontrolü
+    // EQ kontrolÃ¼
     int eq_band = audio_get_eq_band_at_position(px, py);
     if (eq_band >= 0) {
         audio_handle_eq_click(eq_band, py);
         return;
     }
     
-    // Master volume kontrolü
+    // Master volume kontrolÃ¼
     int master_x = 70 * 8 - 180;
     int master_y = 25 * 8 - 50;
     
@@ -427,7 +433,7 @@ void audio_mixer_handle_key(window_t* win, char c) {
     switch (c) {
         case 'r':
         case 'R':
-            // Kayıt başlat/durdur
+            // KayÄ±t baÅŸlat/durdur
             if (mixer_ui->recording) {
                 audio_stop_recording();
                 mixer_ui->recording = 0;
@@ -439,19 +445,19 @@ void audio_mixer_handle_key(window_t* win, char c) {
             
         case 'e':
         case 'E':
-            // Equalizer göster/gizle
+            // Equalizer gÃ¶ster/gizle
             mixer_ui->show_equalizer = !mixer_ui->show_equalizer;
             break;
             
         case 'v':
         case 'V':
-            // Visualizer göster/gizle
+            // Visualizer gÃ¶ster/gizle
             mixer_ui->show_visualizer = !mixer_ui->show_visualizer;
             break;
             
         case 's':
         case 'S':
-            // Tüm sesi durdur
+            // TÃ¼m sesi durdur
             for (int i = 0; i < AUDIO_MAX_CHANNELS; i++) {
                 audio_stop_channel(i);
             }
@@ -468,10 +474,10 @@ void audio_mixer_handle_key(window_t* win, char c) {
 void audio_mixer_update(window_t* win) {
     if (!audio_mixer_initialized || !mixer_ui) return;
     
-    // Visualizer'ı güncelle
+    // Visualizer'Ä± gÃ¼ncelle
     audio_update_visualizer();
     
-    // Mouse durumunu güncelle
+    // Mouse durumunu gÃ¼ncelle
     mouse_state_t mouse_state;
     if (get_mouse_state(&mouse_state) == 0) {
         mixer_ui->mouse_x = mouse_state.x;
@@ -489,7 +495,6 @@ int audio_get_active_channels() {
             count++;
         }
     }
-    
     return count;
 }
 

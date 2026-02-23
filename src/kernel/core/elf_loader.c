@@ -1,4 +1,4 @@
-#include "kernel.h"
+﻿#include "kernel.h"
 #include "elf.h"
 #include "fs.h"
 #include "memory.h"
@@ -49,7 +49,7 @@ int elf_load_and_run(const char* path) {
                 
                 // Temporarily map this frame to kernel identity area to zero it out
                 // or use a safe way to write to it.
-                // Since GümüşOS has identity mapping for 0-16MB, and PMM usually gives frames there:
+                // Since GÃ¼mÃ¼ÅŸOS has identity mapping for 0-16MB, and PMM usually gives frames there:
                 memset(frame, 0, PAGE_SIZE);
             }
             
@@ -61,7 +61,7 @@ int elf_load_and_run(const char* path) {
                 memcpy((void*)phdr->p_vaddr, elf_data + phdr->p_offset, phdr->p_filesz);
             }
             
-            // BSS (p_memsz > p_filesz) ise geri kalanı sıfırla
+            // BSS (p_memsz > p_filesz) ise geri kalanÄ± sÄ±fÄ±rla
             if (phdr->p_memsz > phdr->p_filesz) {
                 memset((void*)(phdr->p_vaddr + phdr->p_filesz), 0, phdr->p_memsz - phdr->p_filesz);
             }

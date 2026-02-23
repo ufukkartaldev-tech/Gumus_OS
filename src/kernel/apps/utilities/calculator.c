@@ -1,4 +1,4 @@
-#include "calculator.h"
+﻿#include "calculator.h"
 #include "window.h"
 #include "kernel.h"
 #include "vga_gfx.h"
@@ -7,14 +7,14 @@
 
 // Hesap Makinesi Durumu
 typedef struct {
-    char display[16];   // Ekranda görünen sayı
-    int current_val;    // Girilen sayı
-    int stored_val;     // İşlem için saklanan sayı
+    char display[16];   // Ekranda gÃ¶rÃ¼nen sayÄ±
+    int current_val;    // Girilen sayÄ±
+    int stored_val;     // Ä°ÅŸlem iÃ§in saklanan sayÄ±
     char operation;     // +, -, *, /
-    int new_entry;      // Yeni sayı girişi mi bekleniyor?
+    int new_entry;      // Yeni sayÄ± giriÅŸi mi bekleniyor?
 } calculator_t;
 
-// Buton Düzeni
+// Buton DÃ¼zeni
 // 7 8 9 +
 // 4 5 6 -
 // 1 2 3 *
@@ -27,14 +27,14 @@ void calculator_draw(window_t* win) {
     int px = win->x * 8;
     int py = win->y * 8;
     
-    // Ekran Alanı (Beyaz Arkaplan)
+    // Ekran AlanÄ± (Beyaz Arkaplan)
     vga_draw_rect(px + 10, py + 20, 140, 20, 15);
     
-    // Sayıyı Sağa Dayalı Yaz
+    // SayÄ±yÄ± SaÄŸa DayalÄ± Yaz
     int len = strlen(calc->display);
     vga_draw_text(px + 140 - (len * 8), py + 26, calc->display, 0);
     
-    // Buton Çizimi
+    // Buton Ã‡izimi
     const char* buttons[] = {
         "7", "8", "9", "+",
         "4", "5", "6", "-",
@@ -51,13 +51,13 @@ void calculator_draw(window_t* win) {
         
         // Buton Kutusu (Gri)
         vga_draw_rect(btn_x, btn_y, 30, 20, 7);
-        // Gölge (3D Efekt)
+        // GÃ¶lge (3D Efekt)
         vga_draw_line(btn_x, btn_y + 20, btn_x + 30, btn_y + 20, 0); // Alt Siyah
-        vga_draw_line(btn_x + 30, btn_y, btn_x + 30, btn_y + 20, 0); // Sağ Siyah
-        vga_draw_line(btn_x, btn_y, btn_x + 30, btn_y, 15); // Üst Beyaz
+        vga_draw_line(btn_x + 30, btn_y, btn_x + 30, btn_y + 20, 0); // SaÄŸ Siyah
+        vga_draw_line(btn_x, btn_y, btn_x + 30, btn_y, 15); // Ãœst Beyaz
         vga_draw_line(btn_x, btn_y, btn_x, btn_y + 20, 15); // Sol Beyaz
         
-        // Buton Yazısı
+        // Buton YazÄ±sÄ±
         vga_draw_text(btn_x + 11, btn_y + 6, buttons[i], 0);
     }
 }
@@ -93,14 +93,14 @@ void process_button(calculator_t* calc, char c) {
         else if (calc->operation == '*') result = calc->stored_val * calc->current_val;
         else if (calc->operation == '/') {
             if (calc->current_val != 0) result = calc->stored_val / calc->current_val;
-            else result = 0; // Hata yönetimi yok
+            else result = 0; // Hata yÃ¶netimi yok
         } else {
             result = calc->current_val;
         }
         
         itoa(result, calc->display);
         calc->current_val = result;
-        calc->operation = 0; // İşlemi sıfırla
+        calc->operation = 0; // Ä°ÅŸlemi sÄ±fÄ±rla
         calc->new_entry = 1;
     }
 }
@@ -109,8 +109,8 @@ void calculator_click(window_t* win, int x, int y) {
     calculator_t* calc = (calculator_t*)win->data;
     if (!calc) return;
     
-    // Pencere içi koordinatlar (x, y)
-    // Buton alanı başlıyor: y=50
+    // Pencere iÃ§i koordinatlar (x, y)
+    // Buton alanÄ± baÅŸlÄ±yor: y=50
     if (y < 50) return;
     
     // Buton tespiti
@@ -118,7 +118,7 @@ void calculator_click(window_t* win, int x, int y) {
     int c = (x - 10) / 35;
     
     if (r >= 0 && r < 4 && c >= 0 && c < 4) {
-        // Tıklanan buton indeksi
+        // TÄ±klanan buton indeksi
         int idx = r * 4 + c;
         const char* buttons[] = {
             "7", "8", "9", "+",
@@ -130,12 +130,12 @@ void calculator_click(window_t* win, int x, int y) {
         char btn_char = buttons[idx][0];
         process_button(calc, btn_char);
         
-        // Ekranı güncelle
+        // EkranÄ± gÃ¼ncelle
         // draw_single_window(win, 1); // Render loop halledecek
     }
 }
 
-// Klavye desteği (Opsiyonel ama şık olur)
+// Klavye desteÄŸi (Opsiyonel ama ÅŸÄ±k olur)
 void calculator_key(window_t* win, char c) {
     calculator_t* calc = (calculator_t*)win->data;
     if (!calc) return;
@@ -143,7 +143,7 @@ void calculator_key(window_t* win, char c) {
     // Enter -> =
     if (c == 13) c = '=';
     
-    // Geçerli tuşları filtrele
+    // GeÃ§erli tuÅŸlarÄ± filtrele
     if ((c >= '0' && c <= '9') || c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == 'C' || c == 'c') {
         if (c == 'c') c = 'C';
         process_button(calc, c);

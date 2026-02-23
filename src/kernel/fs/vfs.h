@@ -1,10 +1,10 @@
-#ifndef VFS_H
+﻿#ifndef VFS_H
 #define VFS_H
 
 #include <stdint.h>
 #include <stddef.h>
 
-// Dosya Sistemi Düğümü (Inode equivalent)
+// Dosya Sistemi DÃ¼ÄŸÃ¼mÃ¼ (Inode equivalent)
 typedef struct vfs_node {
     char name[32];
     uint32_t size;

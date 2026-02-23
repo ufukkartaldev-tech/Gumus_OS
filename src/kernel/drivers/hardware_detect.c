@@ -1,21 +1,37 @@
-#include "hardware_detect.h"
-#include "../core/io.h"
-#include "../core/string.h"
-#include "../core/memory.h"
-#include "../drivers/ata.h"
-#include "../drivers/vga_gfx.h"
-#include "../drivers/ahci.h"
-#include "../drivers/usb_hid.h"
-#include "../drivers/vesa_vbe.h"
-#include "../drivers/network_driver.h"
-#include "../drivers/audio_driver.h"
-#include "../drivers/usb_host.h"
+﻿#include "hardware_detect.h"
+#include "io.h"
+#include "string.h"
+#include "memory.h"
+#include "printf.h"
+#include "ata.h"
+#include "vga_gfx.h"
+#include "ahci.h"
+#include "usb/class/hid/usb_hid_class.h"
+#include "vesa_vbe.h"
+#include "network_driver.h"
+#include "audio_driver.h"
+#include "usb_host.h"
+#include "stdio.h"
 
-// Global değişkenler
+// Memory comparison function
+static int memcmp(const void* s1, const void* s2, size_t n) {
+    const unsigned char* p1 = s1;
+    const unsigned char* p2 = s2;
+    while (n--) {
+        if (*p1 != *p2) {
+            return *p1 - *p2;
+        }
+        p1++;
+        p2++;
+    }
+    return 0;
+}
+
+// Global deÄŸiÅŸkenler
 static hardware_info_t hw_info;
 static int hardware_detect_initialized = 0;
 
-// PCI Konfigürasyon Okuma Fonksiyonları
+// PCI KonfigÃ¼rasyon Okuma FonksiyonlarÄ±
 uint32_t pci_read_config_dword(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
     uint32_t address = (1 << 31) | (bus << 16) | (device << 11) | (function << 8) | (offset & 0xFC);
     outl(PCI_CONFIG_ADDRESS, address);
@@ -57,7 +73,7 @@ void hardware_detect_init() {
     
     memset(&hw_info, 0, sizeof(hardware_info_t));
     
-    printf("Donanım tespiti başlatılıyor...\n");
+    printf("DonanÄ±m tespiti baÅŸlatÄ±lÄ±yor...\n");
     
     hardware_detect_scan_pci();
     hardware_detect_usb();
@@ -65,20 +81,20 @@ void hardware_detect_init() {
     
     hardware_detect_initialized = 1;
     
-    printf("Donanım tespiti tamamlandı: %d PCI aygıtı bulundu\n", hw_info.pci_device_count);
+    printf("DonanÄ±m tespiti tamamlandÄ±: %d PCI aygÄ±tÄ± bulundu\n", hw_info.pci_device_count);
 }
 
 void hardware_detect_scan_pci() {
-    printf("PCI aygıları taranıyor...\n");
+    printf("PCI aygÄ±larÄ± taranÄ±yor...\n");
     
-    // Tüm PCI aygıtlarını tara (0-255 bus, 0-31 device, 0-7 function)
+    // TÃ¼m PCI aygÄ±tlarÄ±nÄ± tara (0-255 bus, 0-31 device, 0-7 function)
     for (int bus = 0; bus < 256 && hw_info.pci_device_count < 32; bus++) {
         for (int device = 0; device < 32 && hw_info.pci_device_count < 32; device++) {
             for (int function = 0; function < 8 && hw_info.pci_device_count < 32; function++) {
                 uint16_t vendor_id = pci_read_config_word(bus, device, function, 0x00);
                 uint16_t device_id = pci_read_config_word(bus, device, function, 0x02);
                 
-                // Geçersiz vendor ID'si varsa aygıt yok
+                // GeÃ§ersiz vendor ID'si varsa aygÄ±t yok
                 if (vendor_id == 0xFFFF || vendor_id == 0x0000) {
                     if (function == 0) {
                         break; // Bu device'da function yok
@@ -86,7 +102,7 @@ void hardware_detect_scan_pci() {
                     continue;
                 }
                 
-                // Aygıt bilgilerini oku
+                // AygÄ±t bilgilerini oku
                 pci_device_t* pci_dev = &hw_info.pci_devices[hw_info.pci_device_count];
                 
                 pci_dev->vendor_id = vendor_id;
@@ -101,12 +117,12 @@ void hardware_detect_scan_pci() {
                 pci_dev->interrupt_line = pci_read_config_byte(bus, device, function, 0x3C);
                 pci_dev->interrupt_pin = pci_read_config_byte(bus, device, function, 0x3D);
                 
-                // BAR'ları oku
+                // BAR'larÄ± oku
                 for (int i = 0; i < 6; i++) {
                     pci_dev->bar[i] = pci_read_config_dword(bus, device, function, 0x10 + i * 4);
                 }
                 
-                // Aygıtı sınıflandır
+                // AygÄ±tÄ± sÄ±nÄ±flandÄ±r
                 switch (pci_dev->class_code) {
                     case PCI_CLASS_STORAGE:
                         if (pci_dev->subclass == PCI_SUBCLASS_STORAGE_IDE) {
@@ -140,14 +156,14 @@ void hardware_detect_scan_pci() {
                         break;
                 }
                 
-                // Aygıt için sürücü yükle
+                // AygÄ±t iÃ§in sÃ¼rÃ¼cÃ¼ yÃ¼kle
                 hardware_load_driver_for_device(pci_dev);
                 
                 hw_info.pci_device_count++;
                 
-                // Multi-function device kontrolü (header_type'ın en üst biti)
+                // Multi-function device kontrolÃ¼ (header_type'Ä±n en Ã¼st biti)
                 if (function == 0 && !(pci_dev->header_type & 0x80)) {
-                    break; // Multi-function değil, diğer function'ları atla
+                    break; // Multi-function deÄŸil, diÄŸer function'larÄ± atla
                 }
             }
         }
@@ -155,21 +171,21 @@ void hardware_detect_scan_pci() {
 }
 
 void hardware_detect_usb() {
-    // USB host controller'larını tespit et
-    printf("USB host controller'ları taranıyor...\n");
+    // USB host controller'larÄ±nÄ± tespit et
+    printf("USB host controller'larÄ± taranÄ±yor...\n");
     
-    // PCI üzerinden USB controller'ları ara
+    // PCI Ã¼zerinden USB controller'larÄ± ara
     for (int i = 0; i < hw_info.pci_device_count; i++) {
         pci_device_t* dev = &hw_info.pci_devices[i];
         
-        // USB Controller class code'ları
+        // USB Controller class code'larÄ±
         if ((dev->class_code == 0x0C && (dev->subclass == 0x03 || dev->subclass == 0x00)) ||
             (dev->class_code == 0x01 && dev->subclass == 0x01)) { // USB as storage
             
             hw_info.has_usb = 1;
             printf("USB Host Controller bulundu: %04X:%04X\n", dev->vendor_id, dev->device_id);
             
-            // USB sürücüsü yükle
+            // USB sÃ¼rÃ¼cÃ¼sÃ¼ yÃ¼kle
             driver_t* usb_driver = create_usb_driver(dev);
             if (usb_driver) {
                 hw_info.detected_drivers[hw_info.driver_count++] = usb_driver;
@@ -180,8 +196,8 @@ void hardware_detect_usb() {
 }
 
 void hardware_detect_acpi() {
-    // ACPI tablolarını tespit et
-    printf("ACPI tabloları taranıyor...\n");
+    // ACPI tablolarÄ±nÄ± tespit et
+    printf("ACPI tablolarÄ± taranÄ±yor...\n");
     
     // RSDP (Root System Description Pointer) ara
     // 1. EBDA (Extended BIOS Data Area) - 0x0000040E'de adres var
@@ -194,7 +210,7 @@ void hardware_detect_acpi() {
     for (uint32_t i = 0; i < 1024; i += 16) {
         uint8_t* rsdp_candidate = (uint8_t*)(ebda_base + i);
         if (memcmp(rsdp_candidate, "RSD PTR ", 8) == 0) {
-            // Checksum kontrolü yap
+            // Checksum kontrolÃ¼ yap
             uint8_t checksum = 0;
             for (int j = 0; j < 20; j++) { // ACPI 1.0 RSDP 20 byte
                 checksum += rsdp_candidate[j];
@@ -204,16 +220,16 @@ void hardware_detect_acpi() {
                 printf("ACPI RSDP bulundu (EBDA): 0x%08X\n", ebda_base + i);
                 return;
             } else {
-                printf("RSDP candidate bulundu ama checksum hatalı: 0x%02X\n", checksum);
+                printf("RSDP candidate bulundu ama checksum hatalÄ±: 0x%02X\n", checksum);
             }
         }
     }
     
-    // 2. BIOS ROM alanında ara (0x000E0000 - 0x000FFFFF)
+    // 2. BIOS ROM alanÄ±nda ara (0x000E0000 - 0x000FFFFF)
     uint8_t* rsdp_area = (uint8_t*)0x000E0000;
     for (int i = 0; i < 0x20000; i += 16) {
         if (memcmp(rsdp_area + i, "RSD PTR ", 8) == 0) {
-            // Checksum kontrolü yap
+            // Checksum kontrolÃ¼ yap
             uint8_t checksum = 0;
             for (int j = 0; j < 20; j++) { // ACPI 1.0 RSDP 20 byte
                 checksum += rsdp_area[i + j];
@@ -222,7 +238,7 @@ void hardware_detect_acpi() {
             if (checksum == 0) {
                 printf("ACPI RSDP bulundu (BIOS): 0x%08X\n", 0x000E0000 + i);
                 
-                // ACPI 2.0+ kontrolü
+                // ACPI 2.0+ kontrolÃ¼
                 uint8_t* rsdp = rsdp_area + i;
                 uint32_t length = *((uint32_t*)(rsdp + 20));
                 if (length >= 36) { // ACPI 2.0+ 36+ byte
@@ -231,17 +247,17 @@ void hardware_detect_acpi() {
                         checksum += rsdp[j];
                     }
                     if (checksum == 0) {
-                        printf("ACPI 2.0+ RSDP doğrulandı, uzunluk: %d\n", length);
+                        printf("ACPI 2.0+ RSDP doÄŸrulandÄ±, uzunluk: %d\n", length);
                     }
                 }
                 return;
             } else {
-                printf("RSDP candidate bulundu ama checksum hatalı: 0x%02X\n", checksum);
+                printf("RSDP candidate bulundu ama checksum hatalÄ±: 0x%02X\n", checksum);
             }
         }
     }
     
-    printf("ACPI RSDP bulunamadı\n");
+    printf("ACPI RSDP bulunamadÄ±\n");
 }
 
 int hardware_load_driver_for_device(pci_device_t* device) {
@@ -251,12 +267,12 @@ int hardware_load_driver_for_device(pci_device_t* device) {
                                                  device->class_code, device->subclass);
     if (!driver) return -1;
     
-    // Sürücüyü başlat
+    // SÃ¼rÃ¼cÃ¼yÃ¼ baÅŸlat
     if (driver->init && driver->init() == 0) {
         hw_info.detected_drivers[hw_info.driver_count++] = driver;
         driver_register(driver);
         
-        printf("Sürücü yüklendi: %s (%04X:%04X)\n", driver->name, 
+        printf("SÃ¼rÃ¼cÃ¼ yÃ¼klendi: %s (%04X:%04X)\n", driver->name, 
                device->vendor_id, device->device_id);
         return 0;
     }
@@ -265,7 +281,7 @@ int hardware_load_driver_for_device(pci_device_t* device) {
 }
 
 driver_t* hardware_get_best_driver(uint16_t vendor_id, uint16_t device_id, uint8_t class_code, uint8_t subclass) {
-    // Sınıf ve alt sınıfa göre sürücü seç
+    // SÄ±nÄ±f ve alt sÄ±nÄ±fa gÃ¶re sÃ¼rÃ¼cÃ¼ seÃ§
     switch (class_code) {
         case PCI_CLASS_STORAGE:
             if (subclass == PCI_SUBCLASS_STORAGE_IDE) {
@@ -297,14 +313,14 @@ driver_t* hardware_get_best_driver(uint16_t vendor_id, uint16_t device_id, uint8
             
         case PCI_CLASS_SERIAL:
             if (subclass == PCI_SUBCLASS_SERIAL_USB) {
-                // USB Host Controller tipine göre sürücü seç
+                // USB Host Controller tipine gÃ¶re sÃ¼rÃ¼cÃ¼ seÃ§
                 pci_device_t temp_device = {0};
                 temp_device.vendor_id = vendor_id;
                 temp_device.device_id = device_id;
                 temp_device.class_code = class_code;
                 temp_device.subclass = subclass;
                 
-                // Program Interface'e göre controller tipini belirle
+                // Program Interface'e gÃ¶re controller tipini belirle
                 uint8_t prog_if = pci_read_config_byte(0, 0, 0, 0x09);
                 temp_device.prog_if = prog_if;
                 
@@ -336,13 +352,13 @@ hardware_info_t* hardware_get_info() {
 
 void hardware_print_summary() {
     if (!hardware_detect_initialized) {
-        printf("Donanım tespiti henüz yapılmadı.\n");
+        printf("DonanÄ±m tespiti henÃ¼z yapÄ±lmadÄ±.\n");
         return;
     }
     
-    printf("\n=== Donanım Özeti ===\n");
-    printf("PCI Aygıtları: %d\n", hw_info.pci_device_count);
-    printf("Yüklenen Sürücüler: %d\n", hw_info.driver_count);
+    printf("\n=== DonanÄ±m Ã–zeti ===\n");
+    printf("PCI AygÄ±tlarÄ±: %d\n", hw_info.pci_device_count);
+    printf("YÃ¼klenen SÃ¼rÃ¼cÃ¼ler: %d\n", hw_info.driver_count);
     printf("IDE Controller: %s\n", hw_info.has_ide ? "Var" : "Yok");
     printf("SATA Controller: %s\n", hw_info.has_sata ? "Var" : "Yok");
     printf("VGA Controller: %s\n", hw_info.has_vga ? "Var" : "Yok");
@@ -352,30 +368,30 @@ void hardware_print_summary() {
     printf("===================\n\n");
 }
 
-// Universal Sürücü Oluşturma Fonksiyonları
+// Universal SÃ¼rÃ¼cÃ¼ OluÅŸturma FonksiyonlarÄ±
 driver_t* create_ide_driver(pci_device_t* device) {
-    // IDE sürücüsü oluştur
-    // Bu mevcut ATA sürücüsünü kullanabilir
-    return NULL; // Şimdilik mevcut sürücüyü kullan
+    // IDE sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸtur
+    // Bu mevcut ATA sÃ¼rÃ¼cÃ¼sÃ¼nÃ¼ kullanabilir
+    return NULL; // Åimdilik mevcut sÃ¼rÃ¼cÃ¼yÃ¼ kullan
 }
 
 driver_t* create_sata_driver(pci_device_t* device) {
-    // SATA/AHCI sürücüsü oluştur
-    printf("SATA/AHCI sürücüsü oluşturuluyor...\n");
+    // SATA/AHCI sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸtur
+    printf("SATA/AHCI sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuluyor...\n");
     return create_ahci_driver(device);
 }
 
 driver_t* create_vga_driver(pci_device_t* device) {
-    // VGA/VBE sürücüsü oluştur
-    printf("VGA/VBE sürücüsü oluşturuluyor...\n");
+    // VGA/VBE sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸtur
+    printf("VGA/VBE sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuluyor...\n");
     return create_vesa_driver(device);
 }
 
 driver_t* create_network_driver(pci_device_t* device) {
-    // Network kartı sürücüsü oluştur
-    printf("Network kartı sürücüsü oluşturuluyor...\n");
+    // Network kartÄ± sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸtur
+    printf("Network kartÄ± sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuluyor...\n");
     
-    // Vendor ID'ye göre doğru sürücüyü seç
+    // Vendor ID'ye gÃ¶re doÄŸru sÃ¼rÃ¼cÃ¼yÃ¼ seÃ§
     switch (device->vendor_id) {
         case 0x10EC: // Realtek
             if (device->device_id == 0x8139) {
@@ -389,15 +405,15 @@ driver_t* create_network_driver(pci_device_t* device) {
             break;
     }
     
-    printf("Desteklenmeyen network kartı: %04X:%04X\n", device->vendor_id, device->device_id);
+    printf("Desteklenmeyen network kartÄ±: %04X:%04X\n", device->vendor_id, device->device_id);
     return NULL;
 }
 
 driver_t* create_audio_driver(pci_device_t* device) {
-    // Audio sürücüsü oluştur
-    printf("Audio sürücüsü oluşturuluyor...\n");
+    // Audio sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸtur
+    printf("Audio sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuluyor...\n");
     
-    // Vendor ID'ye göre doğru sürücüyü seç
+    // Vendor ID'ye gÃ¶re doÄŸru sÃ¼rÃ¼cÃ¼yÃ¼ seÃ§
     switch (device->vendor_id) {
         case 0x8086: // Intel
             if (device->device_id >= 0x2668 && device->device_id <= 0x266A) {
@@ -421,7 +437,7 @@ driver_t* create_audio_driver(pci_device_t* device) {
             break;
     }
     
-    // Generic AC'97/HDA controller'ları için
+    // Generic AC'97/HDA controller'larÄ± iÃ§in
     if (device->class_code == 0x04 && device->subclass == 0x03) {
         // Audio controller
         if (device->prog_if == 0x00) {
@@ -431,21 +447,21 @@ driver_t* create_audio_driver(pci_device_t* device) {
         }
     }
     
-    printf("Desteklenmeyen audio aygıtı: %04X:%04X\n", device->vendor_id, device->device_id);
+    printf("Desteklenmeyen audio aygÄ±tÄ±: %04X:%04X\n", device->vendor_id, device->device_id);
     return NULL;
 }
 
 driver_t* create_usb_driver(pci_device_t* device) {
-    // USB sürücüsü oluştur
-    printf("USB sürücüsü oluşturuluyor...\n");
+    // USB sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸtur
+    printf("USB sÃ¼rÃ¼cÃ¼sÃ¼ oluÅŸturuluyor...\n");
     
-    // USB HID aygıtlarını kontrol et
+    // USB HID aygÄ±tlarÄ±nÄ± kontrol et
     if (device->class_code == 0x03 && device->subclass == 0x01) {
         // USB HID Controller
-        return create_usb_keyboard_driver(device);
+        return create_usb_hid_driver(device);
     } else if (device->class_code == 0x03 && device->subclass == 0x02) {
         // USB Mouse
-        return create_usb_mouse_driver(device);
+        return create_usb_hid_driver(device);
     }
     
     return NULL;

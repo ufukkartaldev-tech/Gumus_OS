@@ -1,33 +1,33 @@
-#include "vga_font.h"
+﻿#include "vga_font.h"
 #include "io.h"
 
-// VGA Sequencer ve Graphics Controller portları
+// VGA Sequencer ve Graphics Controller portlarÄ±
 #define VGA_SEQ_ADDR 0x3C4
 #define VGA_SEQ_DATA 0x3C5
 #define VGA_GC_ADDR   0x3CE
 #define VGA_GC_DATA   0x3CF
 
-// Belirli bir indeksteki karakterin fontunu güncelle
+// Belirli bir indeksteki karakterin fontunu gÃ¼ncelle
 void update_font_char(uint8_t index, uint8_t* bitmap) {
     uint8_t* vga_mem = (uint8_t*)0xA0000;
     
-    // Sequencer: Font erişimi için hazırlan
+    // Sequencer: Font eriÅŸimi iÃ§in hazÄ±rlan
     outb(VGA_SEQ_ADDR, 0x01); outb(VGA_SEQ_DATA, 0x01); // Synchronous Reset
     outb(VGA_SEQ_ADDR, 0x02); outb(VGA_SEQ_DATA, 0x04); // Map Mask: Plane 2
     outb(VGA_SEQ_ADDR, 0x04); outb(VGA_SEQ_DATA, 0x07); // Sequential Access
     outb(VGA_SEQ_ADDR, 0x01); outb(VGA_SEQ_DATA, 0x00); // End Reset
     
-    // Graphics Controller: Font erişimi için hazırlan
+    // Graphics Controller: Font eriÅŸimi iÃ§in hazÄ±rlan
     outb(VGA_GC_ADDR, 0x04); outb(VGA_GC_DATA, 0x02);   // Read Map Select: Plane 2
     outb(VGA_GC_ADDR, 0x05); outb(VGA_GC_DATA, 0x00);   // Mode: Standard
     outb(VGA_GC_ADDR, 0x06); outb(VGA_GC_DATA, 0x00);   // Misc: Map to 0xA0000
     
-    // Bitmap verisini kopyala (Her karakter 32 byte yer kaplar ama 16 byte kullanılır)
+    // Bitmap verisini kopyala (Her karakter 32 byte yer kaplar ama 16 byte kullanÄ±lÄ±r)
     for (int i = 0; i < 16; i++) {
         vga_mem[index * 32 + i] = bitmap[i];
     }
     
-    // VGA durumunu eski haline getir (Text Modu için)
+    // VGA durumunu eski haline getir (Text Modu iÃ§in)
     outb(VGA_SEQ_ADDR, 0x02); outb(VGA_SEQ_DATA, 0x03); 
     outb(VGA_SEQ_ADDR, 0x04); outb(VGA_SEQ_DATA, 0x03); 
     outb(VGA_GC_ADDR, 0x04); outb(VGA_GC_DATA, 0x00);
@@ -36,27 +36,27 @@ void update_font_char(uint8_t index, uint8_t* bitmap) {
 }
 
 void load_turkish_fonts() {
-    // ğ
+    // ÄŸ
     uint8_t g_low[16] = {0x00,0x3E,0x00,0x00,0x3E,0x42,0x42,0x3E,0x02,0x02,0x3E,0x00,0x00,0x00,0x00,0x00};
     update_font_char(0xA6, g_low);
 
-    // Ğ
+    // Ä
     uint8_t g_high[16] = {0x3E,0x00,0x00,0x3E,0x42,0x40,0x40,0x40,0x42,0x3E,0x00,0x00,0x00,0x00,0x00,0x00};
     update_font_char(0xA7, g_high);
 
-    // ş
+    // ÅŸ
     uint8_t s_low[16] = {0x00,0x00,0x3E,0x40,0x3E,0x02,0x3E,0x00,0x08,0x10,0x00,0x00,0x00,0x00,0x00,0x00};
     update_font_char(0xA8, s_low);
 
-    // Ş
+    // Å
     uint8_t s_high[16] = {0x3E,0x42,0x40,0x3E,0x02,0x42,0x3E,0x00,0x08,0x10,0x00,0x00,0x00,0x00,0x00,0x00};
     update_font_char(0xA9, s_high);
 
-    // ı (noktasız i)
+    // Ä± (noktasÄ±z i)
     uint8_t i_no_dot[16] = {0x00,0x00,0x00,0x00,0x0C,0x04,0x04,0x04,0x04,0x04,0x0E,0x00,0x00,0x00,0x00,0x00};
     update_font_char(0xAA, i_no_dot);
 
-    // İ (noktalı I)
+    // Ä° (noktalÄ± I)
     uint8_t i_dot[16] = {0x04,0x00,0x00,0x1E,0x0C,0x0C,0x0C,0x0C,0x0C,0x1E,0x00,0x00,0x00,0x00,0x00,0x00};
     update_font_char(0xAB, i_dot);
 }

@@ -1,6 +1,6 @@
-#include "vga_gfx.h"
+﻿#include "vga_gfx.h"
 #include "memory.h"
-#include "string.h" // memcpy için
+#include "string.h" // memcpy iÃ§in
 
 static uint8_t* backbuffer = 0;
 
@@ -109,32 +109,32 @@ void vga_draw_char(int x, int y, char c, uint8_t color) {
     }
 }
 
-// Görev Çubuğu Çizimi
+// GÃ¶rev Ã‡ubuÄŸu Ã‡izimi
 void draw_taskbar() {
     int y = SCREEN_HEIGHT - 20;
     
     // Gri Arka Plan (Win95 Style)
     vga_draw_rect(0, y, SCREEN_WIDTH, 20, 7); // Light Grey
     
-    // Üst Çizgi (Beyaz - 3D Efekt)
+    // Ãœst Ã‡izgi (Beyaz - 3D Efekt)
     vga_draw_line(0, y, SCREEN_WIDTH - 1, y, 15);
     
-    // "Başlat" Butonu (Basit Gümüş Buton)
-    vga_draw_rect(2, y + 2, 50, 16, 8); // Gölge
-    vga_draw_rect(2, y + 2, 48, 14, 7); // Buton Yüzü
+    // "BaÅŸlat" Butonu (Basit GÃ¼mÃ¼ÅŸ Buton)
+    vga_draw_rect(2, y + 2, 50, 16, 8); // GÃ¶lge
+    vga_draw_rect(2, y + 2, 48, 14, 7); // Buton YÃ¼zÃ¼
     
-    // 3D Buton Kenarları
-    vga_draw_line(2, y + 2, 50, y + 2, 15); // Üst Beyaz
+    // 3D Buton KenarlarÄ±
+    vga_draw_line(2, y + 2, 50, y + 2, 15); // Ãœst Beyaz
     vga_draw_line(2, y + 2, 2, y + 16, 15); // Sol Beyaz
-    vga_draw_line(50, y + 2, 50, y + 16, 0); // Sağ Siyah
+    vga_draw_line(50, y + 2, 50, y + 16, 0); // SaÄŸ Siyah
     vga_draw_line(2, y + 16, 50, y + 16, 0); // Alt Siyah
     
-    vga_draw_text(8, y + 6, "GUMUS", 0); // Siyah Yazı
+    vga_draw_text(8, y + 6, "GUMUS", 0); // Siyah YazÄ±
     
-    // Saat Alanı (Sağ Alt)
+    // Saat AlanÄ± (SaÄŸ Alt)
     vga_draw_rect(SCREEN_WIDTH - 60, y + 4, 55, 14, 15); // Beyaz Kutu
-    vga_draw_line(SCREEN_WIDTH - 60, y + 4, SCREEN_WIDTH - 6, y + 4, 8); // Üst Gölge
-    vga_draw_line(SCREEN_WIDTH - 60, y + 4, SCREEN_WIDTH - 60, y + 18, 8); // Sol Gölge
+    vga_draw_line(SCREEN_WIDTH - 60, y + 4, SCREEN_WIDTH - 6, y + 4, 8); // Ãœst GÃ¶lge
+    vga_draw_line(SCREEN_WIDTH - 60, y + 4, SCREEN_WIDTH - 60, y + 18, 8); // Sol GÃ¶lge
 }
 
 void vga_draw_text(int x, int y, const char* str, uint8_t color) {
@@ -143,17 +143,15 @@ void vga_draw_text(int x, int y, const char* str, uint8_t color) {
         x += 8;
     }
 }
-    }
-}
 
-// Basit ikon çizimi (0 = Şeffaf)
+// Basit ikon Ã§izimi (0 = Åeffaf)
 void vga_draw_icon(int x, int y, const uint8_t* icon, int w, int h) {
     for (int i = 0; i < h; i++) {
         for (int j = 0; j < w; j++) {
             uint8_t color = icon[i * w + j];
-            if (color != 0) { // Şeffaflık (0 ise çizme) (Varsayılan şeffaf renk 0 olsun)
-                // Ama siyah (0) çizebilmek için şeffaf rengi 255 yapmak daha iyi olabilir.
-                // Şimdilik 0 renk kullanılmıyor (Siyah).
+            if (color != 0) { // ÅeffaflÄ±k (0 ise Ã§izme) (VarsayÄ±lan ÅŸeffaf renk 0 olsun)
+                // Ama siyah (0) Ã§izebilmek iÃ§in ÅŸeffaf rengi 255 yapmak daha iyi olabilir.
+                // Åimdilik 0 renk kullanÄ±lmÄ±yor (Siyah).
                 vga_putpixel(x + j, y + i, color);
             }
         }

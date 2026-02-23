@@ -1,14 +1,25 @@
-#include "arp.h"
-#include "../../core/io.h"
-#include "../../core/string.h"
-#include "../../core/memory.h"
+﻿#include "arp.h"
+#include "io.h"
+#include "string.h"
+#include "memory.h"
+#include "printf.h"
+#include "stdio.h"
 
-// Global Değişkenler
-static uint8_t our_ip[4] = {192, 168, 1, 100}; // Varsayılan IP
+// Network byte order functions
+static uint16_t htons(uint16_t hostshort) {
+    return ((hostshort >> 8) & 0xFF) | ((hostshort & 0xFF) << 8);
+}
+
+static uint16_t ntohs(uint16_t netshort) {
+    return htons(netshort);
+}
+
+// Global DeÄŸiÅŸkenler
+static uint8_t our_ip[4] = {192, 168, 1, 100}; // VarsayÄ±lan IP
 static arp_cache_entry_t* arp_cache = NULL;
 static int arp_initialized = 0;
 
-// IP Adresi Utility Fonksiyonları
+// IP Adresi Utility FonksiyonlarÄ±
 void ip_to_string(uint8_t* ip, char* str) {
     sprintf(str, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
 }
@@ -48,13 +59,13 @@ void arp_print_packet(arp_packet_t* packet) {
            packet->operation == ARP_OPERATION_REQUEST ? "Request" : "Reply");
 }
 
-// ARP Cache Fonksiyonları
+// ARP Cache FonksiyonlarÄ±
 void arp_cache_add(uint8_t* ip_addr, mac_addr_t* mac_addr) {
-    // Önce bu IP için mevcut entry var mı kontrol et
+    // Ã–nce bu IP iÃ§in mevcut entry var mÄ± kontrol et
     arp_cache_entry_t* entry = arp_cache;
     while (entry) {
         if (ip_equal(entry->ip_addr, ip_addr)) {
-            // Mevcut entry'i güncelle
+            // Mevcut entry'i gÃ¼ncelle
             ethernet_copy_mac(&entry->mac_addr, mac_addr);
             entry->timeout = 300; // 5 dakika
             return;
@@ -62,7 +73,7 @@ void arp_cache_add(uint8_t* ip_addr, mac_addr_t* mac_addr) {
         entry = entry->next;
     }
     
-    // Yeni entry oluştur
+    // Yeni entry oluÅŸtur
     entry = (arp_cache_entry_t*)kmalloc(sizeof(arp_cache_entry_t));
     if (!entry) {
         return;
@@ -90,7 +101,7 @@ int arp_cache_lookup(uint8_t* ip_addr, mac_addr_t* mac_addr) {
         }
         entry = entry->next;
     }
-    return 0; // Bulunamadı
+    return 0; // BulunamadÄ±
 }
 
 void arp_cache_cleanup() {
@@ -99,7 +110,7 @@ void arp_cache_cleanup() {
     
     while (current) {
         if (current->timeout <= 0) {
-            // Süresi dolmuş entry'i sil
+            // SÃ¼resi dolmuÅŸ entry'i sil
             if (prev) {
                 prev->next = current->next;
             } else {
@@ -116,7 +127,7 @@ void arp_cache_cleanup() {
     }
 }
 
-// ARP Fonksiyonları
+// ARP FonksiyonlarÄ±
 int arp_init() {
     if (arp_initialized) {
         return 0;
@@ -125,7 +136,7 @@ int arp_init() {
     arp_cache = NULL;
     arp_initialized = 1;
     
-    printf("ARP protokolü başlatıldı. IP: %d.%d.%d.%d\n", 
+    printf("ARP protokolÃ¼ baÅŸlatÄ±ldÄ±. IP: %d.%d.%d.%d\n", 
            our_ip[0], our_ip[1], our_ip[2], our_ip[3]);
     
     return 0;
@@ -144,7 +155,8 @@ int arp_send_request(uint8_t* target_ip) {
     packet.proto_addr_len = ARP_PROTO_ADDR_LEN;
     packet.operation = htons(ARP_OPERATION_REQUEST);
     
-    ethernet_copy_mac(&packet.sender_hw_addr, ethernet_get_mac());
+    mac_addr_t mac = ethernet_get_mac();
+    ethernet_copy_mac(&packet.sender_hw_addr, &mac);
     for (int i = 0; i < 4; i++) {
         packet.sender_proto_addr[i] = our_ip[i];
         packet.target_proto_addr[i] = target_ip[i];
@@ -154,7 +166,7 @@ int arp_send_request(uint8_t* target_ip) {
     mac_addr_t broadcast = {{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
     ethernet_copy_mac(&packet.target_hw_addr, &broadcast);
     
-    printf("ARP Request gönderiliyor: ");
+    printf("ARP Request gÃ¶nderiliyor: ");
     char target_str[16];
     ip_to_string(target_ip, target_str);
     printf("%s\n", target_str);
@@ -175,7 +187,8 @@ int arp_send_reply(uint8_t* target_ip, mac_addr_t* target_mac) {
     packet.proto_addr_len = ARP_PROTO_ADDR_LEN;
     packet.operation = htons(ARP_OPERATION_REPLY);
     
-    ethernet_copy_mac(&packet.sender_hw_addr, ethernet_get_mac());
+    mac_addr_t mac = ethernet_get_mac();
+    ethernet_copy_mac(&packet.sender_hw_addr, &mac);
     ethernet_copy_mac(&packet.target_hw_addr, target_mac);
     
     for (int i = 0; i < 4; i++) {
@@ -183,7 +196,7 @@ int arp_send_reply(uint8_t* target_ip, mac_addr_t* target_mac) {
         packet.target_proto_addr[i] = target_ip[i];
     }
     
-    printf("ARP Reply gönderiliyor: ");
+    printf("ARP Reply gÃ¶nderiliyor: ");
     ethernet_print_mac(target_mac);
     printf("\n");
     
@@ -201,15 +214,15 @@ int arp_process_packet(arp_packet_t* packet, mac_addr_t* sender_mac) {
         return -1;
     }
     
-    // Göndereni cache'e ekle
+    // GÃ¶ndereni cache'e ekle
     arp_cache_add(packet->sender_proto_addr, &packet->sender_hw_addr);
     
     uint16_t operation = ntohs(packet->operation);
     
     if (operation == ARP_OPERATION_REQUEST) {
-        // Bu request bizim için mi?
+        // Bu request bizim iÃ§in mi?
         if (ip_equal(packet->target_proto_addr, our_ip)) {
-            // ARP Reply gönder
+            // ARP Reply gÃ¶nder
             arp_send_reply(packet->sender_proto_addr, &packet->sender_hw_addr);
         }
     }
@@ -218,15 +231,15 @@ int arp_process_packet(arp_packet_t* packet, mac_addr_t* sender_mac) {
 }
 
 int arp_resolve(uint8_t* ip_addr, mac_addr_t* mac_addr) {
-    // Önce cache'te ara
+    // Ã–nce cache'te ara
     if (arp_cache_lookup(ip_addr, mac_addr)) {
         return 1; // Cache'te bulundu
     }
     
-    // Cache'te yoksa ARP request gönder
+    // Cache'te yoksa ARP request gÃ¶nder
     arp_send_request(ip_addr);
     
-    // Gerçek bir implementasyonda burada reply beklenir
-    // Şimdilik başarısız döndürelim
+    // GerÃ§ek bir implementasyonda burada reply beklenir
+    // Åimdilik baÅŸarÄ±sÄ±z dÃ¶ndÃ¼relim
     return 0;
 }
