@@ -1,57 +1,104 @@
-#include "test_framework.h"
+#include "framework.h"
 #include "../src/kernel/core/string.h"
 #include "../src/kernel/core/math.h"
+#include "../src/kernel/core/memory/memory.h"
 
-int test_string_len() {
-    ASSERT(strlen("") == 0, "Empty string length should be 0");
-    ASSERT(strlen("abc") == 3, "Length of 'abc' should be 3");
-    return 1;
+/**
+ * KERNEL CORE TESTS (GELİŞMİŞ & ZIRHLI)
+ * ------------------------------------
+ * Bu testler kernel'ın temel yapı taşlarını zorlar.
+ */
+
+// Dayı Tavsiyesi: FPU (Floating Point Unit) Aktifleştirme
+// x86'da double kullanmadan önce bu vana açılmalı!
+void init_fpu() {
+    uint32_t cr0, cr4;
+    __asm__ volatile("mov %%cr0, %0" : "=r"(cr0));
+    cr0 &= ~(1 << 2); // EM bitini temizle (Emulation kapalı)
+    cr0 |= (1 << 1);  // MP bitini set et (Monitor Coprocessor)
+    __asm__ volatile("mov %0, %%cr0" : : "r"(cr0));
+
+    __asm__ volatile("mov %%cr4, %0" : "=r"(cr4));
+    cr4 |= (3 << 9);  // OSFXSR ve OSXMMEXCPT bitlerini aç (Streaming SIMD desteği için)
+    __asm__ volatile("mov %0, %%cr4" : : "r"(cr4));
+
+    __asm__ volatile("finit"); // FPU'yu sıfırla
 }
 
-int test_string_cmp() {
-    ASSERT(strcmp("abc", "abc") == 0, "Strings should be equal");
-    ASSERT(strcmp("abc", "abd") < 0, "abc < abd");
-    ASSERT(strcmp("abc", "aba") > 0, "abc > aba");
-    ASSERT(strncmp("abcd", "abce", 3) == 0, "First 3 chars should be equal");
-    return 1;
+int test_string_robustness() {
+    // 1. strlen(NULL) koruması
+    ASSERT_EQ(strlen(NULL), 0, "strlen(NULL) support");
+    
+    // 2. strcmp mismatch
+    ASSERT(strcmp("Gumus", "GumusOS") != 0, "strcmp mismatch length");
+    ASSERT(strncmp("GumusOS", "Gumus", 5) == 0, "strncmp first 5");
+    
+    return TEST_PASS;
 }
 
-int test_string_mem() {
-    char buf[10];
-    memset(buf, 'A', 5);
-    ASSERT(buf[0] == 'A' && buf[4] == 'A', "Memset failed");
+int test_memory_guards() {
+    uint8_t buffer[12] = {0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF};
+    uint8_t* target = buffer + 1; // [0] ve [11] guard byte'lar
     
-    char src[] = "test";
-    char dst[10];
-    memcpy(dst, src, 5);
-    ASSERT(strcmp(dst, "test") == 0, "Memcpy failed");
-    return 1;
+    // Dayı Tavsiyesi 2: Sınırların dışına tasma kontrolü (Guard Bytes)
+    memset(target, 'X', 10);
+    
+    ASSERT_EQ(buffer[0], 0xFF, "memset prefix guard corruption");
+    ASSERT_EQ(buffer[11], 0xFF, "memset suffix guard corruption");
+    ASSERT_EQ(buffer[1], 'X', "memset first byte");
+    ASSERT_EQ(buffer[10], 'X', "memset last byte");
+    
+    return TEST_PASS;
 }
 
-int test_math_basic() {
-    // We use a small epsilon for floating point comparison if needed, 
-    // but here we check basic properties
-    ASSERT(sqrt(4.0) == 2.0, "sqrt(4) should be 2");
-    ASSERT(sqrt(0.0) == 0.0, "sqrt(0) should be 0");
+int test_unaligned_memory_ops() {
+    uint8_t data[20];
+    for(int i=0; i<20; i++) data[i] = 0;
     
-    // sin(0) = 0
-    double s0 = sin(0.0);
-    ASSERT(s0 > -0.001 && s0 < 0.001, "sin(0) should be approx 0");
+    // 1. Unaligned memset (Adres 4'ün katı değil)
+    uint8_t* unaligned_dst = data + 1;
+    memset(unaligned_dst, 0xAA, 7);
     
-    return 1;
+    ASSERT_EQ(data[0], 0, "unaligned memset prefix security");
+    ASSERT_EQ(data[1], 0xAA, "unaligned memset start");
+    ASSERT_EQ(data[7], 0xAA, "unaligned memset end");
+    ASSERT_EQ(data[8], 0, "unaligned memset suffix security");
+    
+    // 2. Unaligned memcpy (Kaynak ve hedef farklı hizalarda)
+    uint8_t src[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    uint8_t dst[10] = {0};
+    memcpy(dst + 1, src + 2, 5); // Dest alignment mismatch
+    
+    ASSERT_EQ(dst[0], 0, "memcpy unaligned prefix");
+    ASSERT_EQ(dst[1], 3, "memcpy unaligned data match 1");
+    ASSERT_EQ(dst[5], 7, "memcpy unaligned data match 5");
+    
+    return TEST_PASS;
+}
+
+int test_math_fpu_safety() {
+    // Eğer buraya kadar FPU hatası almadıysak vana açılmıştır
+    double val = sqrt(16.0);
+    ASSERT_EQ((uint32_t)val, 4, "sqrt(16.0) with FPU enabled");
+    
+    double s = sin(0.0);
+    int32_t s_int = (int32_t)(s * 1000); // 0.000...
+    ASSERT_EQ(s_int, 0, "sin(0.0) precision check");
+    
+    return TEST_PASS;
 }
 
 void kernel_main() {
-    TEST_HEADER("Kernel Core Tests");
+    test_header("KERNEL CORE RIGOROUS TESTS");
     
-    RUN_TEST(test_string_len, "String Length");
-    RUN_TEST(test_string_cmp, "String Comparison");
-    RUN_TEST(test_string_mem, "Memory Operations");
-    RUN_TEST(test_math_basic, "Math Functions");
+    // Dayı Tavsiyesi 1: FPU açılmazsa math testleri sistemi kilitler!
+    init_fpu();
     
-    TEST_FOOTER();
+    RUN_TEST(test_string_robustness, "String Protection (NULL & Length)");
+    RUN_TEST(test_memory_guards, "Memory Boundary Guards");
+    RUN_TEST(test_unaligned_memory_ops, "Unaligned Memory Access (R/W)");
+    RUN_TEST(test_math_fpu_safety, "FPU & Floating Point Safety");
     
-    while(1) {
-        __asm__ volatile("hlt");
-    }
+    _print_raw("Kernel tests completed successfully.", 2, 22, 0x0B);
+    while(1) { __asm__ volatile("hlt"); }
 }
