@@ -22,16 +22,22 @@ Write-Host "Dependencies derleniyor..." -ForegroundColor Yellow
 & $GCC -m32 -ffreestanding $inc -c src/kernel/core/memory/memory.c -o memory.o
 & $GCC -m32 -ffreestanding $inc -c src/kernel/cpu/task.c -o task.o
 & $GCC -m32 -ffreestanding $inc -c src/kernel/core/syscall.c -o syscall.o
+& $GCC -m32 -ffreestanding $inc -c src/kernel/fs/fs.c -o fs.o
+& $GCC -m32 -ffreestanding $inc -c src/kernel/fs/vfs.c -o vfs.o
 & $GCC -m32 -ffreestanding $inc -c tests/mocks.c -o mocks.o
 
-$all_deps = @("string.o", "math.o", "memory.o", "task.o", "syscall.o", "mocks.o")
+$all_deps = @("string.o", "math.o", "memory.o", "task.o", "syscall.o", "fs.o", "vfs.o", "mocks.o")
 
 # Test listesi
 $tests = @(
     @{ name = "Kernel Core Test"; file = "tests/kernel_test.c"; output = "kernel_test.bin" },
     @{ name = "Memory Test"; file = "tests/memory_test.c"; output = "memory_test.bin" },
     @{ name = "Process Test"; file = "tests/process_test.c"; output = "process_test.bin" },
-    @{ name = "Syscall Test"; file = "tests/syscall_test.c"; output = "syscall_test.bin" }
+    @{ name = "Syscall Test"; file = "tests/syscall_test.c"; output = "syscall_test.bin" },
+    @{ name = "ATA Test"; file = "tests/ata_test.c"; output = "ata_test.bin" },
+    @{ name = "FS Test"; file = "tests/fs_test.c"; output = "fs_test.bin" },
+    @{ name = "VFS Mount Test"; file = "tests/vfs_mount_test.c"; output = "vfs_mount_test.bin" },
+    @{ name = "Disk Stress Test"; file = "tests/disk_stress_test.c"; output = "disk_stress_test.bin" }
 )
 
 foreach ($t in $tests) {
