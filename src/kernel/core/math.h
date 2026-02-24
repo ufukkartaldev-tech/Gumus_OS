@@ -7,5 +7,8 @@ double sin(double x);
 double cos(double x);
 double abs(double x);
 double pow(double x, double y);
+double sqrt(double x);
+double exp(double x);
+double log(double x);
 
 #endif

@@ -1,5 +1,5 @@
 #include "framework.h"
-#include "../src/kernel/core/idt.h"
+#include "../src/kernel/cpu/idt.h"
 
 /**
  * 6. KATMAN: SYSCALL INTERFACE (DEVLET DAİRESİ TESTİ)
