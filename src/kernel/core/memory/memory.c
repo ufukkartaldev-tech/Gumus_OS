@@ -14,16 +14,24 @@ void pmm_set_frame(uint32_t frame_addr) {
     uint32_t frame = frame_addr / PAGE_SIZE;
     uint32_t idx = frame / 32;
     uint32_t off = frame % 32;
-    frames[idx] |= (1 << off);
-    used_frames++;
+    if (!(frames[idx] & (1 << off))) {
+        frames[idx] |= (1 << off);
+        used_frames++;
+    }
 }
 
 void pmm_clear_frame(uint32_t frame_addr) {
     uint32_t frame = frame_addr / PAGE_SIZE;
     uint32_t idx = frame / 32;
     uint32_t off = frame % 32;
-    frames[idx] &= ~(1 << off);
-    used_frames--;
+    if (frames[idx] & (1 << off)) {
+        frames[idx] &= ~(1 << off);
+        used_frames--;
+    }
+}
+
+void pmm_free_frame(void* frame) {
+    pmm_clear_frame((uint32_t)frame);
 }
 
 uint32_t pmm_first_free_frame() {
@@ -168,45 +176,116 @@ void* get_phys_addr(void* virt) {
     return (void*)((page->frame << 12) + ((uint32_t)virt & 0xFFF));
 }
 
-// --- Kernel Heap (Kmalloc) ---
-// Paging sonrasÄ± Sanal Adres uzayÄ±nÄ± yÃ¶neten basit bir allocator
-
+// --- Kernel Heap (Boundary Tag Allocator) ---
+#define HEAP_MAGIC 0xCAFEBABE
 #define HEAP_START_VIRT 0xC0000000
+
+typedef struct heap_block {
+    uint32_t magic;
+    uint32_t size;    // Payload size
+    int is_free;
+    struct heap_block* next;
+} heap_block_t;
+
+static heap_block_t* heap_start = (heap_block_t*)HEAP_START_VIRT;
 static uint32_t heap_curr_break = HEAP_START_VIRT;
 
+static void* expand_heap(size_t size) {
+    void* addr = (void*)heap_curr_break;
+    uint32_t needed_size = size + sizeof(heap_block_t);
+    
+    // Align to page size
+    if (needed_size % PAGE_SIZE != 0) 
+        needed_size += (PAGE_SIZE - (needed_size % PAGE_SIZE));
+
+    for (uint32_t i = 0; i < needed_size; i += PAGE_SIZE) {
+        void* phys = pmm_alloc_frame();
+        if (!phys) return 0;
+        map_page(phys, (void*)(heap_curr_break + i), 3);
+    }
+    
+    heap_block_t* block = (heap_block_t*)heap_curr_break;
+    block->magic = HEAP_MAGIC;
+    block->size = needed_size - sizeof(heap_block_t);
+    block->is_free = 1;
+    block->next = 0;
+    
+    heap_curr_break += needed_size;
+    return block;
+}
+
+void* kmalloc(size_t size) {
+    if (size == 0) return 0;
+    // Align size to 4 bytes
+    if (size % 4 != 0) size += (4 - (size % 4));
+
+    if (heap_curr_break == HEAP_START_VIRT) {
+        expand_heap(size);
+    }
+
+    heap_block_t* curr = heap_start;
+    heap_block_t* prev = 0;
+
+    while (curr) {
+        if (curr->is_free && curr->size >= size) {
+            // Split block if possible
+            if (curr->size >= size + sizeof(heap_block_t) + 4) {
+                heap_block_t* next_block = (heap_block_t*)((uint32_t)curr + sizeof(heap_block_t) + size);
+                next_block->magic = HEAP_MAGIC;
+                next_block->size = curr->size - size - sizeof(heap_block_t);
+                next_block->is_free = 1;
+                next_block->next = curr->next;
+                
+                curr->size = size;
+                curr->next = next_block;
+            }
+            curr->is_free = 0;
+            return (void*)((uint32_t)curr + sizeof(heap_block_t));
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    // No free block found, expand
+    heap_block_t* new_block = expand_heap(size);
+    if (!new_block) return 0;
+    
+    // Link the new block
+    if (prev) prev->next = new_block;
+    
+    return kmalloc(size); // Try again
+}
+
 void* kmalloc_aligned(size_t size, uint32_t align) {
-    if (heap_curr_break % align != 0) {
-        heap_curr_break += (align - (heap_curr_break % align));
+    // Basic aligned kmalloc: if align is 4096, just give a whole page
+    if (align == 4096) {
+        void* ptr = kmalloc(size + 4096);
+        uint32_t addr = (uint32_t)ptr;
+        if (addr % 4096 != 0) {
+            addr += (4096 - (addr % 4096));
+        }
+        return (void*)addr;
     }
     return kmalloc(size);
 }
 
-void* kmalloc(size_t size) {
-    // 4 byte align
-    if (size % 4 != 0) size += (4 - (size % 4));
-    
-    void* addr = (void*)heap_curr_break;
-    
-    // Gerekli sayfalar mapli mi?
-    uint32_t start_page = (uint32_t)addr & 0xFFFFF000;
-    uint32_t end_page = ((uint32_t)addr + size) & 0xFFFFF000;
-    
-    for (uint32_t pg = start_page; pg <= end_page; pg += PAGE_SIZE) {
-        if (!get_phys_addr((void*)pg)) {
-            void* phys = pmm_alloc_frame();
-            if (!phys) return 0; // OOM
-            map_page(phys, (void*)pg, 3); // RW Kernel
-        }
-    }
-    
-    heap_curr_break += size;
-    return addr;
-}
-
 void kfree(void* ptr) {
-    // Bump pointer'da free zordur.
-    // Åimdilik boÅŸ iÅŸlem.
-    (void)ptr;
+    if (!ptr) return;
+    heap_block_t* block = (heap_block_t*)((uint32_t)ptr - sizeof(heap_block_t));
+    if (block->magic != HEAP_MAGIC) return; // BozulmuÅŸ header!
+    
+    block->is_free = 1;
+    
+    // DayÄ± Tavsiyesi 4: Coalescing (BirleÅŸtirme)
+    heap_block_t* curr = heap_start;
+    while (curr && curr->next) {
+        if (curr->is_free && curr->next->is_free) {
+            curr->size += curr->next->size + sizeof(heap_block_t);
+            curr->next = curr->next->next;
+            continue; // Bir daha kontrol et (Ã¼Ã§lÃ¼ birleÅŸme iÃ§in)
+        }
+        curr = curr->next;
+    }
 }
 
 // --- SHM (Shared Memory) ---
