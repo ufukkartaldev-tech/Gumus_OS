@@ -4,10 +4,9 @@
 struct idt_entry idt[IDT_ENTRIES];
 struct idt_ptr idtp;
 
-// assembly_handlers.asm dosyasÄ±ndan gelecek
+// assembly_handlers.asm dosyasından gelecek
 extern void isr0();
 extern void irq0();
-extern void irq1();
 extern void irq1();
 extern void irq12();
 extern void isr128(); // Syscall (int 0x80)
@@ -69,7 +68,6 @@ void init_idt() {
     // IRQ 1: Klavye
     set_idt_gate(33, (uint32_t)irq1);
     
-    // IRQ 12: Fare (Mouse)
     // IRQ 12: Fare (Mouse)
     set_idt_gate(44, (uint32_t)irq12);
 

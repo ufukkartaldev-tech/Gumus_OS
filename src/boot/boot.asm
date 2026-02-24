@@ -2,26 +2,15 @@
 [org 0x7c00]
 KERNEL_OFFSET equ 0x1000 ; Kernel'ı bu adrese yükleyeceğiz
 
+; Dayı Tavsiyesi 1: Segmentleri Mühürle
+xor ax, ax
+mov ds, ax
+mov es, ax
+mov ss, ax
+mov sp, 0x7C00
+mov bp, sp
+
 mov [BOOT_DRIVE], dl
-
-; VBE setup geçici olarak devre dışı - VGA text mode kullanacağız
-; mov ax, 0x4f02
-; mov bx, 0x4103 ; mode 0x103 | 0x4000 (LFB)
-; int 0x10
-
-; Query mode info to get LFB address - devre dışı
-; mov ax, 0x4f01
-; mov cx, 0x103
-; mov di, 0x9000 ; buffer to store mode info
-; int 0x10
-
-; LFB address is at offset 40 (0x28) in the mode info block - devre dışı
-; mov eax, [0x9028]
-; mov [0x500], eax ; Kernel bu adresten okuyacak
-
-; Yığın (Stack) kurulumu
-mov bp, 0x9000
-mov sp, bp
 
 mov bx, MSG_REAL_MODE
 call print_string
@@ -38,8 +27,13 @@ jc bios_error        ; BIOS hatası varsa
 mov bx, MSG_LOADED
 call print_string
 
-; Kernel çağrısından önce test
-mov word [0xB8000], 0x0F4B00  ; 'K' karakteri + beyaz renk
+; Kernel çağrısından önce test (Real Mode)
+; Dayı Tavsiyesi: 16-bit modda segment:offset kullan
+push es
+mov ax, 0xB800
+mov es, ax
+mov word [es:0], 0x0F4B  ; 'K' karakteri + beyaz renk
+pop es
 
 ; 16-bit modda kernel'i çağır
 call KERNEL_OFFSET      ; Kernel'a zıpla!

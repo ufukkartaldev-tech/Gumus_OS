@@ -398,8 +398,25 @@ void beep_hz(uint32_t hz, uint32_t ms) {
     nosound();
 }
 
+// Dayı Tavsiyesi: FPU (Floating Point Unit) Aktifleştirme
+// x86'da double kullanmadan önce bu vana açılmalı!
+void init_fpu() {
+    uint32_t cr0, cr4;
+    __asm__ volatile("mov %%cr0, %0" : "=r"(cr0));
+    cr0 &= ~(1 << 2); // EM bitini temizle (Emulation kapalı)
+    cr0 |= (1 << 1);  // MP bitini set et (Monitor Coprocessor)
+    __asm__ volatile("mov %0, %%cr0" : : "r"(cr0));
+
+    __asm__ volatile("mov %%cr4, %0" : "=r"(cr4));
+    cr4 |= (3 << 9);  // OSFXSR ve OSXMMEXCPT bitlerini aç (Streaming SIMD desteği için)
+    __asm__ volatile("mov %0, %%cr4" : : "r"(cr4));
+
+    __asm__ volatile("finit"); // FPU'yu sıfırla
+}
+
 void kernel_main() {
     init_gdt();
+    init_fpu(); // Dayı Tavsiyesi: Matematik işlemleri için FPU'yu aç
     init_memory(0); 
     
     vga_init_double_buffer(); // Double Buffering BaÅŸlat

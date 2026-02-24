@@ -29,6 +29,24 @@ gdt_data:
     db 11001111b
     db 0x0
 
+gdt_code16:
+    ; 16-bit Kod Segmenti (Real Mode uyumlu)
+    dw 0xffff
+    dw 0x0
+    db 0x0
+    db 10011010b
+    db 00001111b    ; Granularity=0, 32-bit default=0
+    db 0x0
+
+gdt_data16:
+    ; 16-bit Veri Segmenti (Real Mode uyumlu)
+    dw 0xffff
+    dw 0x0
+    db 0x0
+    db 10010010b
+    db 00001111b    ; Granularity=0, 32-bit default=0
+    db 0x0
+
 gdt_end:
 
 gdt_descriptor:
@@ -38,3 +56,5 @@ gdt_descriptor:
 ; Segment ofsetleri (Kernel için gereklidir)
 CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
+CODE16_SEG equ gdt_code16 - gdt_start
+DATA16_SEG equ gdt_data16 - gdt_start
