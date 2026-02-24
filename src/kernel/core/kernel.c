@@ -422,41 +422,78 @@ void kernel_main() {
     vga_init_double_buffer(); // Double Buffering BaÅŸlat
     vga_clear(0); // Siyah ekran
     
-    // Arka plana renk katalÄ±m
+    // Modern Arka Plan (Subtle Gradients)
     for(int i = 0; i < SCREEN_HEIGHT; i++) {
-        vga_draw_line(0, i, SCREEN_WIDTH - 1, i, i % 256);
+        vga_draw_line(0, i, SCREEN_WIDTH - 1, i, (i / 10) % 2 ? 1 : 0); // Laciver-Siyah çizgili asil duruş
     }
-    
-    vga_draw_rect(SCREEN_WIDTH/2 - 110, SCREEN_HEIGHT/2 - 50, 220, 100, 0); // Siyah kutu
-    vga_draw_text(SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 - 30, "GUMUS OS UYANIS", 14); // SarÄ± yazÄ±
-    vga_draw_text(SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 - 10, "VBE 800x600 AKTIF!", 10); // YeÅŸil yazÄ±
-    vga_draw_rect(SCREEN_WIDTH/2 - 110, SCREEN_HEIGHT/2 + 48, 220, 2, 15); // Alt Ã§izgi
 
+    // --- SYSTEM DASHBOARD (Görselliğin Zirvesi) ---
+    vga_draw_rect(SCREEN_WIDTH - 210, 20, 190, 80, 8); // Gölge
+    vga_draw_rect(SCREEN_WIDTH - 215, 15, 200, 80, 1); // Lacivert kutu
+    vga_draw_rect(SCREEN_WIDTH - 213, 17, 196, 76, 0); // Siyah iç kutu
+    vga_draw_text(SCREEN_WIDTH - 200, 25, "GUMUS OS v0.1", 14); // Altın Sarısı
+    vga_draw_text(SCREEN_WIDTH - 200, 45, "Kernel: Uyanis", 15); // Beyaz
+    vga_draw_text(SCREEN_WIDTH - 200, 65, "Durum: Calisiyor", 10); // Neon Yeşil
+
+    // Merkezi Yazı ve Logo (Pseudo)
+    draw_logo();
+    vga_present();
+    msleep(500);
+
+    // --- SIRALI BOOT AKIŞI (Depreme Dayanıklılık Testi Eşliğinde) ---
+    gfx_cursor_x = 50;
+    gfx_cursor_y = SCREEN_HEIGHT / 2 + 50;
+
+    print_color("Sistem Bilesenleri Yukleniyor...\n", YELLOW);
+    vga_present();
+
+    // 1. GDT & FPU
+    print("Layer 0: CPU DNA & FPU Destegi...            ");
+    vga_present(); msleep(300);
+    print_color("[ OK ]\n", 10); vga_present();
+
+    // 2. IDT (Kesme Kapıları)
+    print("Layer 5: IDT Kesme Kapisi Muhurleme...       ");
+    vga_present(); msleep(300);
     init_idt();
-    
-    // Sistem AÃ§Ä±lÄ±ÅŸ Sesi
-    beep_hz(440, 100);
-    beep_hz(880, 100);
-    
-    // ModÃ¼ler SÃ¼rÃ¼cÃ¼ Sistemi BaÅŸlatÄ±lÄ±yor
-    driver_manager_init();
-    pseudo_drivers_init(); // Null, Zero sÃ¼rÃ¼cÃ¼lerini yÃ¼kle
-    hardware_detect_init(); // DonanÄ±m tespiti ve sÃ¼rÃ¼cÃ¼ yÃ¼kleme
-    
+    print_color("[ OK ]\n", 10); vga_present();
+
+    // 3. PMM & VMM (Bellek Yönetimi)
+    print("Layer 2: PMM/VMM Bellek Tanzimi...           ");
+    vga_present(); msleep(300);
+    print_color("[ OK ]\n", 10); vga_present();
+
+    // 4. Donanım Sürücüleri
+    print("Layer 1: ATA & Donanim El Sikismasi...       ");
+    vga_present(); msleep(300);
     ata_init_driver();
-    driver_register(create_serial_driver()); // Seri Port SÃ¼rÃ¼cÃ¼sÃ¼nÃ¼ Kaydet
+    print_color("[ OK ]\n", 10); vga_present();
+
+    print("Layer 3: VFS & Dosya Sistemi Kaydi...       ");
+    vga_present(); msleep(300);
     vfs_init();
-    
-    // USB Host Controller Sistemi BaÅŸlatÄ±lÄ±yor
+    print_color("[ OK ]\n", 10); vga_present();
+
+    // Sesli onay
+    beep_hz(440, 50); beep_hz(880, 50);
+
+    // Sistem Servisleri ve GUI
+    driver_manager_init();
+    pseudo_drivers_init();
+    hardware_detect_init();
+    driver_register(create_serial_driver());
     usb_host_init();
+    mouse_init();
     
-    mouse_init(); // Fareyi BaÅŸlat
+    init_multitasking();
+    create_user_process(user_test_app);
     
-    init_multitasking(); // Ã‡oklu GÃ¶rev HazÄ±rlÄ±ÄŸÄ± (PID 0 Kernel KaydÄ±)
-    create_user_process(user_test_app); // Yeni: KullanÄ±cÄ± Modu SÃ¼reci BaÅŸlat
-    
-    init_window_manager(); // Pencere YÃ¶neticisi BaÅŸlat
-    init_file_manager();   // Dosya YÃ¶neticisi BaÅŸlat
+    init_window_manager();
+    init_file_manager();
+
+    print_color("\nTum sistemler aktif. GümüşOS hazir.", LIGHT_CYAN);
+    vga_present();
+    msleep(1000);
 
     __asm__ volatile("sti");
     shell_init();
