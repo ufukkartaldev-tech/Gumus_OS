@@ -95,6 +95,9 @@ void map_page_in_dir(page_directory_t* dir, void* phys, void* virt, uint32_t fla
     page->present = 1;
     page->rw = (flags & 2) ? 1 : 0;
     page->user = (flags & 4) ? 1 : 0;
+
+    // TLB Flush: Değişikliği işlemciye bildir
+    __asm__ volatile("invlpg (%0)" :: "r"(virt) : "memory");
 }
 
 void map_page(void* phys, void* virt, uint32_t flags) {
