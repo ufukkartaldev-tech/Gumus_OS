@@ -32,5 +32,6 @@ void init_idt();
 void set_idt_gate(int n, uint32_t handler);
 void isr_handler(registers_t* r);
 void irq_handler(registers_t* r);
+uint32_t syscall_handler(registers_t* r);
 
 #endif

@@ -10,5 +10,5 @@ void gdt_flush(uint32_t gdt_ptr) { (void)gdt_ptr; }
 void tss_flush() { }
 void isr_handler(registers_t* regs) { (void)regs; }
 void irq_handler(registers_t* regs) { (void)regs; }
-void syscall_handler(registers_t* regs) { (void)regs; }
+uint32_t syscall_handler(registers_t* regs) { (void)regs; return 0; }
 void handle_keyboard(uint8_t scancode) { (void)scancode; }

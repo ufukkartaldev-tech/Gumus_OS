@@ -5,6 +5,7 @@
 #include "idt.h"
 
 void panic(const char* message, registers_t* r);
+void kernel_main();
 void putchar(char c);
 char kbd_get();
 void print(const char* str);

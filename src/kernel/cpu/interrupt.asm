@@ -81,7 +81,7 @@ isr_common_stub:
     mov gs, ax
     
     push esp
-    call isr_handler
+    call _isr_handler
     add esp, 4
     
     pop eax
@@ -105,7 +105,7 @@ irq_common_stub:
     mov gs, ax
     
     push esp            ; registers* pointer'ı olarak ESP'yi gönder
-    call irq_handler
+    call _irq_handler
     mov esp, eax        ; Yeni stack pointer'ı (görev değişmiş olabilir)
     
     pop eax
