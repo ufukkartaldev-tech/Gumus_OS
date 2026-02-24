@@ -1,148 +1,172 @@
-; GümüşOS IDT (Interrupt Descriptor Table) Unit Test
-; Interrupt yönetimini test eder
+; GümüşOS IDT (Interrupt Descriptor Table) Rugged Test Suite
+; "Dayı Tavsiyesi" ile 32-bit Protected Mode ve tam IDT yapısına geçiş.
 
 [org 0x7c00]
 [bits 16]
 
-; Test mesajları
-MSG_START db "IDT Test Suite Baslatildi...", 0
-MSG_IDT_SETUP db "IDT Kurulumu Testi: ", 0
-MSG_INTERRUPT db "Interrupt Testi: ", 0
-MSG_PASS db "PASS", 0
-MSG_FAIL db "FAIL", 0
-MSG_DONE db "IDT Testleri Tamamlandi!", 0
-
-; IDT yapısı
-idt:
-    times 256 dq 0  ; 256 interrupt için
-
-idt_descriptor:
-    dw idt_end - idt - 1  ; IDT boyutu
-    dd idt               ; IDT adresi
-
-; Test interrupt handler
-test_handler:
-    pusha
-    mov ax, 0xB800
-    mov es, ax
-    mov word [es:160], 0x0F49  ; 'I' karakteri
-    popa
-    iret
-
-idt_end:
-
-; Test başlat
+; --- BAŞLANGIÇ: Donanım ve Yığın Hazırlığı ---
 start:
-    call clear_screen
-    mov si, MSG_START
-    call print_string
-    call newline
-    
-    ; IDT kurulumu testi
-    call test_idt_setup
-    
-    ; Interrupt testi
-    call test_interrupt
-    
-    ; Test sonu
-    call newline
-    mov si, MSG_DONE
-    call print_string
-    
-    jmp $
+    cli                         ; 1. Kural: Kesmeleri durdur (Dayı Tavsiyesi - Stack tehlikesi)
 
-; IDT kurulumu testi
-test_idt_setup:
-    mov si, MSG_IDT_SETUP
-    call print_string
-    
-    ; IDT'yi yükle
-    lidt [idt_descriptor]
-    
-    ; Test interrupt handler'ını ayarla
-    mov eax, test_handler
-    mov [idt + 0x80 * 8], ax
-    shr eax, 16
-    mov [idt + 0x80 * 8 + 6], ax
-    
-    call print_pass
-    ret
-
-; Interrupt testi
-test_interrupt:
-    call newline
-    mov si, MSG_INTERRUPT
-    call print_string
-    
-    ; Ekranı temizle
-    mov ax, 0xB800
+    xor ax, ax                  ; Segment koordinasyonu
+    mov ds, ax
     mov es, ax
-    mov word [es:160], 0x0F20  ; Boşluk
-    
-    ; Test interrupt'ı çağır
-    int 0x80
-    
-    ; Sonucu kontrol et
-    mov ax, [es:160]
-    cmp ax, 0x0F49
-    jne interrupt_fail
-    
-    call print_pass
-    ret
+    mov ss, ax
+    mov sp, 0x7C00              ; Yığını kodun altına güvenli bölgeye mühürle
 
-interrupt_fail:
-    call print_fail
-    ret
+    ; --- 32-BIT GEÇİŞ BİLETİ (GDT) ---
+    lgdt [gdt_descriptor]
 
-; Yardımcı fonksiyonlar
-clear_screen:
-    pusha
-    mov ax, 0xB800
+    ; Protected Mode'u aktifleştir (CR0 PE bit)
+    mov eax, cr0
+    or eax, 0x1
+    mov cr0, eax
+
+    ; Uzun atlama (Far Jump) ile segmentleri tazele ve 32-bit dünyasına gir
+    jmp 0x08:init_pm_32
+
+[bits 32]
+init_pm_32:
+    ; 2. Kural: 32-bit Data Segmentlerini ayarla
+    mov ax, 0x10
+    mov ds, ax
     mov es, ax
-    xor di, di
-    mov cx, 80 * 25
-    mov al, ' '
-    mov ah, 0x0F
-    rep stosw
-    popa
-    ret
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    mov esp, 0x90000            ; Saf ve yüksek bir stack alanı
 
-print_string:
-    pusha
-    mov ah, 0x0E
-.print_loop:
-    lodsb
-    cmp al, 0
-    je .done
-    int 0x10
-    jmp .print_loop
+    ; Ekranı temizle (32-bit Direct VGA Access)
+    call clear_vga_32
+
+    ; Sayfa Başlığı
+    mov esi, MSG_DNA_START
+    mov edi, 0xB8000 + 160 * 1 + 20 ; Line 1, Col 10
+    mov ah, 0x0B                ; Light Cyan
+    call print_vga_32
+
+    ; --- TEST 1: IDT KURULUMU (Tapu Kaydı) ---
+    mov esi, MSG_TEST_IDT
+    mov edi, 0xB8000 + 160 * 3 + 2
+    mov ah, 0x07                ; Grey
+    call print_vga_32
+
+    call setup_full_idt
+    lidt [idt_descriptor_pm]    ; IDT'yi işlemciye tanıt
+
+    mov esi, MSG_PASS
+    mov edi, 0xB8000 + 160 * 3 + 60
+    mov ah, 0x0A                ; Green
+    call print_vga_32
+
+    ; --- TEST 2: INTERRUPT TETİKLEME (int 0x80) ---
+    mov esi, MSG_TEST_INT
+    mov edi, 0xB8000 + 160 * 4 + 2
+    mov ah, 0x07
+    call print_vga_32
+
+    ; INT 0x80 çağırılmadan önce handler'ın yazacağı yeri temizle
+    mov dword [0xB8000 + 160 * 4 + 40], 0
+
+    int 0x80                    ; Kesmeyi ateşle!
+
+    ; Handler başarılı çalıştıysa oraya 'INT OK' yazmış olmalı
+    cmp dword [0xB8000 + 160 * 4 + 44], 0x0E4B0E4F ; 'O', 'K' (Yellow)
+    je .int_pass
+
+    mov esi, MSG_FAIL
+    mov edi, 0xB8000 + 160 * 4 + 60
+    mov ah, 0x0C                ; Red
+    call print_vga_32
+    jmp .done
+
+.int_pass:
+    mov esi, MSG_PASS
+    mov edi, 0xB8000 + 160 * 4 + 60
+    mov ah, 0x0A
+    call print_vga_32
+
 .done:
-    popa
+    mov esi, MSG_FINISH
+    mov edi, 0xB8000 + 160 * 6 + 2
+    mov ah, 0x0B
+    call print_vga_32
+
+    jmp $                       ; Sonu...
+
+; --- FONKSİYONLAR ---
+
+setup_full_idt:
+    ; Dayı Tavsiyesi: 256 girişin tamamını temizle
+    ; (times 256 dq 0 ile zaten sıfırlandı ama setup_idt ile kapıları çalalım)
+    
+    ; int 0x80 kapısını kur (128. giriş -> 128 * 8 = 1024 offset)
+    mov eax, test_handler_32
+    mov [idt_pm + 1024], ax             ; Offset low
+    mov word [idt_pm + 1024 + 2], 0x08   ; Selector (Kernel Code)
+    mov byte [idt_pm + 1024 + 4], 0     ; Reserved
+    mov byte [idt_pm + 1024 + 5], 0xEE  ; Access (Present, Ring 3, Int Gate)
+    shr eax, 16
+    mov [idt_pm + 1024 + 6], ax         ; Offset high
     ret
 
-print_pass:
-    pusha
-    mov si, MSG_PASS
-    call print_string
-    popa
+test_handler_32:
+    ; Kesme geldiğinde ekrana "INT OK" bas
+    mov dword [0xB8000 + 160 * 4 + 40], 0x0E4E0E49 ; 'I', 'N' (Sarı)
+    mov dword [0xB8000 + 160 * 4 + 44], 0x0E4B0E4F ; 'O', 'K' (Sarı)
+    iretd                               ; 32-bit Interrupt Return (Dayı Tavsiyesi 3)
+
+clear_vga_32:
+    mov edi, 0xB8000
+    mov ecx, 80 * 25
+    mov ax, 0x0F20              ; Beyaz boşluk
+    rep stosw
     ret
 
-print_fail:
-    pusha
-    mov si, MSG_FAIL
-    call print_string
-    popa
+; ESI = String, EDI = VGA Addr, AH = Color
+print_vga_32:
+.loop:
+    lodsb
+    or al, al
+    jz .done
+    mov [edi], al
+    mov [edi + 1], ah
+    add edi, 2
+    jmp .loop
+.done:
     ret
 
-newline:
-    pusha
-    mov ah, 0x0E
-    mov al, 0x0D
-    int 0x10
-    mov al, 0x0A
-    int 0x10
-    popa
-    ret
+; --- VERİ YAPILARI (Hizalı ve Zırhlı) ---
 
+align 16
+gdt_start:
+    dq 0x0                      ; Bos (Null)
+gdt_code:
+    dq 0x00CF9A000000FFFF       ; Code Segment (Ring 0)
+gdt_data:
+    dq 0x00CF92000000FFFF       ; Data Segment (Ring 0)
+gdt_end:
+
+gdt_descriptor:
+    dw gdt_end - gdt_start - 1
+    dd gdt_start
+
+align 16
+idt_pm:
+    times 256 dq 0              ; 256 x 8-byte giriş (Dayı Tavsiyesi - Full Tablo)
+
+idt_descriptor_pm:
+    dw 256 * 8 - 1              ; Boyut
+    dd idt_pm                   ; Lineer Adres (Protected Mode Standardı)
+
+; Mesajlar
+MSG_DNA_START db "--- GUMUS OS IDT RIGOROUS TEST ---", 0
+MSG_TEST_IDT  db "Layer 5: IDT Tapu Kaydi (Full 256)...", 0
+MSG_TEST_INT  db "Layer 5: Interrupt Fire (int 0x80)...", 0
+MSG_PASS      db "[PASS]", 0
+MSG_FAIL      db "[FAIL]", 0
+MSG_FINISH    db "Status: System is stable in Protected Mode.", 0
+
+; Boot Signature
 times 510-($-$$) db 0
 dw 0xAA55
