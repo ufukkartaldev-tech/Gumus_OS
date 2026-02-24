@@ -1,214 +1,198 @@
-; GümüşOS VGA Text Mode Unit Test
-; VGA yazma fonksiyonlarını test eder
+; GümüşOS VGA Text Mode Unit Test (Dayı Tavsiyesi v2)
+; VGA yazma, okuma ve scroll fonksiyonlarını doğru segmentasyon ile test eder.
 
 [org 0x7c00]
 [bits 16]
 
-; VGA adresleri
-VGA_ADDR equ 0xB8000
+; Dayı Tavsiyesi 2: VGA_ADDR artık Segment adresi
+VGA_SEG   equ 0xB800
 VGA_WIDTH equ 80
 VGA_HEIGHT equ 25
 
-; Test mesajları
-MSG_START db "VGA Text Mode Test Suite Baslatildi...", 0
-MSG_CLEAR db "Ekran Temizleme Testi: ", 0
-MSG_WRITE db "Karakter Yazma Testi: ", 0
-MSG_SCROLL db "Scroll Testi: ", 0
-MSG_PASS db "PASS", 0
-MSG_FAIL db "FAIL", 0
-MSG_DONE db "VGA Testleri Tamamlandi!", 0
-
-; Test başlat
 start:
+    ; Dayı Tavsiyesi 1: Segmentleri Mühürle
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov sp, 0x7C00
+
+    ; Dayı Tavsiyesi 4: ES'yi bir kez mühürle, hamallığı bırak
+    mov ax, VGA_SEG
+    mov es, ax
+
     call clear_screen
+    
     mov si, MSG_START
     call print_string
     call newline
     
-    ; Ekran temizleme testi
+    ; --- TEST 1: Ekran Temizleme ---
     call test_clear_screen
     
-    ; Karakter yazma testi
+    ; --- TEST 2: Karakter Yazma ---
     call test_char_write
     
-    ; Scroll testi
+    ; --- TEST 3: Scroll (Kaydırma) ---
     call test_scroll
     
-    ; Test sonu
-    call newline
     mov si, MSG_DONE
     call print_string
     
     jmp $
 
-; Ekran temizleme testi
+; --- TEST FONKSİYONLARI ---
+
 test_clear_screen:
     mov si, MSG_CLEAR
     call print_string
     
-    ; Ekranı doldur
     call fill_screen
-    ; Ekranı temizle
     call clear_screen
     
-    ; Temizlendiğini kontrol et
-    mov di, VGA_ADDR
+    ; ES:DI üzerinden kontrol (DI=0 çünkü ES=0xB800)
+    xor di, di
     mov cx, VGA_WIDTH * VGA_HEIGHT
-.check_loop:
+.loop:
     mov al, [es:di]
     cmp al, ' '
-    jne clear_fail
+    jne .fail
     add di, 2
-    loop .check_loop
+    loop .loop
     
     call print_pass
     ret
-
-clear_fail:
+.fail:
     call print_fail
     ret
 
-; Karakter yazma testi
 test_char_write:
     call newline
     mov si, MSG_WRITE
     call print_string
     
-    ; Test karakterleri yaz
-    mov di, VGA_ADDR + 160  ; 2. satır
-    mov al, 'A'
-    mov ah, 0x0F
+    ; 2. satır (160 offset)
+    mov di, 160
+    mov ax, 0x0F41  ; 'A', White on Black
     stosw
-    mov al, 'B'
-    stosw
-    mov al, 'C'
+    mov ax, 0x0F42  ; 'B'
     stosw
     
-    ; Yazıldığını kontrol et
-    mov di, VGA_ADDR + 160
+    xor di, di
+    add di, 160
     mov al, [es:di]
     cmp al, 'A'
-    jne write_fail
-    add di, 2
-    mov al, [es:di]
+    jne .fail
+    mov al, [es:di+2]
     cmp al, 'B'
-    jne write_fail
-    add di, 2
-    mov al, [es:di]
-    cmp al, 'C'
-    jne write_fail
+    jne .fail
     
     call print_pass
     ret
-
-write_fail:
+.fail:
     call print_fail
     ret
 
-; Scroll testi
 test_scroll:
     call newline
     mov si, MSG_SCROLL
     call print_string
     
-    ; Ekranı doldur
-    call fill_screen
+    call fill_screen    ; Her yer 'X'
+    call scroll_up      ; 2. satırdaki 'X'ler 1. satıra gelmeli
     
-    ; Scroll yap
-    call scroll_up
-    
-    ; Scroll kontrolü
-    mov di, VGA_ADDR
+    xor di, di
     mov al, [es:di]
     cmp al, 'X'
-    jne scroll_fail
+    jne .fail
     
     call print_pass
     ret
-
-scroll_fail:
+.fail:
     call print_fail
     ret
 
-; Yardımcı fonksiyonlar
+; --- YARDIMCI FONKSİYONLAR ---
+
 clear_screen:
     pusha
-    mov ax, VGA_ADDR
-    mov es, ax
     xor di, di
     mov cx, VGA_WIDTH * VGA_HEIGHT
-    mov al, ' '
-    mov ah, 0x0F
+    mov ax, 0x0F20      ; Space, White on Black
     rep stosw
     popa
     ret
 
 fill_screen:
     pusha
-    mov ax, VGA_ADDR
-    mov es, ax
     xor di, di
     mov cx, VGA_WIDTH * VGA_HEIGHT
-    mov al, 'X'
-    mov ah, 0x0F
+    mov ax, 0x0F58      ; 'X', White on Black
     rep stosw
     popa
     ret
 
 scroll_up:
     pusha
-    mov ax, VGA_ADDR
-    mov es, ax
-    mov si, VGA_WIDTH * 2  ; 2. satırdan başla
-    mov di, 0              ; 1. satıra yaz
+    ; Dayı Tavsiyesi 3: DS'yi geçici olarak VGA segmentine çek
+    push ds
+    mov ax, VGA_SEG
+    mov ds, ax          ; Kaynak: VGA
+    mov es, ax          ; Hedef: VGA
+    
+    mov si, VGA_WIDTH * 2  ; 2. satır (Kaynak)
+    mov di, 0              ; 1. satır (Hedef)
     mov cx, (VGA_HEIGHT - 1) * VGA_WIDTH
     rep movsw
     
     ; Son satırı temizle
     mov di, (VGA_HEIGHT - 1) * VGA_WIDTH * 2
     mov cx, VGA_WIDTH
-    mov al, ' '
-    mov ah, 0x0F
+    mov ax, 0x0F20
     rep stosw
+    
+    pop ds              ; DS'yi geri al (Stringler için lazım)
     popa
     ret
 
 print_string:
     pusha
     mov ah, 0x0E
-.print_loop:
+.loop:
     lodsb
-    cmp al, 0
-    je .done
+    or al, al
+    jz .done
     int 0x10
-    jmp .print_loop
+    jmp .loop
 .done:
     popa
     ret
 
 print_pass:
-    pusha
     mov si, MSG_PASS
     call print_string
-    popa
     ret
 
 print_fail:
-    pusha
     mov si, MSG_FAIL
     call print_string
-    popa
     ret
 
 newline:
-    pusha
     mov ah, 0x0E
     mov al, 0x0D
     int 0x10
     mov al, 0x0A
     int 0x10
-    popa
     ret
+
+MSG_START db ">>> GUMUS OS VGA TESTER v2.0 <<<", 0x0D, 0x0A, 0
+MSG_CLEAR db "Clear Screen: ", 0
+MSG_WRITE db "Char Write: ", 0
+MSG_SCROLL db "Scroll Up: ", 0
+MSG_PASS  db "[PASS]", 0
+MSG_FAIL  db "[FAIL]", 0
+MSG_DONE  db 0x0D, 0x0A, "VGA Matrix Verified.", 0x0D, 0x0A, 0
 
 times 510-($-$$) db 0
 dw 0xAA55
