@@ -84,14 +84,57 @@ Profesyonel ses yönetimi ve işleme!
 
 ---
 
+## 🔧 Gereksinimler ve Kurulum (Windows)
+
+GümüşOS, 32‑bit hedefe derlenir ve Windows üzerinde MSYS2 + QEMU ile çalıştırılır.
+- MSYS2 (mingw32 toolchain)
+- GCC (i686), NASM, LD, OBJCOPY
+- QEMU (qemu-system-x86_64)
+
+Kurulum (önerilen):
+1. MSYS2 kur: https://www.msys2.org/
+2. MSYS2 MinGW 32-bit kabuğunda paketleri yükle:
+   - pacman -S --needed mingw-w64-i686-gcc nasm mingw-w64-i686-binutils
+3. Windows için QEMU kur ve qemu-system-x86_64.exe’nin PATH’te olduğundan emin ol.
+4. Gerekirse build.ps1 içindeki PATH satırlarını kendi kurulumuna göre güncelle.
+
+---
+
 ## 🚀 Nasıl Çalıştırılır?
 
-1. **Gerekli Araçlar:** NASM, GCC (MinGW), LD ve QEMU sisteminizde kurulu olmalıdır.
-2. **Derleme:** PowerShell üzerinden `./build.ps1` komutunu verin.
-3. **Sonuç:** QEMU üzerinde GümüşOS'un 800x600'lük renkli dünyası açılacaktır.
-4. **Dosya Yöneticisi:** Shell'den `dosyalar` komutu ile grafiksel dosya yöneticisini açın.
-5. **Sistem Monitörü:** Shell'den `monitor` komutu ile sistem performansını izleyin.
-6. **Ses Sistemi:** Shell'den `ses_cal` komutu ile ses mixer'ı açın.
+1. PowerShell’i aç ve proje köküne geç.
+2. Derle ve QEMU’da başlat: `./build.ps1`
+3. İlk açılışta logo ve komut satırı gelir; `yardim` yazarak komutları gör.
+4. Grafiksel Dosya Yöneticisi: `dosyalar`
+5. Sistem Monitörü: `monitor`
+6. Ses Mixer: `ses_cal`
+
+### Testleri Çalıştırma
+- Tüm birim test görüntülerini üret: `./build_tests.ps1`
+- Her test için .bin çıktısı oluşur (ör. `memory_test.bin`).
+
+### Hata Ayıklama Derlemesi
+- Tek dosya denemeleri ve derleme günlükleri için: `./debug_build.ps1` (çıktı: `compile_log.txt`)
+
+---
+
+## ⌨️ Kabuk Komutları (Shell)
+- yardim | help: Komut listesini gösterir
+- temizle | clear: Ekranı temizler
+- versiyon: Sürüm bilgisini yazdırır
+- bellek: Bellek durumunu gösterir
+- listele | ls: Dosyaları listeler
+- oku [ad]: Dosya içeriğini okur
+- kaydet [ad] [icerik]: Dosya oluşturur
+- bicimlendir | format: Test disk alanını hazırlar
+- pencere: Test amaçlı pencere açar
+- yilan: Konsol yılan oyunu
+- gumus-… | soyle …: GümüşDil ifadelerini çalıştırır
+- cal, dur, ciz: Ses ve çizim kısa komutları
+- calistir [ELF]: ELF yükleyici ile program çalıştır
+- donanim | lspci: Donanım özetini yazdırır
+- ag_baslat, ag_durum, ping [IP], arp [IP]: Ağ komutları
+- ses_cal, ses_kaydet, wav_cal [dosya]: Ses komutları
 
 ---
 
@@ -103,3 +146,17 @@ GümüşOS'un gelişimini `ROADMAP.md` dosyasından takip edebilirsiniz. Bir son
 
 ---
 *Gümüşhane'den doğan bu güneş, adım adım dünyaya yayılıyor. Uyanış başladı...* 🌌
+
+## 🧩 Proje Yapısı (Özet)
+- `src/boot/`: 16‑bit önyükleme ve korumalı moda geçiş
+- `src/kernel/core/`: Çekirdek, bellek, syscall, pencere ve yardımcılar
+- `src/kernel/cpu/`: GDT/IDT/TSS, kesmeler ve görev yönetimi
+- `src/kernel/drivers/`: Grafik, giriş, depolama, ağ, USB ve ses sürücüleri
+- `src/kernel/apps/`: Dosya yöneticisi, sistem monitörü, ses arayüzü, oyunlar
+- `src/user/`: Kullanıcı modundaki örnek programlar ve C runtime
+- `tests/`: Çekirdek birim testleri ve test boot imajları
+
+### Hızlı Sorun Giderme
+- qemu-system-x86_64 bulunamadı: QEMU’yu kur ve PATH’e ekle veya build.ps1’deki PATH’i güncelle.
+- 32‑bit araç eksik: MSYS2 içinde mingw‑w64‑i686‑gcc ve binutils paketlerini yükle.
+- Ses/GUI sorunları: QEMU komut satırındaki audio ve vga ayarlarını kontrol et.
