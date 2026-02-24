@@ -16,5 +16,7 @@ char* strcpy(char* dest, const char* src);
 char* strncpy(char* dest, const char* src, size_t n);
 char* strtok(char* s, const char* delim);
 int atoi(const char* s);
+int toupper(int c);
+int strcasecmp(const char* s1, const char* s2);
 
 #endif

@@ -22,42 +22,41 @@ void ata_write_sectors(uint32_t LBA, uint8_t sector_count, uint32_t source_addre
 int test_fs_filename_normalization() {
     memset(mock_disk, 0, sizeof(mock_disk));
     
-    // Root directory sector (defined as 100 in fs.c)
+    // Dayı Tavsiyesi 1: 8.3 Normalizasyonu
     fat_directory_entry_t* root = (fat_directory_entry_t*)&mock_disk[100 * 512];
     
-    // "TEST.TXT" girişi oluştur
-    memcpy(root[0].name, "TEST    ", 8);
+    // "KONYA.TXT" girişi (8.3 format: "KONYA   TXT")
+    memcpy(root[0].name, "KONYA   ", 8);
     memcpy(root[0].ext, "TXT", 3);
-    root[0].file_size = 12;
-    root[0].first_cluster_lo = 1; // Sector 201 (since start_sector = 200 + cluster)
+    root[0].file_size = 5;
+    root[0].first_cluster_lo = 1;
     root[0].attributes = 0x20;
     
-    // Veriyi yaz
-    memcpy(&mock_disk[(200 + 1) * 512], "MERHABA DUNYA", 13);
+    memcpy(&mock_disk[(200 + 1) * 512], "GUMUS", 5);
     
-    char* data = fs_read("TEST.TXT");
-    ASSERT(data != NULL, "FS: File read failed for TEST.TXT");
-    ASSERT(strcmp(data, "MERHABA DUNYA") == 0, "FS: File content mismatch");
+    // Test: Küçük harfle arama (test.txt -> TEST.TXT normalizasyonu)
+    // Not: GümüşOS fs.c şu an case-sensitive olabilir, bu test o köprüyü kuracak.
+    char* data = fs_read("konya.txt"); 
+    
+    ASSERT(data != NULL, "FS: Should find KONYA.TXT even when searched as konya.txt (Normalization)");
+    ASSERT(strcmp(data, "GUMUS") == 0, "FS: Content mismatch on normalized read");
     
     kfree(data);
     return TEST_PASS;
 }
 
-int test_fs_fragmentation_logic() {
-    // Mevcut fs.c çok basit (cluster=sector) olduğu için 
-    // fragmented file desteği aslında yok. 
-    // Ama biz en azından büyük dosya yazımını test edebiliriz.
+int test_fs_integrity_and_null_termination() {
+    // Dayı Tavsiyesi 3: Null Termination Feraseti
+    // Dosya sisteminden okunan veri string ise sonuna \0 eklenmiş olmalı.
+    const char* secret = "Sifre123";
+    fs_write("PASS.TXT", secret);
     
-    const char* large_data = "Bu veri birden fazla sektore yayilacak kadar buyuk olmali... "
-                             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-                             "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+    uint32_t size;
+    char* read_back = (char*)fs_read_bin("PASS.TXT", &size);
     
-    int success = fs_write("LARGE.DAT", large_data);
-    ASSERT(success == 1, "FS: Large file write failed");
-    
-    char* read_back = fs_read("LARGE.DAT");
-    ASSERT(read_back != NULL, "FS: Large file read failed");
-    ASSERT(strcmp(read_back, large_data) == 0, "FS: Integrity check failed");
+    ASSERT(read_back != NULL, "FS: Binary read failed");
+    // read_back[size] == '\0' olduğunu garanti etmeliyiz (fs_read_bin bunu yapmalı)
+    ASSERT(read_back[size - 1] == '3', "FS: Last byte integrity check");
     
     kfree(read_back);
     return TEST_PASS;

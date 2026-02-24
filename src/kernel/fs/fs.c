@@ -66,7 +66,7 @@ void fs_cat(const char* filename) {
         }
         name[k] = '\0';
 
-        if (strcmp(name, filename) == 0) {
+        if (strcasecmp(name, filename) == 0) {
             found = 1;
             uint32_t cluster = entry[i].first_cluster_lo;
             // Basitlik iÃ§in cluster = sektÃ¶r varsayÄ±yoruz (Pseudo-FAT)
@@ -179,16 +179,17 @@ uint8_t* fs_read_bin(const char* filename, uint32_t* out_size) {
         }
         name[k] = '\0';
 
-        if (strcmp(name, filename) == 0) {
+        if (strcasecmp(name, filename) == 0) {
             uint32_t cluster = entry[i].first_cluster_lo;
             uint32_t size = entry[i].file_size;
             if (out_size) *out_size = size;
             
             // TÃ¼m dosyayÄ± oku
             uint32_t sector_count = (size + 511) / 512;
-            uint8_t* data = kmalloc(sector_count * 512); // Padding dahil al
+            uint8_t* data = kmalloc(sector_count * 512 + 1); // +1 safety null terminator
             
             ata_read_sectors((uint32_t)data, 200 + cluster, sector_count);
+            data[size] = '\0'; // DayÄ± Tavsiyesi: String korumasÄ±
             
             kfree(buffer);
             return data;

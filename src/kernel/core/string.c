@@ -150,3 +150,16 @@ int atoi(const char* s) {
     }
     return res * sign;
 }
+
+int toupper(int c) {
+    if (c >= 'a' && c <= 'z') return c - ('a' - 'A');
+    return c;
+}
+
+int strcasecmp(const char* s1, const char* s2) {
+    while (*s1 && (toupper(*s1) == toupper(*s2))) {
+        s1++;
+        s2++;
+    }
+    return (unsigned char)toupper(*s1) - (unsigned char)toupper(*s2);
+}
