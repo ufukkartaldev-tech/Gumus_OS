@@ -31,39 +31,9 @@ Write-Host "[2/5] Kernel Entry ve Test Kernel derleniyor..."
 & $NASM -f elf32 src/kernel/core/kernel_entry.asm -o kernel_entry.o
 & $NASM -f elf32 src/kernel/core/test_kernel.asm -o test_kernel.o
 
-# 3. Kernel Derleme (C Kodları)
-Write-Host "[3/5] Kernel derleniyor..."
-$INCLUDES = @(
-    "-Isrc/kernel/core",
-    "-Isrc/kernel/core/memory",
-    "-Isrc/kernel/cpu",
-    "-Isrc/kernel/drivers",
-    "-Isrc/kernel/drivers/audio",
-    "-Isrc/kernel/drivers/graphics",
-    "-Isrc/kernel/drivers/input",
-    "-Isrc/kernel/drivers/storage",
-    "-Isrc/kernel/drivers/usb/core",
-    "-Isrc/kernel/drivers/usb/class",
-    "-Isrc/kernel/fs",
-    "-Isrc/kernel/apps",
-    "-Isrc/kernel/apps/games",
-    "-Isrc/kernel/apps/multimedia",
-    "-Isrc/kernel/apps/system",
-    "-Isrc/kernel/apps/utilities"
-)
-
-$FILES = @(
-    @{ src = "src/kernel/core/minimal_kernel.c"; obj = "kernel.o" }
-)
-
-foreach ($file in $FILES) {
-    Write-Host "Derleniyor: $($file.src)"
-    & $GCC -ffreestanding -fno-common @INCLUDES -c $($file.src) -o $($file.obj)
-}
-
-# 4. Kernel'ı Linkle ve Binary'ye Çevir
-Write-Host "[4/5] Kernel dosyaları bağlanıyor..."
-$OBJS = @("kernel_entry.o", "kernel.o")
+# 3. Kernel Linkleme (Assembly sadece)
+Write-Host "[3/5] Kernel dosyaları bağlanıyor..."
+$OBJS = @("kernel_entry.o")
 & $LD -o kernel.tmp -Ttext 0x1000 --allow-multiple-definition @OBJS
 & $OBJCOPY -O binary kernel.tmp kernel.bin
 

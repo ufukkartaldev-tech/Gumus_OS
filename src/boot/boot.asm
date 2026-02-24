@@ -41,9 +41,8 @@ call print_string
 ; Kernel çağrısından önce test
 mov word [0xB8000], 0x0F4B00  ; 'K' karakteri + beyaz renk
 
-; 32-bit Protected Mode'a geç
-call switch_to_pm
-
+; 16-bit modda kernel'i çağır
+call KERNEL_OFFSET      ; Kernel'a zıpla!
 jmp $
 
 kernel_error:
@@ -71,10 +70,13 @@ jmp $ ; Asla buraya ulaşmamalı
 switch_to_pm:
     cli                     ; Kesmeleri durdur
     lgdt [gdt_descriptor]   ; GDT'yi yükle
+    
     mov eax, cr0
-    or eax, 0x1             ; cr0 register'ının ilk bitini 1 yap (PE bit)
+    or eax, 0x1             ; PE bitini ayarla
     mov cr0, eax
-    jmp CODE_SEG:init_pm    ; Far jump ile segment register'larını güncelle
+    
+    ; 32-bit'e geçiş için far jump
+    jmp CODE_SEG:init_pm
 
 [bits 32]
 init_pm:

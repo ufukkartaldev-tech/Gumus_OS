@@ -1,8 +1,9 @@
 ; Kernel'a giriş için Assembly köprüsü
-[bits 32]
+[bits 16]
 
-; 32-bit modda C kernel'ını çağır (Windows GCC mangling)
-extern _kernel_main
-call _kernel_main
+; 16-bit modda basit test
+mov ax, 0xB800
+mov es, ax
+mov word [es:0], 0x0F41  ; 'A' karakteri + beyaz renk
 
-jmp $            ; Eğer kernel'dan dönerse sonsuz döngüye gir
+jmp $            ; Sonsuz döngü
