@@ -50,6 +50,9 @@ if ($Minimal) {
     $inc += "-Isrc/kernel/drivers/input"
     $inc += "-Isrc/kernel/apps/system"
   }
+  if ($Stage -ge 5) {
+    $inc += "-Isrc/kernel/apps/system"
+  }
 } else {
   $inc = @(
     "-Isrc/kernel/core",
@@ -82,6 +85,9 @@ if ($Minimal) {
   }
   if ($Stage -ge 4) {
     $dirs += @("src/kernel/drivers/input")
+  }
+  if ($Stage -ge 5) {
+    $dirs += @("src/kernel/apps/system")
   }
 } else {
   # Derlenecek dizinler (Tam Derleme)
@@ -120,6 +126,8 @@ foreach ($dir in $dirs) {
           $wl3ata = @("ata_stub.c")
           $wl4input = @("keyboard.c")
           $wl4core = @("shell_stub.c","kbd_buf_stub.c")
+          $wl5shell = @("shell_min.c")
+          $wl5core = @("screen_stub.c")
           $whitelist = $wl1
           if ($Stage -ge 2) { $whitelist = $wl2 }
           if ($Stage -ge 2 -and $dir -like "src/kernel/drivers/graphics") {
@@ -136,6 +144,12 @@ foreach ($dir in $dirs) {
           }
           if ($Stage -ge 4 -and $dir -like "src/kernel/core") {
             $whitelist = $whitelist + $wl4core
+          }
+          if ($Stage -ge 5 -and $dir -like "src/kernel/apps/system") {
+            $whitelist = $wl5shell
+          }
+          if ($Stage -ge 5 -and $dir -like "src/kernel/core") {
+            $whitelist = $whitelist + $wl5core
           }
           if (-not ($whitelist -contains $file.Name)) { continue }
         } else {
