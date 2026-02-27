@@ -59,6 +59,9 @@ if ($Minimal) {
   if ($Stage -ge 8) {
     $inc += "-Isrc/kernel/drivers/audio"
   }
+  if ($Stage -ge 9) {
+    $inc += "-Isrc/kernel/drivers"
+  }
 } else {
   $inc = @(
     "-Isrc/kernel/core",
@@ -100,6 +103,9 @@ if ($Minimal) {
   }
   if ($Stage -ge 8) {
     $dirs += @("src/kernel/drivers/audio")
+  }
+  if ($Stage -ge 9) {
+    $dirs += @("src/kernel/drivers")
   }
 } else {
   # Derlenecek dizinler (Tam Derleme)
@@ -143,6 +149,7 @@ foreach ($dir in $dirs) {
           $wl6mouse = @("mouse_min.c")
           $wl7usb = @("usb_host_min.c")
           $wl8audio = @("sound.c")
+          $wl9net = @("network_min.c")
           $whitelist = $wl1
           if ($Stage -ge 2) { $whitelist = $wl2 }
           if ($Stage -ge 2 -and $dir -like "src/kernel/drivers/graphics") {
@@ -174,6 +181,9 @@ foreach ($dir in $dirs) {
           }
           if ($Stage -ge 8 -and $dir -like "src/kernel/drivers/audio") {
             $whitelist = $wl8audio
+          }
+          if ($Stage -ge 9 -and $dir -like "src/kernel/drivers") {
+            $whitelist = $wl9net
           }
           if (-not ($whitelist -contains $file.Name)) { continue }
         } else {
