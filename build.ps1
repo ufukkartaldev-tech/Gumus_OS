@@ -53,6 +53,9 @@ if ($Minimal) {
   if ($Stage -ge 5) {
     $inc += "-Isrc/kernel/apps/system"
   }
+  if ($Stage -ge 7) {
+    $inc += "-Isrc/kernel/drivers/usb/core"
+  }
 } else {
   $inc = @(
     "-Isrc/kernel/core",
@@ -88,6 +91,9 @@ if ($Minimal) {
   }
   if ($Stage -ge 5) {
     $dirs += @("src/kernel/apps/system")
+  }
+  if ($Stage -ge 7) {
+    $dirs += @("src/kernel/drivers/usb/core")
   }
 } else {
   # Derlenecek dizinler (Tam Derleme)
@@ -129,6 +135,7 @@ foreach ($dir in $dirs) {
           $wl5shell = @("shell_min.c")
           $wl5core = @("screen_stub.c")
           $wl6mouse = @("mouse_min.c")
+          $wl7usb = @("usb_host_min.c")
           $whitelist = $wl1
           if ($Stage -ge 2) { $whitelist = $wl2 }
           if ($Stage -ge 2 -and $dir -like "src/kernel/drivers/graphics") {
@@ -154,6 +161,9 @@ foreach ($dir in $dirs) {
           }
           if ($Stage -ge 5 -and $dir -like "src/kernel/core") {
             $whitelist = $whitelist + $wl5core
+          }
+          if ($Stage -ge 7 -and $dir -like "src/kernel/drivers/usb/core") {
+            $whitelist = $wl7usb
           }
           if (-not ($whitelist -contains $file.Name)) { continue }
         } else {
