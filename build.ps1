@@ -128,6 +128,7 @@ foreach ($dir in $dirs) {
           $wl4core = @("shell_stub.c","kbd_buf_stub.c")
           $wl5shell = @("shell_min.c")
           $wl5core = @("screen_stub.c")
+          $wl6mouse = @("mouse_min.c")
           $whitelist = $wl1
           if ($Stage -ge 2) { $whitelist = $wl2 }
           if ($Stage -ge 2 -and $dir -like "src/kernel/drivers/graphics") {
@@ -141,6 +142,9 @@ foreach ($dir in $dirs) {
           }
           if ($Stage -ge 4 -and $dir -like "src/kernel/drivers/input") {
             $whitelist = $wl4input
+          }
+          if ($Stage -ge 6 -and $dir -like "src/kernel/drivers/input") {
+            $whitelist = $wl6mouse
           }
           if ($Stage -ge 4 -and $dir -like "src/kernel/core") {
             $whitelist = $whitelist + $wl4core
