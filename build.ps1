@@ -41,6 +41,11 @@ if ($Minimal) {
     "-Isrc/kernel/cpu"
   )
   if ($Stage -ge 2) { $inc += "-Isrc/kernel/drivers/graphics" }
+  if ($Stage -ge 3) {
+    $inc += "-Isrc/kernel/fs"
+    $inc += "-Isrc/kernel/drivers/storage"
+    $inc += "-Isrc/kernel/drivers"
+  }
 } else {
   $inc = @(
     "-Isrc/kernel/core",
@@ -67,6 +72,9 @@ if ($Minimal) {
   )
   if ($Stage -ge 2) {
     $dirs += @("src/kernel/drivers/graphics")
+  }
+  if ($Stage -ge 3) {
+    $dirs += @("src/kernel/fs","src/kernel/drivers/storage")
   }
 } else {
   # Derlenecek dizinler (Tam Derleme)
@@ -101,10 +109,18 @@ foreach ($dir in $dirs) {
           $wl2 = $wl1 + @("stdio.c","printf.c","utf8.c","window.c","memory.c","task_stub.c")
           $wl2 += @() # core ekleri
           $wl2gfx = @("vga_gfx.c","vga_font.c")
+          $wl3fs = @("fs.c","vfs.c")
+          $wl3ata = @("ata_stub.c")
           $whitelist = $wl1
           if ($Stage -ge 2) { $whitelist = $wl2 }
           if ($Stage -ge 2 -and $dir -like "src/kernel/drivers/graphics") {
             $whitelist = $wl2gfx
+          }
+          if ($Stage -ge 3 -and $dir -like "src/kernel/fs") {
+            $whitelist = $wl3fs
+          }
+          if ($Stage -ge 3 -and $dir -like "src/kernel/drivers/storage") {
+            $whitelist = $wl3ata
           }
           if (-not ($whitelist -contains $file.Name)) { continue }
         } else {
