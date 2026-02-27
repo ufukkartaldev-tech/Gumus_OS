@@ -46,6 +46,10 @@ if ($Minimal) {
     $inc += "-Isrc/kernel/drivers/storage"
     $inc += "-Isrc/kernel/drivers"
   }
+  if ($Stage -ge 4) {
+    $inc += "-Isrc/kernel/drivers/input"
+    $inc += "-Isrc/kernel/apps/system"
+  }
 } else {
   $inc = @(
     "-Isrc/kernel/core",
@@ -75,6 +79,9 @@ if ($Minimal) {
   }
   if ($Stage -ge 3) {
     $dirs += @("src/kernel/fs","src/kernel/drivers/storage")
+  }
+  if ($Stage -ge 4) {
+    $dirs += @("src/kernel/drivers/input")
   }
 } else {
   # Derlenecek dizinler (Tam Derleme)
@@ -107,10 +114,12 @@ foreach ($dir in $dirs) {
         if ($Minimal) {
           $wl1 = @("simple_kernel.c","gdt.c","gdt_stub.c","string.c")
           $wl2 = $wl1 + @("stdio.c","printf.c","utf8.c","window.c","memory.c","task_stub.c")
-          $wl2 += @() # core ekleri
+          $wl2 += @()
           $wl2gfx = @("vga_gfx.c","vga_font.c")
           $wl3fs = @("fs.c","vfs.c")
           $wl3ata = @("ata_stub.c")
+          $wl4input = @("keyboard.c")
+          $wl4core = @("shell_stub.c","kbd_buf_stub.c")
           $whitelist = $wl1
           if ($Stage -ge 2) { $whitelist = $wl2 }
           if ($Stage -ge 2 -and $dir -like "src/kernel/drivers/graphics") {
@@ -121,6 +130,12 @@ foreach ($dir in $dirs) {
           }
           if ($Stage -ge 3 -and $dir -like "src/kernel/drivers/storage") {
             $whitelist = $wl3ata
+          }
+          if ($Stage -ge 4 -and $dir -like "src/kernel/drivers/input") {
+            $whitelist = $wl4input
+          }
+          if ($Stage -ge 4 -and $dir -like "src/kernel/core") {
+            $whitelist = $whitelist + $wl4core
           }
           if (-not ($whitelist -contains $file.Name)) { continue }
         } else {
