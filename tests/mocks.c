@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "../src/kernel/cpu/task.h"
+#include "../src/kernel/core/memory/memory.h"
 #include "../src/kernel/core/string.h"
 
 // --- Global Mock Data ---
@@ -42,7 +43,7 @@ void get_rtc_time(uint8_t* s, uint8_t* m, uint8_t* h) {
 
 void init_gdt() {}
 void init_idt() {}
-void schedule(uint32_t e) {}
+uint32_t schedule(uint32_t e) { return e; }
 void driver_manager_init() {}
 void hardware_detect_init() {}
 void pseudo_drivers_init() {}
@@ -110,4 +111,15 @@ void copy_to_user(void* dest, const void* src, size_t size) {
 
 void copy_from_user(void* dest, const void* src, size_t size) {
     memcpy(dest, src, size);
+}
+
+// --- ATA Mocks ---
+void ata_read_sectors(uint32_t target_address, uint32_t LBA, uint8_t sector_count) {
+    static uint8_t _mock_disk[128 * 1024];
+    memcpy((void*)target_address, &_mock_disk[LBA * 512], sector_count * 512);
+}
+
+void ata_write_sectors(uint32_t LBA, uint8_t sector_count, uint32_t source_address) {
+    static uint8_t _mock_disk[128 * 1024];
+    memcpy(&_mock_disk[LBA * 512], (void*)source_address, sector_count * 512);
 }

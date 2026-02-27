@@ -13,7 +13,19 @@ $OBJCOPY = "objcopy.exe"
 
 Write-Host "--- GümüşOS Unit Test Suite ---" -ForegroundColor Cyan
 
-$inc = "-Isrc/kernel/core -Isrc/kernel/core/memory -Isrc/kernel/cpu -Isrc/kernel/drivers -Itests"
+$inc = @(
+  "-Isrc/kernel/core",
+  "-Isrc/kernel/core/memory",
+  "-Isrc/kernel/cpu",
+  "-Isrc/kernel/drivers",
+  "-Isrc/kernel/drivers/graphics",
+  "-Isrc/kernel/drivers/storage",
+  "-Isrc/kernel/drivers/usb/core",
+  "-Isrc/kernel/fs",
+  "-Isrc/kernel/apps",
+  "-Isrc/kernel/apps/system",
+  "-Itests"
+)
 
 # Pre-compile core dependencies
 Write-Host "Dependencies derleniyor..." -ForegroundColor Yellow
@@ -26,7 +38,7 @@ Write-Host "Dependencies derleniyor..." -ForegroundColor Yellow
 & $GCC -m32 -ffreestanding $inc -c src/kernel/fs/vfs.c -o vfs.o
 & $GCC -m32 -ffreestanding $inc -c tests/mocks.c -o mocks.o
 
-$all_deps = @("string.o", "math.o", "memory.o", "task.o", "syscall.o", "fs.o", "vfs.o", "mocks.o")
+$base_core = @("string.o", "math.o", "memory.o", "task.o", "syscall.o")
 
 # Test listesi
 $tests = @(
@@ -49,17 +61,26 @@ foreach ($t in $tests) {
     # 2. Wrapper
     $wrapper = @'
 [bits 32]
-[extern kernel_main]
+extern _kernel_main
 global _start
 _start:
-  call kernel_main
+  call _kernel_main
   jmp $
 '@
     $wrapper | Out-File -FilePath "test_wrapper.asm" -Encoding ASCII
-    & $NASM -f elf32 test_wrapper.asm -o test_wrapper.o
+    & $NASM -f win32 test_wrapper.asm -o test_wrapper.o
     
     # 3. Link
-    $objects = @("test_wrapper.o", "test_obj.o") + $all_deps
+    $objects = @("test_wrapper.o", "test_obj.o") + $base_core
+    $include_mocks = $true
+    if ($t.file -match "fs_test.c") {
+        $objects += @("fs.o","vfs.o")
+    } elseif ($t.file -match "vfs_mount_test.c") {
+        $objects += @("fs.o","vfs.o")
+    } elseif ($t.file -match "disk_stress_test.c") {
+        # no extra deps; uses ATA mocks from mocks.o
+    }
+    if ($include_mocks) { $objects += @("mocks.o") }
     & $LD -m i386pe -o test.tmp -Ttext 0x1000 --allow-multiple-definition $objects
     
     if ($LASTEXITCODE -eq 0) {
@@ -94,9 +115,9 @@ dw 0xAA55
         [Array]::Copy($b2, 0, $f, 512, [Math]::Min($b2.Length, 7680))
         [System.IO.File]::WriteAllBytes($t.output, $f)
         
-        Write-Host "✓ $($t.output) hazir" -ForegroundColor Green
+        Write-Host "[PASS] $($t.output) hazir" -ForegroundColor Green
     }
     else {
-        Write-Host "✗ $($t.name) linkleme hatasi" -ForegroundColor Red
+        Write-Host "[FAIL] $($t.name) linkleme hatasi" -ForegroundColor Red
     }
 }

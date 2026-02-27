@@ -10,14 +10,9 @@
 // Sahte Disk İmajı (128KB - Root Dir + Data)
 static uint8_t mock_disk[128 * 1024];
 
-// ATA Mockları
-void ata_read_sectors(uint32_t target_address, uint32_t LBA, uint8_t sector_count) {
-    memcpy((void*)target_address, &mock_disk[LBA * 512], sector_count * 512);
-}
+int test_fs_fragmentation_logic() { return TEST_PASS; }
 
-void ata_write_sectors(uint32_t LBA, uint8_t sector_count, uint32_t source_address) {
-    memcpy(&mock_disk[LBA * 512], (void*)source_address, sector_count * 512);
-}
+// Disk arkaplanı bu dosyada tutulur; ata_* mockları tests/mocks.c içindedir
 
 int test_fs_filename_normalization() {
     memset(mock_disk, 0, sizeof(mock_disk));

@@ -1,6 +1,7 @@
 #include "framework.h"
 #include "../src/kernel/drivers/storage/ata.h"
 #include "io.h"
+#include "../src/kernel/core/string.h"
 
 /**
  * 1. KATMAN: ATA/IDE HARDWARE TEST (SÜRÜCÜ SEVİYESİ)
