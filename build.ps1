@@ -40,6 +40,7 @@ if ($Minimal) {
     "-Isrc/kernel/core/memory",
     "-Isrc/kernel/cpu"
   )
+  if ($Stage -ge 2) { $inc += "-Isrc/kernel/drivers/graphics" }
 } else {
   $inc = @(
     "-Isrc/kernel/core",
@@ -64,6 +65,9 @@ if ($Minimal) {
     "src/kernel/core/memory",
     "src/kernel/cpu"
   )
+  if ($Stage -ge 2) {
+    $dirs += @("src/kernel/drivers/graphics")
+  }
 } else {
   # Derlenecek dizinler (Tam Derleme)
   $dirs = @(
@@ -94,7 +98,7 @@ foreach ($dir in $dirs) {
     foreach ($file in $files) {
         if ($Minimal) {
           $wl1 = @("simple_kernel.c","gdt.c","gdt_stub.c","string.c")
-          $wl2 = $wl1 + @("stdio.c","printf.c","utf8.c","window.c")
+          $wl2 = $wl1 + @("stdio.c","printf.c","utf8.c","window.c","memory.c","task_stub.c")
           $wl2 += @() # core ekleri
           $wl2gfx = @("vga_gfx.c","vga_font.c")
           $whitelist = $wl1
