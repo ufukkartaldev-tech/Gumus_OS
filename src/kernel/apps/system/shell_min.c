@@ -2,6 +2,7 @@
 #include "string.h"
 #include "kernel.h"
 #include "fs.h"
+#include "sound.h"
 
 static char buf[MAX_COMMAND_LEN];
 static int idx = 0;
@@ -32,6 +33,7 @@ void shell_parse_command(char* cmd) {
         print("  ls           \n");
         print("  oku <ad>     \n");
         print("  kaydet <ad> <icerik>\n");
+        print("  beep [f ms]  \n");
     } else if (strcmp(cmd, "clear") == 0 || strcmp(cmd, "temizle") == 0) {
         clear_screen();
     } else if (strcmp(cmd, "versiyon") == 0) {
@@ -42,6 +44,24 @@ void shell_parse_command(char* cmd) {
         char* name = cmd + 4;
         trim(name);
         if (strlen(name) > 0) fs_cat(name);
+    } else if (strncmp(cmd, "beep", 4) == 0) {
+        uint32_t f = 1000, ms = 150;
+        // parse optional args: beep <freq> <ms>
+        if (strlen(cmd) > 4) {
+            char* p = cmd + 4;
+            while (*p == ' ') p++;
+            if (*p) {
+                f = atoi(p);
+                while (*p && *p != ' ') p++;
+                while (*p == ' ') p++;
+                if (*p) ms = atoi(p);
+            }
+        }
+        // crude delay
+        play_sound(f);
+        volatile uint32_t c = ms * 5000;
+        while (c--) { __asm__ volatile("" ::: "memory"); }
+        nosound();
     } else if (strncmp(cmd, "kaydet ", 7) == 0) {
         char* rest = cmd + 7;
         trim(rest);
