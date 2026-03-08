@@ -15,6 +15,8 @@
 #include "icmp.h"
 #include "dhcp.h"
 #include "dns.h"
+#include "ftp.h"
+#include "ext2.h"
 #include "file_manager_gui.h"
 #include "hardware_detect.h"
 #include "file_manager_gui.h"
@@ -83,6 +85,14 @@ void shell_parse_command(char* cmd) {
         print("  arp [IP]    - ARP tablosunu sorgular\n");
         print("  dhcp_yenile - DHCP IP adresini yeniler\n");
         print("  dns coz [domain] - Domain adını cozuler\n");
+        print("  ftp list [server] - FTP sunucusunda dosya listeler\n");
+        print("  ftp indir [server] [dosya] - FTP'den dosya indirir\n");
+        print("  ftp yukle [server] [dosya] - FTP'ye dosya yükler\n");
+        print_color("\nDosya Sistemi Komutları:\n", LIGHT_CYAN);
+        print("  ext2_mount [device] - EXT2 filesystem'i mount eder\n");
+        print("  ext2_unmount - EXT2 filesystem'i unmount eder\n");
+        print("  ls -l [path] - Dosyaları detaylı listeler\n");
+        print("  chmod [dosya] [izin] - Dosya izinlerini değiştirir\n");
         print_color("\nGrafiksel Arayuz:\n", LIGHT_CYAN);
         print("  dosyalar    - Grafiksel dosya yÃ¶neticisini acar\n");
         print("  monitor     - Sistem monitÃ¶rÃ¼nÃ¼ acar\n");
@@ -291,6 +301,67 @@ void shell_parse_command(char* cmd) {
         } else {
             print_color("DNS cozumlemesi basarisiz.\n", LIGHT_RED);
         }
+    } else if (strncmp(cmd, "ftp list ", 9) == 0) {
+        char* server_str = cmd + 9;
+        print_color("\nFTP Sunucusuna bağlanılıyor: ", LIGHT_CYAN);
+        print(server_str);
+        print("\n");
+        
+        uint8_t server_ip[4];
+        if (dns_string_to_ip(server_str, server_ip) < 0) {
+            print_color("Geçersiz IP adresi.\n", LIGHT_RED);
+        } else {
+            if (ftp_connect(&ftp_main_connection, server_ip, 21) == 0) {
+                if (ftp_login(&ftp_main_connection, "anonymous", "guest@gumusos.local") == 0) {
+                    ftp_directory_t dir;
+                    if (ftp_list_directory(&ftp_main_connection, &dir) == 0) {
+                        ftp_print_directory(&dir);
+                    } else {
+                        print_color("Directory listelenemedi.\n", LIGHT_RED);
+                    }
+                } else {
+                    print_color("FTP login başarısız.\n", LIGHT_RED);
+                }
+                ftp_disconnect(&ftp_main_connection);
+            } else {
+                print_color("FTP bağlantısı kurulamadı.\n", LIGHT_RED);
+            }
+        }
+    } else if (strncmp(cmd, "ftp indir ", 10) == 0) {
+        char* params = cmd + 10;
+        char* space = strchr(params, ' ');
+        if (!space) {
+            print_color("Kullanım: ftp indir [server] [dosya]\n", YELLOW);
+        } else {
+            *space = '\0';
+            char* server_str = params;
+            char* filename = space + 1;
+            
+            print_color("\nFTP'den dosya indiriliyor: ", LIGHT_CYAN);
+            printf("%s -> %s\n", filename, filename);
+            
+            uint8_t server_ip[4];
+            if (dns_string_to_ip(server_str, server_ip) < 0) {
+                print_color("Geçersiz IP adresi.\n", LIGHT_RED);
+            } else {
+                if (ftp_connect(&ftp_main_connection, server_ip, 21) == 0) {
+                    if (ftp_login(&ftp_main_connection, "anonymous", "guest@gumusos.local") == 0) {
+                        if (ftp_download_file(&ftp_main_connection, filename, filename) == 0) {
+                            print_color("Dosya başarıyla indirildi.\n", LIGHT_GREEN);
+                        } else {
+                            print_color("Dosya indirilemedi.\n", LIGHT_RED);
+                        }
+                    } else {
+                        print_color("FTP login başarısız.\n", LIGHT_RED);
+                    }
+                    ftp_disconnect(&ftp_main_connection);
+                } else {
+                    print_color("FTP bağlantısı kurulamadı.\n", LIGHT_RED);
+                }
+            }
+        }
+    } else if (strncmp(cmd, "ftp yukle ", 10) == 0) {
+        print_color("\nFTP upload henüz implemente edilmedi.\n", YELLOW);
     } else if (strcmp(cmd, "dosyalar") == 0) {
         print_color("\nGrafiksel Dosya YÃ¶neticisi aciliyor...\n", LIGHT_CYAN);
         launch_file_manager_gui();
@@ -307,6 +378,85 @@ void shell_parse_command(char* cmd) {
         } else {
             audio_start_recording();
             print_color("\nSes kaydÄ± baslatildi.\n", LIGHT_GREEN);
+        }
+    } else if (strncmp(cmd, "ext2_mount ", 11) == 0) {
+        char* device_str = cmd + 11;
+        print_color("\nEXT2 filesystem mount ediliyor: ", LIGHT_CYAN);
+        print(device_str);
+        print("\n");
+        
+        // ATA device'ı bul (şimdilik varsayılan)
+        ata_device_t* device = &ata_primary_master; // Varsayılan device
+        
+        if (ext2_mount(device, &ext2_main_fs) == 0) {
+            print_color("EXT2 filesystem başarıyla mount edildi.\n", LIGHT_GREEN);
+        } else {
+            print_color("EXT2 filesystem mount edilemedi.\n", LIGHT_RED);
+        }
+    } else if (strcmp(cmd, "ext2_unmount") == 0) {
+        print_color("\nEXT2 filesystem unmount ediliyor...\n", LIGHT_CYAN);
+        
+        if (ext2_unmount(&ext2_main_fs) == 0) {
+            print_color("EXT2 filesystem başarıyla unmount edildi.\n", LIGHT_GREEN);
+        } else {
+            print_color("EXT2 filesystem unmount edilemedi.\n", LIGHT_RED);
+        }
+    } else if (strncmp(cmd, "ls -l ", 6) == 0) {
+        char* path = cmd + 6;
+        print_color("\nEXT2 Directory Listesi: ", LIGHT_CYAN);
+        print(path);
+        print("\n");
+        
+        if (!ext2_main_fs.mounted) {
+            print_color("EXT2 filesystem mount edilmemiş.\n", LIGHT_RED);
+        } else {
+            ext2_dir_iter_t iter;
+            if (ext2_open_dir(&ext2_main_fs, path, &iter) == 0) {
+                printf("%-10s %-8s %-8s %-10s %-20s %s\n",
+                       "İzinler", "Sahip", "Grup", "Boyut", "Tarih", "Dosya Adı");
+                printf("------------------------------------------------------------\n");
+                
+                ext2_dir_entry_t entry;
+                while (ext2_read_dir(&iter, &entry) == 0) {
+                    ext2_inode_t inode;
+                    if (ext2_read_inode(&ext2_main_fs, entry.inode, &inode) == 0) {
+                        printf(" ");
+                        ext2_print_permissions(inode.i_mode);
+                        printf(" %-8d %-8d %-10s %-20s %s\n",
+                               inode.i_uid, inode.i_gid,
+                               ext2_format_size(inode.i_size),
+                               "Tarih", entry.name);
+                    }
+                }
+                
+                ext2_close_dir(&iter);
+            } else {
+                print_color("Directory açılamadı.\n", LIGHT_RED);
+            }
+        }
+    } else if (strncmp(cmd, "chmod ", 6) == 0) {
+        char* params = cmd + 6;
+        char* space = strchr(params, ' ');
+        if (!space) {
+            print_color("Kullanım: chmod [dosya] [izin]\n", YELLOW);
+        } else {
+            *space = '\0';
+            char* filename = params;
+            char* perm_str = space + 1;
+            
+            uint16_t permissions;
+            if (sscanf(perm_str, "0%ho", &permissions) == 1) {
+                print_color("\nDosya izinleri değiştiriliyor: ", LIGHT_CYAN);
+                printf("%s -> 0%o\n", filename, permissions);
+                
+                if (ext2_chmod(&ext2_main_fs, filename, permissions) == 0) {
+                    print_color("İzinler başarıyla değiştirildi.\n", LIGHT_GREEN);
+                } else {
+                    print_color("İzinler değiştirilemedi.\n", LIGHT_RED);
+                }
+            } else {
+                print_color("Geçersiz izin formatı. Örnek: chmod dosya.txt 755\n", YELLOW);
+            }
         }
     } else if (strncmp(cmd, "wav_cal ", 8) == 0) {
         char* filename = cmd + 8;
