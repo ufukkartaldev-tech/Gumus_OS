@@ -14,6 +14,7 @@
 #include "ip.h"
 #include "icmp.h"
 #include "dhcp.h"
+#include "dns.h"
 #include "file_manager_gui.h"
 #include "hardware_detect.h"
 #include "file_manager_gui.h"
@@ -81,6 +82,7 @@ void shell_parse_command(char* cmd) {
         print("  ping [IP]   - ICMP ping gonderir\n");
         print("  arp [IP]    - ARP tablosunu sorgular\n");
         print("  dhcp_yenile - DHCP IP adresini yeniler\n");
+        print("  dns coz [domain] - Domain adını cozuler\n");
         print_color("\nGrafiksel Arayuz:\n", LIGHT_CYAN);
         print("  dosyalar    - Grafiksel dosya yÃ¶neticisini acar\n");
         print("  monitor     - Sistem monitÃ¶rÃ¼nÃ¼ acar\n");
@@ -268,6 +270,26 @@ void shell_parse_command(char* cmd) {
             }
         } else {
             print_color("DHCP Client baslatilamadi.\n", LIGHT_RED);
+        }
+    } else if (strncmp(cmd, "dns coz ", 8) == 0) {
+        char* domain = cmd + 8;
+        print_color("\nDNS Cozumleniyor: ", LIGHT_CYAN);
+        print(domain);
+        print("\n");
+        
+        uint8_t ip[4];
+        int result = dns_resolve(domain, ip);
+        
+        if (result == 0) {
+            char ip_str[16];
+            dns_ip_to_string(ip, ip_str);
+            print_color("IP Adres: ", LIGHT_GREEN);
+            print(ip_str);
+            print("\n");
+        } else if (result == -2) {
+            print_color("DNS cevabi bekleniyor...\n", YELLOW);
+        } else {
+            print_color("DNS cozumlemesi basarisiz.\n", LIGHT_RED);
         }
     } else if (strcmp(cmd, "dosyalar") == 0) {
         print_color("\nGrafiksel Dosya YÃ¶neticisi aciliyor...\n", LIGHT_CYAN);
