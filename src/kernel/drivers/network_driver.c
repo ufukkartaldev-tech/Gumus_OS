@@ -1,4 +1,4 @@
-﻿#include "network_driver.h"
+#include "network_driver.h"
 #include "memory.h"
 #include "io.h"
 #include "string.h"
@@ -15,19 +15,7 @@ static uint16_t ntohs(uint16_t netshort) {
     return htons(netshort);
 }
 
-// Memory comparison function
-static int memcmp(const void* s1, const void* s2, size_t n) {
-    const unsigned char* p1 = s1;
-    const unsigned char* p2 = s2;
-    while (n--) {
-        if (*p1 != *p2) {
-            return *p1 - *p2;
-        }
-        p1++;
-        p2++;
-    }
-    return 0;
-}
+// memcmp, string.h içinden sağlanır
 
 static rtl8139_driver_t rtl8139_driver;
 static e1000_driver_t e1000_driver;

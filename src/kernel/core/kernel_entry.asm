@@ -1,9 +1,9 @@
-; Kernel'a giriş için Assembly köprüsü
-[bits 16]
+[bits 32]
+[extern _kernel_main]
 
-; 16-bit modda basit test
-mov ax, 0xB800
-mov es, ax
-mov word [es:0], 0x0F41  ; 'A' karakteri + beyaz renk
-
-jmp $            ; Sonsuz döngü
+_start:
+    ; Kernel ana fonksiyonuna zıpla
+    call _kernel_main
+    
+    ; Kernel dönerse (asla olmamalı) sonsuz döngü
+    jmp $

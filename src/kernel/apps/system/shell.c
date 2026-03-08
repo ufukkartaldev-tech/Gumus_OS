@@ -13,6 +13,7 @@
 #include "arp.h"
 #include "ip.h"
 #include "icmp.h"
+#include "dhcp.h"
 #include "file_manager_gui.h"
 #include "hardware_detect.h"
 #include "file_manager_gui.h"
@@ -79,6 +80,7 @@ void shell_parse_command(char* cmd) {
         print("  ag_durum    - Ag durumunu gosterir\n");
         print("  ping [IP]   - ICMP ping gonderir\n");
         print("  arp [IP]    - ARP tablosunu sorgular\n");
+        print("  dhcp_yenile - DHCP IP adresini yeniler\n");
         print_color("\nGrafiksel Arayuz:\n", LIGHT_CYAN);
         print("  dosyalar    - Grafiksel dosya yÃ¶neticisini acar\n");
         print("  monitor     - Sistem monitÃ¶rÃ¼nÃ¼ acar\n");
@@ -253,6 +255,19 @@ void shell_parse_command(char* cmd) {
             print("\n");
         } else {
             print_color("ARP cozumlemesi basarisiz.\n", LIGHT_RED);
+        }
+    } else if (strcmp(cmd, "dhcp_yenile") == 0) {
+        print_color("\nDHCP yenileniyor...\n", LIGHT_CYAN);
+        
+        if (dhcp_init() == 0) {
+            print_color("DHCP Client baslatildi.\n", LIGHT_GREEN);
+            if (dhcp_discover() == 0) {
+                print_color("DHCP Discover gonderildi.\n", LIGHT_GREEN);
+            } else {
+                print_color("DHCP Discover gonderilemedi.\n", LIGHT_RED);
+            }
+        } else {
+            print_color("DHCP Client baslatilamadi.\n", LIGHT_RED);
         }
     } else if (strcmp(cmd, "dosyalar") == 0) {
         print_color("\nGrafiksel Dosya YÃ¶neticisi aciliyor...\n", LIGHT_CYAN);

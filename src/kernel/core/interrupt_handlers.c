@@ -44,8 +44,9 @@ void irq_handler(registers_t* regs) {
     }
 }
 
-void syscall_handler(registers_t* regs) {
-    // Handle system calls
-    // Implementation depends on syscall number
+uint32_t syscall_handler(registers_t* regs) {
+    // Handle system calls and optionally return new ESP
+    // Şimdilik bağlam değişimi yok; mevcut stack'i geri döndür.
     (void)regs;
+    return (uint32_t)regs;
 }

@@ -1,4 +1,4 @@
-﻿#include "hardware_detect.h"
+#include "hardware_detect.h"
 #include "io.h"
 #include "string.h"
 #include "memory.h"
@@ -13,19 +13,7 @@
 #include "usb_host.h"
 #include "stdio.h"
 
-// Memory comparison function
-static int memcmp(const void* s1, const void* s2, size_t n) {
-    const unsigned char* p1 = s1;
-    const unsigned char* p2 = s2;
-    while (n--) {
-        if (*p1 != *p2) {
-            return *p1 - *p2;
-        }
-        p1++;
-        p2++;
-    }
-    return 0;
-}
+// memcmp, string.h içinden sağlanır
 
 // Global deÄŸiÅŸkenler
 static hardware_info_t hw_info;

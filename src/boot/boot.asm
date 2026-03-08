@@ -27,16 +27,8 @@ jc bios_error        ; BIOS hatası varsa
 mov bx, MSG_LOADED
 call print_string
 
-; Kernel çağrısından önce test (Real Mode)
-; Dayı Tavsiyesi: 16-bit modda segment:offset kullan
-push es
-mov ax, 0xB800
-mov es, ax
-mov word [es:0], 0x0F4B  ; 'K' karakteri + beyaz renk
-pop es
-
-; 16-bit modda kernel'i çağır
-call KERNEL_OFFSET      ; Kernel'a zıpla!
+; 16-bit modda kernel'i çağırmak yerine Protected Mode'a geçiyoruz
+jmp switch_to_pm        ; 32-bit geçişini başlat
 jmp $
 
 kernel_error:
