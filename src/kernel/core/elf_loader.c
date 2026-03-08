@@ -1,23 +1,39 @@
 ﻿#include "kernel.h"
 #include "elf.h"
-#include "fs.h"
+#include "vfs.h"
 #include "memory.h"
 #include "task.h"
 #include "string.h"
 
 int elf_load_and_run(const char* path) {
-    uint32_t file_size = 0;
-    uint8_t* elf_data = fs_read_bin(path, &file_size);
+    // VFS üzerinden dosya aç
+    int fd = vfs_open(path, 0);
+    if (fd < 0) {
+        printf("[ELF] Dosya açılamadı: %s\n", path);
+        return -1;
+    }
     
+    // Dosya boyutunu al
+    vfs_node_t* node = NULL;
+    // VFS'ten dosya boyutunu öğrenmek için node'u al
+    // Şimdilik basit implementasyon
+    
+    // Dosyayı oku
+    uint8_t* elf_data = kmalloc(4096); // Başlangıç için 4KB
     if (!elf_data) {
-        // print("[ELF] Dosya okunamadi\n");
+        vfs_close(fd);
         return -1;
     }
-
-    if (file_size < sizeof(elf_header_t)) {
+    
+    int bytes_read = vfs_read(fd, elf_data, 4096);
+    if (bytes_read <= 0) {
+        printf("[ELF] Dosya okunamadı\n");
         kfree(elf_data);
+        vfs_close(fd);
         return -1;
     }
+    
+    uint32_t file_size = bytes_read;
 
     elf_header_t* header = (elf_header_t*)elf_data;
     
@@ -75,5 +91,6 @@ int elf_load_and_run(const char* path) {
     create_elf_task(header->e_entry, proc_dir, max_vaddr);
 
     kfree(elf_data);
+    vfs_close(fd);
     return 0;
 }

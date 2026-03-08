@@ -2,6 +2,7 @@
 #include "fs.h"
 #include "string.h"
 #include "memory.h"
+#include "ext2.h"
 
 #define MAX_OPEN_FILES 16
 
@@ -16,7 +17,8 @@ static struct file_desc {
 
 void vfs_init() {
     for(int i=0; i<MAX_OPEN_FILES; i++) file_table[i].used = 0;
-    fs_init(); // ATA tabanlÄ± ilkel FS baÅŸlat
+    fs_init(); // ATA tabanlı ilkel FS başlat
+    ext2_init(); // EXT2 filesystem'ni başlat
 }
 
 // Wrapper Functions to bridge gap between new VFS and old FS code
@@ -31,12 +33,42 @@ int vfs_mount(const char* path, vfs_node_t* fs_root) {
 }
 
 int vfs_open(const char* path, int flags) {
-    // Basit implementasyon: Path'i doÄŸrudan fs_read_bin ile aÃ§
-    // GerÃ§ek VFS'de path parsing ve mount point lookup yapÄ±lÄ±r
+    // EXT2 filesystem mount edilmişse onu kullan
+    if (ext2_main_fs.mounted) {
+        int fd = -1;
+        for(int i = 0; i < MAX_OPEN_FILES; i++) {
+            if (!file_table[i].used) {
+                fd = i;
+                break;
+            }
+        }
+        
+        if (fd == -1) return -1;
+        
+        // EXT2 dosyasını aç
+        ext2_file_t* file = kmalloc(sizeof(ext2_file_t));
+        if (!file) return -1;
+        
+        if (ext2_open_file(&ext2_main_fs, path, flags, file) == 0) {
+            // VFS node oluştur
+            vfs_node_t* node = kmalloc(sizeof(vfs_node_t));
+            strcpy(node->name, path);
+            node->size = file->size;
+            node->flags = 0x01; // File
+            node->impl_data = file;
+            
+            file_table[fd].node = node;
+            file_table[fd].offset = 0;
+            file_table[fd].used = 1;
+            
+            return fd;
+        } else {
+            kfree(file);
+            return -1;
+        }
+    }
     
-    // Åimdilik sadece tek bir dosya sistemi var (fs.c)
-    // Ve descriptor tablosu Ã¼zerinden yÃ¶netelim
-    
+    // Fallback to eski FS
     int fd = -1;
     for(int i=0; i<MAX_OPEN_FILES; i++) {
         if (!file_table[i].used) {
@@ -47,10 +79,10 @@ int vfs_open(const char* path, int flags) {
     
     if (fd == -1) return -1;
     
-    // Node oluÅŸtur (GeÃ§ici)
+    // Node oluştur (Geçici)
     vfs_node_t* node = kmalloc(sizeof(vfs_node_t));
     strcpy(node->name, path);
-    // Boyut vs. fs_read_bin ile Ã¶ÄŸrenilecek
+    // Boyut vs. fs_read_bin ile ögrenilecek
     
     file_table[fd].node = node;
     file_table[fd].offset = 0;
@@ -62,11 +94,15 @@ int vfs_open(const char* path, int flags) {
 int vfs_read(int fd, void* buf, int size) {
     if (fd < 0 || fd >= MAX_OPEN_FILES || !file_table[fd].used) return -1;
     
-    // fs_read_bin tÃ¼m dosyayÄ± yÃ¼klÃ¼yor. 
-    // VFS ise parÃ§a parÃ§a okuyabilir.
-    // Åimdilik "hack": fs_read_bin ile oku, ofset kadar kopyala.
-    // BU Ã‡OK VERÄ°MSÄ°Z AMA GEÃ‡Ä°T TÃ–RENÄ° Ä°Ã‡Ä°N YETERLÄ°.
+    // EXT2 dosyası ise EXT2 üzerinden oku
+    if (file_table[fd].node->impl_data) {
+        ext2_file_t* file = (ext2_file_t*)file_table[fd].node->impl_data;
+        if (file) {
+            return ext2_read_file(file, buf, size);
+        }
+    }
     
+    // Fallback to eski FS
     uint32_t fsize;
     uint8_t* data = fs_read_bin(file_table[fd].node->name, &fsize);
     if (!data) return 0;
@@ -87,7 +123,7 @@ int vfs_read(int fd, void* buf, int size) {
 
 int vfs_write(int fd, void* buf, int size) {
     // Yazma iÅŸlemi daha karmaÅŸÄ±k.
-    // Åimdilik tek seferde yazma destekliyoruz (fs_write_bin)
+    // Åžimdilik tek seferde yazma destekliyoruz (fs_write_bin)
     // Append desteklemiyoruz.
     if (fd < 0 || fd >= MAX_OPEN_FILES || !file_table[fd].used) return -1;
     
@@ -97,6 +133,13 @@ int vfs_write(int fd, void* buf, int size) {
 
 void vfs_close(int fd) {
     if (fd >= 0 && fd < MAX_OPEN_FILES && file_table[fd].used) {
+        // EXT2 dosyası ise kapat
+        if (file_table[fd].node->impl_data) {
+            ext2_file_t* file = (ext2_file_t*)file_table[fd].node->impl_data;
+            ext2_close_file(file);
+            kfree(file);
+        }
+        
         kfree(file_table[fd].node);
         file_table[fd].used = 0;
     }
